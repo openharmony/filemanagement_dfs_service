@@ -20,6 +20,7 @@
 #include <climits>
 #include <cstring>
 #include <dirent.h>
+#include <functional>
 #include <mutex>
 #include <sys/stat.h>
 #include <sys/xattr.h>
@@ -34,6 +35,13 @@ std::mutex &GetPlaceholderStateMutex()
 {
     static std::mutex mutex;
     return mutex;
+}
+
+std::mutex &GetPlaceholderFileMutex(const std::string &path)
+{
+    constexpr size_t FILE_LOCK_BUCKET_COUNT = 64;
+    static std::array<std::mutex, FILE_LOCK_BUCKET_COUNT> mutexes;
+    return mutexes[std::hash<std::string>{}(path) % mutexes.size()];
 }
 
 namespace {

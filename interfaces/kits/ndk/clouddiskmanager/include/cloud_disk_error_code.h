@@ -52,7 +52,7 @@ typedef enum CloudDisk_ErrorCode {
      */
     CLOUD_DISK_OK = 0,
     /**
-     * @brief The permission verification fails.
+     * @brief The permission verification or file access fails.
      *
      * @since 21
      */
@@ -262,7 +262,7 @@ typedef enum CloudDisk_ErrorCode {
      */
     OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE = 34400033,
     /**
-     * @brief The number of active placeholder hydration tasks has reached the limit.
+     * @brief The number of pending placeholder hydration tasks has reached the limit.
      *
      * @since 26.1.0
      */

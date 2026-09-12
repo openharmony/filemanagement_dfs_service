@@ -132,17 +132,6 @@ int32_t PlaceholderCallbackManager::DispatchCancelFetchData(const std::string &b
     return DispatchCallback(bundleName, syncFolderIndex, reqHead, reqContext);
 }
 
-int32_t PlaceholderCallbackManager::DispatchFetchRangeData(const std::string &bundleName,
-                                                           uint32_t syncFolderIndex,
-                                                           CloudDiskCallbackReqHead &reqHead,
-                                                           CloudDiskRangeInfo &rangeInfo)
-{
-    reqHead.callbackType = CloudDiskCallbackType::FETCH_RANGE_DATA;
-    CloudDiskCallbackContext reqContext{};
-    reqContext.fetchRangeData = &rangeInfo;
-    return DispatchCallback(bundleName, syncFolderIndex, reqHead, reqContext);
-}
-
 int32_t PlaceholderCallbackManager::DispatchDehydrate(const std::string &bundleName,
                                                       uint32_t syncFolderIndex,
                                                       CloudDiskCallbackReqHead &reqHead,
@@ -248,6 +237,7 @@ void PlaceholderCallbackManager::AddDeathRecipientLocked(const sptr<ICloudDiskSe
     auto deathRecipient = sptr(new SvcDeathRecipient(deathCallback));
     if (!remoteObject->AddDeathRecipient(deathRecipient)) {
         LOGW("Failed to add callback table death recipient");
+        return;
     }
     deathRecipientMap_[remoteKey] = deathRecipient;
 }

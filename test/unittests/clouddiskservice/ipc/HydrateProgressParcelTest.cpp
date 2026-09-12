@@ -96,4 +96,23 @@ HWTEST_F(HydrateProgressParcelTest, InvalidState_001, TestSize.Level2)
     ASSERT_TRUE(full.WriteBuffer(filler.data(), filler.size()));
     EXPECT_FALSE(progress.Marshalling(full));
 }
+
+/**
+ * @tc.name: StateBoundaries_001
+ * @tc.desc: Accept both inclusive hydration progress state boundaries.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(HydrateProgressParcelTest, StateBoundaries_001, TestSize.Level1)
+{
+    for (auto state : {HydrateProgressState::PENDING, HydrateProgressState::CANCELLED}) {
+        HydrateProgress progress;
+        progress.state = static_cast<int32_t>(state);
+        Parcel parcel;
+        ASSERT_TRUE(progress.Marshalling(parcel));
+        std::unique_ptr<HydrateProgress> copy(HydrateProgress::Unmarshalling(parcel));
+        ASSERT_NE(copy, nullptr);
+        EXPECT_EQ(copy->state, progress.state);
+    }
+}
 } // namespace OHOS::FileManagement::CloudDiskService::Test

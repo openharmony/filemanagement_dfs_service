@@ -19,6 +19,7 @@
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_comm.h"
+#include "cloud_disk_service_error.h"
 #include "cloud_disk_sync_folder_manager.h"
 #endif
 #include "cloud_disk_service_callback_manager.h"
@@ -53,47 +54,8 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
     LOGI("OnStateChanged state:%{public}d, userId: %{public}d, currentUserId: %{public}d", state, userId,
          currentUserId_);
     if (state == OsAccountState::SWITCHED) {
-        LOGI("Switched user");
-        SetCurrentUserId(userId);
-        DiskMonitor::GetInstance().StopMonitor();
-        PlaceholderCallbackManager::GetInstance().ClearAll();
-        PlaceholderTaskManager::GetInstance().CancelAllTasks(PlaceholderTaskCancelReason::USER_SWITCH);
-        PlaceholderTaskManager::GetInstance().ClearTombstones();
-        PlaceholderProgressManager::GetInstance().Drain();
-        PlaceholderProgressManager::GetInstance().Clear();
-        CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
-        CloudDiskServiceCallbackManager::GetInstance().ClearMap();
-        CloudDiskSyncFolder::GetInstance().ClearMap();
-
-        std::vector<FileManagement::SyncFolderExt> syncFolders;
-        int32_t ret =
-            OHOS::FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
-        if (ret != 0) {
-            LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
-                 syncFolders.size());
-            UnloadSa();
-            return;
-        }
-        for (auto item : syncFolders) {
-            std::string path;
-            if (CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path) != 0) {
-                LOGE("Get path failed");
-                continue;
-            }
-            SyncFolderValue syncFolderValue;
-            syncFolderValue.bundleName = item.bundleName_;
-            syncFolderValue.path = path;
-            uint32_t syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
-            CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
-        }
-        int32_t syncFolderSize = CloudDiskSyncFolder::GetInstance().GetSyncFolderSize();
-        if (syncFolderSize == 0) {
-            LOGI("No sync folder, unload sa");
-            UnloadSa();
-            return;
-        } else if (syncFolderSize > 0) {
-            DiskMonitor::GetInstance().StartMonitor(userId);
-        }
+        HandleUserSwitched(userId);
+        return;
     }
     if (state == OsAccountState::STOPPED) {
         if (userId != currentUserId_) {
@@ -105,6 +67,51 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
     }
 #endif
 }
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+void AccountStatusSubscriber::HandleUserSwitched(int32_t userId)
+{
+    LOGI("Switched user");
+    SetCurrentUserId(userId);
+    DiskMonitor::GetInstance().StopMonitor();
+    PlaceholderCallbackManager::GetInstance().ClearAll();
+    PlaceholderTaskManager::GetInstance().CancelAllTasks(PlaceholderTaskCancelReason::USER_SWITCH);
+    PlaceholderTaskManager::GetInstance().ClearCancellationRecords();
+    PlaceholderProgressManager::GetInstance().Drain();
+    PlaceholderProgressManager::GetInstance().Clear();
+    CloudDiskServiceSyncFolder::CloudDiskServiceClearAll();
+    CloudDiskServiceCallbackManager::GetInstance().ClearMap();
+    CloudDiskSyncFolder::GetInstance().ClearMap();
+
+    std::vector<FileManagement::SyncFolderExt> syncFolders;
+    int32_t ret = CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
+    if (ret != E_OK) {
+        LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
+             syncFolders.size());
+        UnloadSa();
+        return;
+    }
+    for (const auto &item : syncFolders) {
+        std::string path;
+        if (CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(item.path_, std::to_string(userId), path) != E_OK) {
+            LOGE("Get path failed");
+            continue;
+        }
+        SyncFolderValue syncFolderValue = {item.bundleName_, path};
+        uint32_t syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
+        CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+    }
+    int32_t syncFolderSize = CloudDiskSyncFolder::GetInstance().GetSyncFolderSize();
+    if (syncFolderSize == 0) {
+        LOGI("No sync folder, unload sa");
+        UnloadSa();
+        return;
+    }
+    if (syncFolderSize > 0) {
+        DiskMonitor::GetInstance().StartMonitor(userId);
+    }
+}
+#endif
 
 void AccountStatusSubscriber::UnloadSa()
 {

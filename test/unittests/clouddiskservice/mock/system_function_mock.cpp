@@ -49,6 +49,11 @@ DIR* opendir(const char* path)
     return Assistant::ins->opendir(path);
 }
 
+int closedir(DIR *dir)
+{
+    return Assistant::ins->CloseDir(dir);
+}
+
 int dirfd(DIR *d)
 {
     return Assistant::ins->dirfd(d);
@@ -69,6 +74,19 @@ ssize_t pwrite(int fd, const void *data, size_t size, off_t offset)
     return realPwrite(fd, data, size, offset);
 }
 
+int fsync(int fd)
+{
+    if (Assistant::mockFsyncApi && Assistant::ins != nullptr) {
+        return Assistant::ins->Fsync(fd);
+    }
+    static auto realFsync = reinterpret_cast<int (*)(int)>(dlsym(RTLD_NEXT, "fsync"));
+    if (realFsync == nullptr) {
+        errno = EIO;
+        return -1;
+    }
+    return realFsync(fd);
+}
+
 int stat(const char *path, struct stat *buf)
 {
     if (Assistant::mockFdApi) {
@@ -86,6 +104,25 @@ int stat(const char *path, struct stat *buf)
         return -1;
     }
     return realStat(path, buf);
+}
+
+int lstat(const char *path, struct stat *buf)
+{
+    if (Assistant::mockLstatApi) {
+        if (Assistant::ins == nullptr) {
+            errno = ENOENT;
+            return -1;
+        }
+        return Assistant::ins->MockStat(path, buf);
+    }
+
+    static int (*realLstat)(const char *, struct stat *) = []() {
+        return reinterpret_cast<int (*)(const char *, struct stat *)>(dlsym(RTLD_NEXT, "lstat"));
+    }();
+    if (realLstat == nullptr) {
+        return -1;
+    }
+    return realLstat(path, buf);
 }
 
 int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)

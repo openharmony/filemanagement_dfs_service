@@ -74,6 +74,58 @@ void CloudDiskServiceAccessTokenTest::TearDown(void)
 }
 
 /**
+ * @tc.name: IsSystemApp_001
+ * @tc.desc: Verify that a native token is treated as a system application
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, IsSystemApp_001, TestSize.Level1)
+{
+    MockGetTokenTypeFlag(TOKEN_NATIVE);
+    MockIsSystemApp(false);
+    EXPECT_TRUE(CloudDiskServiceAccessToken::IsSystemApp());
+}
+
+/**
+ * @tc.name: IsSystemApp_002
+ * @tc.desc: Verify that a system HAP is treated as a system application
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, IsSystemApp_002, TestSize.Level1)
+{
+    MockGetTokenTypeFlag(TOKEN_HAP);
+    MockIsSystemApp(true);
+    EXPECT_TRUE(CloudDiskServiceAccessToken::IsSystemApp());
+}
+
+/**
+ * @tc.name: IsSystemApp_003
+ * @tc.desc: Verify that a non-system HAP is rejected
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, IsSystemApp_003, TestSize.Level2)
+{
+    MockGetTokenTypeFlag(TOKEN_HAP);
+    MockIsSystemApp(false);
+    EXPECT_FALSE(CloudDiskServiceAccessToken::IsSystemApp());
+}
+
+/**
+ * @tc.name: IsSystemApp_004
+ * @tc.desc: Verify that an unsupported token type is rejected
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceAccessTokenTest, IsSystemApp_004, TestSize.Level2)
+{
+    MockGetTokenTypeFlag(TOKEN_SHELL);
+    MockIsSystemApp(true);
+    EXPECT_FALSE(CloudDiskServiceAccessToken::IsSystemApp());
+}
+
+/**
  * @tc.name: CheckCallerPermission001
  * @tc.desc: Verify the CheckCallerPermission function
  * @tc.type: FUNC

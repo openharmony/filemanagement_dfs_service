@@ -13,19 +13,42 @@
  * limitations under the License.
  */
 
+#include <algorithm>
+#include <fcntl.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "assistant.h"
+#include "bit_ops.h"
 #include "cloud_disk_common.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_service_metafile.h"
+#include "cloud_file_utils.h"
 #include "convertor.h"
+#include "placeholder_helper.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
 using namespace testing;
 using namespace testing::ext;
+
+namespace {
+const string TEST_PLACEHOLDER_NAME = "placeholder.txt";
+
+void FillPlaceholderDentry(void *buffer, const string &name, uint8_t placeholderState)
+{
+    auto *group = static_cast<CloudDiskServiceDentryGroup *>(buffer);
+    *group = {};
+    BitOps::SetBit(0, group->bitmap);
+    auto &dentry = group->nsl[0];
+    dentry.revalidate = VALIDATE;
+    dentry.hash = CloudDisk::CloudFileUtils::DentryHash(name);
+    dentry.namelen = static_cast<uint16_t>(name.size());
+    std::copy(name.begin(), name.end(), group->fileName[0]);
+    SetDentryPlaceholderState(dentry, placeholderState);
+}
+} // namespace
 
 class CloudDiskServiceMetafileTest : public testing::Test {
 public:
@@ -797,6 +820,137 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoLookupByNameTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "DoLookupByNameTest002 ERROR";
     }
     GTEST_LOG_(INFO) << "DoLookupByNameTest002 End";
+}
+
+/**
+ * @tc.name: DoLookupPlaceholderByName_001
+ * @tc.desc: Verify lookup rejects an invalid metafile descriptor
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupPlaceholderByName_001, TestSize.Level2)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    mFile.fd_.Reset(-1);
+    uint8_t state = PLACEHOLDER_STATE_NONE;
+    EXPECT_EQ(mFile.DoLookupPlaceholderByName(MetaBase(TEST_PLACEHOLDER_NAME), state), EINVAL);
+}
+
+/**
+ * @tc.name: DoLookupPlaceholderByName_002
+ * @tc.desc: Verify lookup reports a missing dentry
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupPlaceholderByName_002, TestSize.Level2)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    int32_t fd = open("/dev/null", O_RDWR);
+    ASSERT_GE(fd, 0);
+    mFile.fd_.Reset(fd);
+    EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
+    uint8_t state = PLACEHOLDER_STATE_NONE;
+    EXPECT_EQ(mFile.DoLookupPlaceholderByName(MetaBase(TEST_PLACEHOLDER_NAME), state), ENOENT);
+}
+
+/**
+ * @tc.name: DoLookupPlaceholderByName_003
+ * @tc.desc: Verify lookup returns the placeholder state stored in the dentry
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoLookupPlaceholderByName_003, TestSize.Level1)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    int32_t fd = open("/dev/null", O_RDWR);
+    ASSERT_GE(fd, 0);
+    mFile.fd_.Reset(fd);
+    EXPECT_CALL(*insMock, ReadFile(_, _, DENTRYGROUP_SIZE, _))
+        .WillOnce(Invoke([](int, off_t, size_t, void *buffer) -> int64_t {
+            FillPlaceholderDentry(buffer, TEST_PLACEHOLDER_NAME, PLACEHOLDER_STATE_PARTIALLY_HYDRATED);
+            return DENTRYGROUP_SIZE;
+        }));
+    uint8_t state = PLACEHOLDER_STATE_NONE;
+    EXPECT_EQ(mFile.DoLookupPlaceholderByName(MetaBase(TEST_PLACEHOLDER_NAME), state), E_OK);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_PARTIALLY_HYDRATED);
+}
+
+/**
+ * @tc.name: DoUpdatePlaceholderState_001
+ * @tc.desc: Verify update rejects an invalid metafile descriptor
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoUpdatePlaceholderState_001, TestSize.Level2)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    mFile.fd_.Reset(-1);
+    EXPECT_EQ(mFile.DoUpdatePlaceholderState(MetaBase(TEST_PLACEHOLDER_NAME), PLACEHOLDER_STATE_UNHYDRATED), EINVAL);
+}
+
+/**
+ * @tc.name: DoUpdatePlaceholderState_002
+ * @tc.desc: Verify update reports a missing dentry
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoUpdatePlaceholderState_002, TestSize.Level2)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    int32_t fd = open("/dev/null", O_RDWR);
+    ASSERT_GE(fd, 0);
+    mFile.fd_.Reset(fd);
+    EXPECT_CALL(*insMock, ReadFile(_, _, _, _)).WillRepeatedly(Return(0));
+    EXPECT_EQ(mFile.DoUpdatePlaceholderState(MetaBase(TEST_PLACEHOLDER_NAME), PLACEHOLDER_STATE_UNHYDRATED), ENOENT);
+}
+
+/**
+ * @tc.name: DoUpdatePlaceholderState_003
+ * @tc.desc: Verify update maps a short metafile write to EIO
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoUpdatePlaceholderState_003, TestSize.Level2)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    int32_t fd = open("/dev/null", O_RDWR);
+    ASSERT_GE(fd, 0);
+    mFile.fd_.Reset(fd);
+    EXPECT_CALL(*insMock, ReadFile(_, _, DENTRYGROUP_SIZE, _))
+        .WillOnce(Invoke([](int, off_t, size_t, void *buffer) -> int64_t {
+            FillPlaceholderDentry(buffer, TEST_PLACEHOLDER_NAME, PLACEHOLDER_STATE_NONE);
+            return DENTRYGROUP_SIZE;
+        }));
+    EXPECT_CALL(*insMock, WriteFile(_, _, _, sizeof(CloudDiskServiceDentryGroup))).WillOnce(Return(0));
+    EXPECT_EQ(mFile.DoUpdatePlaceholderState(MetaBase(TEST_PLACEHOLDER_NAME), PLACEHOLDER_STATE_UNHYDRATED), EIO);
+}
+
+/**
+ * @tc.name: DoUpdatePlaceholderState_004
+ * @tc.desc: Verify update persists the requested placeholder state
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceMetafileTest, DoUpdatePlaceholderState_004, TestSize.Level1)
+{
+    CloudDiskServiceMetaFile mFile(100, 1, 123);
+    int32_t fd = open("/dev/null", O_RDWR);
+    ASSERT_GE(fd, 0);
+    mFile.fd_.Reset(fd);
+    EXPECT_CALL(*insMock, ReadFile(_, _, DENTRYGROUP_SIZE, _))
+        .WillOnce(Invoke([](int, off_t, size_t, void *buffer) -> int64_t {
+            FillPlaceholderDentry(buffer, TEST_PLACEHOLDER_NAME, PLACEHOLDER_STATE_NONE);
+            return DENTRYGROUP_SIZE;
+        }));
+    uint8_t writtenState = PLACEHOLDER_STATE_NONE;
+    EXPECT_CALL(*insMock, WriteFile(_, _, _, sizeof(CloudDiskServiceDentryGroup)))
+        .WillOnce(Invoke([&writtenState](int, const void *buffer, off_t, size_t size) -> int64_t {
+            const auto *group = static_cast<const CloudDiskServiceDentryGroup *>(buffer);
+            writtenState = GetDentryPlaceholderState(group->nsl[0]);
+            return static_cast<int64_t>(size);
+        }));
+    EXPECT_EQ(mFile.DoUpdatePlaceholderState(MetaBase(TEST_PLACEHOLDER_NAME), PLACEHOLDER_STATE_UNHYDRATED), E_OK);
+    EXPECT_EQ(writtenState, PLACEHOLDER_STATE_UNHYDRATED);
 }
 
 /**

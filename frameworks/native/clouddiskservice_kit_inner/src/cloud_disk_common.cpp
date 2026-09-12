@@ -56,8 +56,9 @@ HydrateProgress *HydrateProgress::Unmarshalling(Parcel &parcel)
 namespace {
 bool IsValidCallbackType(int32_t callbackType)
 {
-    return callbackType >= static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA) &&
-           callbackType <= static_cast<int32_t>(CloudDiskCallbackType::DEHYDRATE);
+    return callbackType == static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA) ||
+           callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA) ||
+           callbackType == static_cast<int32_t>(CloudDiskCallbackType::DEHYDRATE);
 }
 
 bool IsValidHydratePriority(int32_t priority)
@@ -92,9 +93,9 @@ bool WritePathInfo(Parcel &parcel, const CloudDiskPathInfo &pathInfo, const char
     return true;
 }
 
-bool WriteDataBuf(Parcel &parcel, const CloudDiskDataBuf &dataBuf, const char *fieldName, bool allowNullData)
+bool WriteDataBuf(Parcel &parcel, const CloudDiskDataBuf &dataBuf, const char *fieldName)
 {
-    if (dataBuf.data == nullptr && dataBuf.dataSize != 0 && !allowNullData) {
+    if (dataBuf.data == nullptr && dataBuf.dataSize != 0) {
         LOGE("Failed to write %{public}s: invalid data buffer", fieldName);
         return false;
     }
@@ -316,7 +317,7 @@ bool WriteCallbackParcel(Parcel &parcel,
 {
     if (!WritePathInfo(parcel, reqHead.syncFolderPath, "syncFolderPath") ||
         !parcel.WriteInt32(static_cast<int32_t>(reqHead.callbackType)) ||
-        !WriteDataBuf(parcel, reqHead.reqKey, "reqKey", false)) {
+        !WriteDataBuf(parcel, reqHead.reqKey, "reqKey")) {
         LOGE("Failed to write callback request header");
         return false;
     }
@@ -328,8 +329,6 @@ bool WriteCallbackParcel(Parcel &parcel,
         case CloudDiskCallbackType::CANCEL_FETCH_DATA:
             return context.cancelFetchData != nullptr &&
                    WritePathInfo(parcel, *context.cancelFetchData, "cancelFetchData");
-        case CloudDiskCallbackType::FETCH_RANGE_DATA:
-            break;
         case CloudDiskCallbackType::DEHYDRATE:
             return context.dehydrateData != nullptr &&
                    WritePathInfo(parcel, context.dehydrateData->filePath, "dehydrateFilePath");
@@ -337,22 +336,9 @@ bool WriteCallbackParcel(Parcel &parcel,
             LOGE("Failed to write callback context: invalid callback type");
             return false;
     }
-
-    if (context.fetchRangeData == nullptr) {
-        LOGE("Failed to write callback context: range info is nullptr");
-        return false;
-    }
-    const CloudDiskRangeInfo &rangeInfo = *context.fetchRangeData;
-    if (!WritePathInfo(parcel, rangeInfo.filePath, "rangeFilePath") || !parcel.WriteUint64(rangeInfo.offset) ||
-        !parcel.WriteUint64(rangeInfo.size)) {
-        LOGE("Failed to write range callback request");
-        return false;
-    }
-    return WriteDataBuf(parcel, rangeInfo.data, "rangeData", true);
 }
 
-static bool ReadCallbackRequestHead(Parcel &parcel, CloudDiskCallbackReqHead &reqHead,
-    CallbackParcelStorage &storage)
+static bool ReadCallbackRequestHead(Parcel &parcel, CloudDiskCallbackReqHead &reqHead, CallbackParcelStorage &storage)
 {
     if (!parcel.ReadString(storage.syncFolder)) {
         LOGE("Failed to read syncFolderPath");
@@ -409,21 +395,11 @@ bool ReadCallbackParcel(Parcel &parcel,
         return true;
     }
 
-    storage.rangeInfo.filePath = storage.pathInfo;
-    if (!parcel.ReadUint64(storage.rangeInfo.offset) || !parcel.ReadUint64(storage.rangeInfo.size) ||
-        !parcel.ReadUInt8Vector(&storage.rangeData)) {
-        LOGE("Failed to read range callback request");
-        return false;
-    }
-    AssignDataBuf(storage.rangeInfo.data, storage.rangeData);
-    context.fetchRangeData = &storage.rangeInfo;
-    return true;
+    LOGE("Failed to read callback context: invalid callback type");
+    return false;
 }
 
-bool WriteCallbackReply(Parcel &parcel,
-                        CloudDiskCallbackType callbackType,
-                        const CloudDiskCallbackContext &context,
-                        uint64_t rangeDataCapacity)
+bool WriteCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, const CloudDiskCallbackContext &context)
 {
     if (callbackType == CloudDiskCallbackType::DEHYDRATE) {
         if (context.dehydrateData == nullptr) {
@@ -432,34 +408,11 @@ bool WriteCallbackReply(Parcel &parcel,
         }
         return parcel.WriteBool(context.dehydrateData->allow);
     }
-    if (callbackType != CloudDiskCallbackType::FETCH_RANGE_DATA) {
+    if (callbackType == CloudDiskCallbackType::FETCH_DATA || callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
         return true;
     }
-    if (context.fetchRangeData == nullptr) {
-        LOGE("Failed to write range callback reply: context is nullptr");
-        return false;
-    }
-
-    const CloudDiskDataBuf &dataBuf = context.fetchRangeData->data;
-    uint64_t dataSize = std::min(dataBuf.dataSize, rangeDataCapacity);
-    if (dataBuf.data == nullptr && dataSize != 0) {
-        LOGE("Failed to write range callback reply: data is nullptr");
-        return false;
-    }
-    if (dataSize > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
-        LOGE("Failed to write range callback reply: invalid data size");
-        return false;
-    }
-    size_t copySize = static_cast<size_t>(dataSize);
-    std::vector<uint8_t> data(copySize);
-    if (copySize != 0) {
-        std::copy(dataBuf.data, dataBuf.data + copySize, data.begin());
-    }
-    if (!parcel.WriteUInt8Vector(data) || !parcel.WriteUint64(dataSize)) {
-        LOGE("Failed to write range callback reply");
-        return false;
-    }
-    return true;
+    LOGE("Failed to write callback reply: invalid callback type");
+    return false;
 }
 
 bool ReadCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, CloudDiskCallbackContext &context)
@@ -471,32 +424,11 @@ bool ReadCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, Cloud
         }
         return parcel.ReadBool(context.dehydrateData->allow);
     }
-    if (callbackType != CloudDiskCallbackType::FETCH_RANGE_DATA) {
+    if (callbackType == CloudDiskCallbackType::FETCH_DATA || callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
         return true;
     }
-    if (context.fetchRangeData == nullptr) {
-        LOGE("Failed to read range callback reply: context is nullptr");
-        return false;
-    }
-
-    std::vector<uint8_t> data;
-    uint64_t dataSize = 0;
-    if (!parcel.ReadUInt8Vector(&data) || !parcel.ReadUint64(dataSize) || dataSize > data.size()) {
-        LOGE("Failed to read range callback reply");
-        return false;
-    }
-
-    CloudDiskDataBuf &dataBuf = context.fetchRangeData->data;
-    uint64_t copySize = std::min(dataSize, dataBuf.dataSize);
-    if (dataBuf.data == nullptr && copySize != 0) {
-        LOGE("Failed to read range callback reply: target data is nullptr");
-        return false;
-    }
-    if (copySize != 0) {
-        std::copy(data.begin(), data.begin() + static_cast<size_t>(copySize), dataBuf.data);
-    }
-    dataBuf.dataSize = copySize;
-    return true;
+    LOGE("Failed to read callback reply: invalid callback type");
+    return false;
 }
 
 bool ChangesResult::Marshalling(Parcel &parcel) const

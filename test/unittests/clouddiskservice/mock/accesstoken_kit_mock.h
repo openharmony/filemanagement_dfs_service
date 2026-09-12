@@ -27,5 +27,6 @@ void MockIsOsAccountVerified(bool mockRet);
 void MockSetHapBundleName(const std::string &bundleName);
 void MockSetNativeProcessName(const std::string &processName);
 void MockSetHapInstIndex(int32_t instIndex);
+void MockIsSystemApp(bool mockRet);
 
 #endif

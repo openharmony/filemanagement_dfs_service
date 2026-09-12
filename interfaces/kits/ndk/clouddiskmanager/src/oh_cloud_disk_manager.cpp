@@ -15,7 +15,6 @@
 
 #include "oh_cloud_disk_manager.h"
 
-#include <algorithm>
 #include <cstring>
 #include <functional>
 #include <new>
@@ -63,7 +62,6 @@ public:
 private:
     void HandleFetchData(const OH_CloudDisk_CallbackReqHead &reqHead, CloudDiskCallbackContext &context);
     void HandleCancelFetchData(const OH_CloudDisk_CallbackReqHead &reqHead, CloudDiskCallbackContext &context);
-    void HandleFetchRangeData(const OH_CloudDisk_CallbackReqHead &reqHead, CloudDiskCallbackContext &context);
     void HandleDehydrate(const OH_CloudDisk_CallbackReqHead &reqHead, CloudDiskCallbackContext &context);
     Callback callback_{nullptr};
 };
@@ -82,11 +80,15 @@ OH_CloudDisk_DataBuf ToPublicDataBuf(const CloudDiskDataBuf &dataBuf)
 }
 
 bool ConvertPlaceholderCustomInfo(const OH_CloudDisk_PlaceholderCustomInfo *customInfo,
-                                  PlaceholderCustomInfo &innerCustomInfo)
+    PlaceholderCustomInfo &innerCustomInfo)
 {
     innerCustomInfo.data.clear();
-    if (customInfo == nullptr || customInfo->data == nullptr || customInfo->dataLength == 0) {
+    if (customInfo == nullptr || customInfo->dataLength == 0) {
         return true;
+    }
+    if (customInfo->data == nullptr) {
+        LOGE("Placeholder custom info data is null");
+        return false;
     }
     if (customInfo->dataLength > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
         LOGE("Placeholder custom info is too large, size: %{public}zu", customInfo->dataLength);
@@ -167,9 +169,6 @@ void CloudDiskServiceCallbackTableImpl::OnCallback(const CloudDiskCallbackReqHea
         case CloudDiskCallbackType::CANCEL_FETCH_DATA:
             HandleCancelFetchData(publicReqHead, reqContext);
             break;
-        case CloudDiskCallbackType::FETCH_RANGE_DATA:
-            HandleFetchRangeData(publicReqHead, reqContext);
-            break;
         case CloudDiskCallbackType::DEHYDRATE:
             HandleDehydrate(publicReqHead, reqContext);
             break;
@@ -204,28 +203,6 @@ void CloudDiskServiceCallbackTableImpl::HandleCancelFetchData(const OH_CloudDisk
     OH_CloudDisk_CallbackContext publicContext{};
     publicContext.cancelFetchData = &pathInfo;
     callback_(reqHead, publicContext);
-}
-
-void CloudDiskServiceCallbackTableImpl::HandleFetchRangeData(const OH_CloudDisk_CallbackReqHead &reqHead,
-                                                             CloudDiskCallbackContext &context)
-{
-    if (context.fetchRangeData == nullptr) {
-        LOGE("Fetch range data callback context is nullptr");
-        return;
-    }
-    OH_CloudDisk_RangeInfo rangeInfo{ToPublicPathInfo(context.fetchRangeData->filePath), context.fetchRangeData->offset,
-                                     context.fetchRangeData->size, ToPublicDataBuf(context.fetchRangeData->data)};
-    uint8_t *rangeData = rangeInfo.data.data;
-    uint64_t rangeDataCapacity = rangeInfo.data.dataSize;
-    OH_CloudDisk_CallbackContext publicContext{};
-    publicContext.fetchRangeData = &rangeInfo;
-    callback_(reqHead, publicContext);
-    if (rangeInfo.data.data != rangeData) {
-        LOGE("Callback changed the range data buffer pointer");
-        context.fetchRangeData->data.dataSize = 0;
-        return;
-    }
-    context.fetchRangeData->data.dataSize = std::min(rangeInfo.data.dataSize, rangeDataCapacity);
 }
 
 void CloudDiskServiceCallbackTableImpl::HandleDehydrate(const OH_CloudDisk_CallbackReqHead &reqHead,
@@ -780,8 +757,8 @@ CloudDisk_ErrorCode OH_CloudDisk_HydratePlaceholder(const CloudDisk_SyncFolderPa
     if (syncFolderPath == nullptr || filePath == nullptr ||
         !IsValidPathInfo(syncFolderPath->value, syncFolderPath->length) ||
         !IsValidPathInfo(filePath->value, filePath->length) ||
-        (type != CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA && type != CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA) ||
-        priority < ::CLOUD_DISK_HYDRATE_PRIORITY_LOW || priority > ::CLOUD_DISK_HYDRATE_PRIORITY_HIGH) {
+        (type != OH_CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA && type != OH_CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA) ||
+        priority < ::OH_CLOUD_DISK_HYDRATE_PRIORITY_LOW || priority > ::OH_CLOUD_DISK_HYDRATE_PRIORITY_HIGH) {
         LOGE("Invalid placeholder hydrate arguments");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
     }
@@ -789,7 +766,7 @@ CloudDisk_ErrorCode OH_CloudDisk_HydratePlaceholder(const CloudDisk_SyncFolderPa
     std::string syncFolder(syncFolderPath->value, syncFolderPath->length);
     std::string relativePath(filePath->value, filePath->length);
     int32_t ret = E_INVALID_ARG;
-    if (type == CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA) {
+    if (type == OH_CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA) {
         ret = CloudDiskServiceManager::GetInstance().StartHydration(syncFolder, relativePath,
                                                                     static_cast<CloudDiskHydratePriority>(priority));
     } else {
@@ -834,12 +811,12 @@ static bool BuildCallbackExecuteRequest(const OH_CloudDisk_CallbackReqHead &reqH
         return false;
     }
     const CloudDisk_PathInfo *filePath = nullptr;
-    if (reqHead.callbackType == CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA) {
+    if (reqHead.callbackType == OH_CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA) {
         if (reqContext.fetchData == nullptr || !BuildExecuteFetchData(rsp.fetchData, request)) {
             return false;
         }
         filePath = &reqContext.fetchData->filePath;
-    } else if (reqHead.callbackType == CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA) {
+    } else if (reqHead.callbackType == OH_CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA) {
         filePath = reqContext.cancelFetchData;
     } else {
         return false;

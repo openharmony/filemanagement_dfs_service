@@ -232,6 +232,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
         EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(0));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_TRUE(res);
@@ -307,7 +309,10 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(EACCES, -1)));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -333,7 +338,10 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(EACCES, -1)));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -535,12 +543,12 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_PathConvertFail_001, TestSize.
     GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 start";
     try {
         std::string syncFolder = "/test/mockFailed";
-        std::string path = "/test/mockFailed/PathToMntPathBySandboxPath";
+        const std::string relativePath = "PathToMntPathBySandboxPath";
         int32_t userId = 100;
         std::string hmdfsPath;
 
-        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
-        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        int32_t ret = GetHmdfsPath(syncFolder, relativePath, userId, hmdfsPath);
+        EXPECT_EQ(ret, CloudDiskServiceErrCode::E_FILE_NOT_EXIST);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 failed";
@@ -550,7 +558,7 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_PathConvertFail_001, TestSize.
 
 /**
  * @tc.name: GetHmdfsPath_AccessFailed_002
- * @tc.desc: Verify GetHmdfsPath with successful path conversion
+ * @tc.desc: Verify target ENOENT is converted to file not exist
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -563,10 +571,10 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_AccessFailed_002, TestSize.Lev
         int32_t userId = 100;
         std::string hmdfsPath;
 
-        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(DoAll(SetErrnoAndReturn(ENOENT, -1)));
 
         int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
-        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(ret, E_FILE_NOT_EXIST);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetHmdfsPath_AccessFailed_002 failed";

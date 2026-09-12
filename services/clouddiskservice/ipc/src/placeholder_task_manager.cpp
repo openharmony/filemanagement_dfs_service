@@ -16,9 +16,12 @@
 #include "placeholder_task_manager.h"
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <climits>
+#include <fcntl.h>
 #include <limits>
+#include <memory>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -35,16 +38,51 @@ constexpr uint64_t INVALID_REQUEST_VALUE = 0;
 constexpr uint64_t INITIAL_REQUEST_VALUE = 1;
 constexpr size_t REQUEST_KEY_SIZE = sizeof(uint64_t);
 constexpr size_t BITS_PER_BYTE = CHAR_BIT;
-constexpr size_t MAX_ACTIVE_TASKS_PER_APP = 5;
-constexpr size_t MAX_ACTIVE_TASKS_GLOBAL = 10;
-constexpr size_t MAX_TOMBSTONES_PER_APP = 16;
-constexpr size_t MAX_TOMBSTONES_GLOBAL = 32;
+constexpr size_t MAX_CANCELLATION_RECORDS_PER_APP = 16;
+constexpr size_t MAX_CANCELLATION_RECORDS_GLOBAL = 32;
 constexpr auto HYDRATION_IDLE_TIMEOUT = std::chrono::minutes(5);
-constexpr auto TOMBSTONE_TTL = std::chrono::seconds(60);
+constexpr auto CANCELLATION_RECORD_TTL = std::chrono::seconds(60);
+
+static_assert(CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP > 0);
+static_assert(CLOUD_DISK_MAX_ACTIVE_TASKS_GLOBAL > 0);
+static_assert(CLOUD_DISK_MAX_PENDING_TASKS_PER_APP > 0);
+static_assert(CLOUD_DISK_MAX_PENDING_TASKS_GLOBAL > 0);
+static_assert(CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP <= CLOUD_DISK_MAX_ACTIVE_TASKS_GLOBAL);
+static_assert(CLOUD_DISK_MAX_PENDING_TASKS_PER_APP <= CLOUD_DISK_MAX_PENDING_TASKS_GLOBAL);
 
 bool IsValidPriority(CloudDiskHydratePriority priority)
 {
     return priority >= CLOUD_DISK_HYDRATE_PRIORITY_LOW && priority <= CLOUD_DISK_HYDRATE_PRIORITY_HIGH;
+}
+
+int32_t ConvertHydrationTargetError(int32_t error)
+{
+    return error == ENOENT ? E_FILE_NOT_EXIST : ConvertErrnoToCloudDiskError(error);
+}
+
+int32_t ConvertHydrationStateError(int32_t error)
+{
+    if (error == EINVAL || error == ERANGE) {
+        return E_INVALID_PLACEHOLDER_STATE;
+    }
+    return ConvertHydrationTargetError(error);
+}
+
+int32_t ConvertHydrationIoError(int32_t error)
+{
+    switch (error) {
+        case ENOSPC:
+        case EDQUOT:
+            return E_NO_SPACE_LEFT;
+        case EFBIG:
+            return E_FILE_TOO_LARGE;
+        case EACCES:
+            return E_ACCES;
+        case EPERM:
+            return E_PERM;
+        default:
+            return E_TRY_AGAIN;
+    }
 }
 
 int32_t WriteHydrationData(int32_t fd, const CallbackExecuteRequest &request)
@@ -59,7 +97,7 @@ int32_t WriteHydrationData(int32_t fd, const CallbackExecuteRequest &request)
                 continue;
             }
             LOGE("Write hydration data failed, errno:%{public}d", error);
-            return error == ENOSPC ? E_NO_SPACE_LEFT : E_TRY_AGAIN;
+            return ConvertHydrationIoError(error);
         }
         if (written == 0) {
             LOGE("Hydration write made no progress");
@@ -70,7 +108,7 @@ int32_t WriteHydrationData(int32_t fd, const CallbackExecuteRequest &request)
     return E_OK;
 }
 
-bool ShouldKeepTombstone(PlaceholderTaskCancelReason reason)
+bool ShouldKeepCancellationRecord(PlaceholderTaskCancelReason reason)
 {
     return reason != PlaceholderTaskCancelReason::DISPATCH_FAILED &&
            reason != PlaceholderTaskCancelReason::USER_SWITCH && reason != PlaceholderTaskCancelReason::SERVICE_STOP;
@@ -81,7 +119,146 @@ bool ShouldNotifyCancellation(PlaceholderTaskCancelReason reason)
     return reason == PlaceholderTaskCancelReason::USER_REQUEST || reason == PlaceholderTaskCancelReason::TIMEOUT ||
            reason == PlaceholderTaskCancelReason::INTERNAL_ERROR;
 }
+
+bool IsInvalidFetchDataRequest(const std::shared_ptr<PlaceholderTaskRecord> &task,
+                               const CallbackExecuteRequest &request)
+{
+    constexpr uint64_t MAX_OFFSET = static_cast<uint64_t>(std::numeric_limits<off_t>::max());
+    const bool invalidDataBounds = request.size != request.data.size() || request.size > MAX_EXECUTE_DATA_SIZE ||
+                                   request.offset > request.totalSize ||
+                                   request.size > request.totalSize - request.offset || request.offset > MAX_OFFSET ||
+                                   request.size > MAX_OFFSET - request.offset;
+    const bool invalidCompletion =
+        (!request.isComplete && request.size == 0) ||
+        (request.isComplete && request.totalSize != 0 && request.size == 0) ||
+        (request.totalSize == 0 && (request.offset != 0 || request.size != 0 || !request.isComplete));
+    const bool invalidTaskSize =
+        task->cachedSize > request.totalSize || (task->totalSizeInitialized && task->totalSize != request.totalSize);
+    return invalidDataBounds || invalidCompletion || invalidTaskSize;
+}
+
+using CanonicalPath = std::string;
+
+int32_t ResolveHydrationPath(const std::string &syncRoot,
+                             const std::string &path,
+                             CanonicalPath &rootPath,
+                             CanonicalPath &filePath)
+{
+    if (syncRoot.empty() || path.empty()) {
+        return E_INVALID_ARG;
+    }
+    std::array<char, PATH_MAX> resolvedRoot{};
+    if (realpath(syncRoot.c_str(), resolvedRoot.data()) == nullptr) {
+        int32_t error = errno;
+        LOGE("Resolve hydration root failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+    rootPath = resolvedRoot.data();
+    std::array<char, PATH_MAX> resolvedFile{};
+    if (realpath(path.c_str(), resolvedFile.data()) == nullptr) {
+        int32_t error = errno;
+        LOGE("Resolve hydration target failed, errno:%{public}d", error);
+        return ConvertHydrationTargetError(error);
+    }
+    filePath = resolvedFile.data();
+    if (!IsPathInSyncFolder(rootPath, filePath)) {
+        LOGE("Hydration path escapes sync folder");
+        return E_INVALID_ARG;
+    }
+    return E_OK;
+}
+
+int32_t CheckHydrationState(int32_t fd)
+{
+    uint8_t state = PLACEHOLDER_STATE_NONE;
+    int32_t ret = GetFilePlaceholderState(fd, state);
+    if (ret != E_OK) {
+        LOGE("Read placeholder state before hydration failed, errno:%{public}d", ret);
+        return ConvertHydrationStateError(ret);
+    }
+    if (!IsValidPlaceholderState(state)) {
+        LOGE("Invalid placeholder state before hydration, state:%{public}u", state);
+        return E_INVALID_PLACEHOLDER_STATE;
+    }
+    if (state == PLACEHOLDER_STATE_NONE) {
+        return E_NOT_A_PLACEHOLDER;
+    }
+    return state == PLACEHOLDER_STATE_FULLY_HYDRATED ? E_ALREADY_HYDRATED : E_OK;
+}
+
+int32_t OpenCanonicalHydrationFile(const CanonicalPath &rootPath, const CanonicalPath &filePath, UniqueFd &fd)
+{
+    UniqueFd currentFd(open(rootPath.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+    if (currentFd < 0) {
+        int32_t error = errno;
+        LOGE("Open hydration root failed, errno:%{public}d", error);
+        return ConvertHydrationTargetError(error);
+    }
+
+    size_t start = rootPath == "/" ? 1 : rootPath.size() + 1;
+    while (start < filePath.size()) {
+        size_t end = filePath.find('/', start);
+        bool isLast = end == std::string::npos;
+        std::string component = filePath.substr(start, isLast ? end : end - start);
+        int32_t flags = isLast ? O_RDWR | O_CLOEXEC | O_NOFOLLOW : O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW;
+        UniqueFd nextFd(openat(currentFd, component.c_str(), flags));
+        if (nextFd < 0) {
+            int32_t error = errno;
+            LOGE("Open hydration path component failed, errno:%{public}d", error);
+            return ConvertHydrationTargetError(error);
+        }
+        if (isLast) {
+            fd = std::move(nextFd);
+            return E_OK;
+        }
+        currentFd = std::move(nextFd);
+        start = end + 1;
+    }
+    return E_INVALID_ARG;
+}
+
+int32_t OpenHydrationFile(const CanonicalPath &rootPath,
+                          const CanonicalPath &filePath,
+                          UniqueFd &fd,
+                          HydrationFileMetadata &metadata)
+{
+    UniqueFd openedFd;
+    int32_t ret = OpenCanonicalHydrationFile(rootPath, filePath, openedFd);
+    if (ret != E_OK) {
+        return ret;
+    }
+    struct stat fileStat {};
+    if (fstat(openedFd, &fileStat) != 0) {
+        int32_t error = errno;
+        LOGE("Read hydration metadata failed, errno:%{public}d", error);
+        return ConvertErrnoToCloudDiskError(error);
+    }
+    if (S_ISDIR(fileStat.st_mode) || fileStat.st_size < 0) {
+        LOGE("Hydration target is a directory or has an invalid size");
+        return E_INVALID_ARG;
+    }
+    ret = CheckHydrationState(openedFd);
+    if (ret != E_OK) {
+        return ret;
+    }
+    metadata.deviceId = static_cast<uint64_t>(fileStat.st_dev);
+    metadata.inodeId = static_cast<uint64_t>(fileStat.st_ino);
+    metadata.logicalSize = static_cast<uint64_t>(fileStat.st_size);
+    fd = std::move(openedFd);
+    return E_OK;
+}
 } // namespace
+
+int32_t OpenValidatedHydrationFile(const std::string &syncRoot,
+                                   const std::string &path,
+                                   UniqueFd &fd,
+                                   HydrationFileMetadata &metadata)
+{
+    CanonicalPath rootPath{};
+    CanonicalPath filePath{};
+    int32_t ret = ResolveHydrationPath(syncRoot, path, rootPath, filePath);
+    return ret == E_OK ? OpenHydrationFile(rootPath, filePath, fd, metadata) : ret;
+}
 
 PlaceholderTaskManager &PlaceholderTaskManager::GetInstance()
 {
@@ -89,25 +266,25 @@ PlaceholderTaskManager &PlaceholderTaskManager::GetInstance()
     return instance;
 }
 
-void PlaceholderTaskManager::StartWorkerPool()
+void PlaceholderTaskManager::StartScheduler()
 {
-    std::lock_guard<std::mutex> workerLock(workerMutex_);
-    std::lock_guard<std::mutex> lock(mapMutex_);
-    if (running_) {
-        return;
+    {
+        std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        if (running_) {
+            return;
+        }
+        running_ = true;
+        stopping_ = false;
+        monitorHandles_.emplace_back(ffrt::submit_h([this] { DeadlineLoop(); }));
     }
-    running_ = true;
-    workerHandles_.reserve(CLOUD_DISK_HYDRATE_WORKER_COUNT);
-    for (uint32_t index = 0; index < CLOUD_DISK_HYDRATE_WORKER_COUNT; ++index) {
-        workerHandles_.emplace_back(ffrt::submit_h([this] { WorkerLoop(); }));
-    }
-    workerHandles_.emplace_back(ffrt::submit_h([this] { DeadlineLoop(); }));
+    ScheduleDispatch();
 }
 
-void PlaceholderTaskManager::StopWorkerPool()
+void PlaceholderTaskManager::StopScheduler()
 {
-    std::lock_guard<std::mutex> workerLock(workerMutex_);
-    std::vector<ffrt::task_handle> workerHandles;
+    std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+    std::vector<ffrt::task_handle> monitorHandles;
     std::vector<std::shared_ptr<PlaceholderTaskRecord>> tasks;
     {
         std::lock_guard<std::mutex> lock(mapMutex_);
@@ -117,28 +294,29 @@ void PlaceholderTaskManager::StopWorkerPool()
             (void)reqKey;
             tasks.push_back(task);
         }
-        workerHandles.swap(workerHandles_);
+        monitorHandles.swap(monitorHandles_);
     }
-    taskCv_.notify_all();
     deadlineCv_.notify_all();
     for (const auto &task : tasks) {
         std::lock_guard<std::mutex> lock(task->mutex);
         CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::SERVICE_STOP);
     }
-    for (const auto &handle : workerHandles) {
+    auto dispatchBarrier = dispatchQueue_.submit_h([] {});
+    dispatchQueue_.wait(dispatchBarrier);
+    for (const auto &handle : monitorHandles) {
         ffrt::wait({handle});
     }
     std::lock_guard<std::mutex> lock(mapMutex_);
-    pendingQueue_ = {};
     deadlineMap_.clear();
-    tombstoneMap_.clear();
-    tombstoneOrder_.clear();
+    cancellationRecordMap_.clear();
+    cancellationOrder_.clear();
+    dispatchScheduled_ = false;
     stopping_ = false;
 }
 
 PlaceholderTaskManager::RequestKey PlaceholderTaskManager::GenerateRequestKeyLocked()
 {
-    PurgeExpiredTombstonesLocked();
+    PurgeExpiredCancellationRecordsLocked();
     do {
         if (nextReqKeyValue_ == INVALID_REQUEST_VALUE) {
             nextReqKeyValue_ = INITIAL_REQUEST_VALUE;
@@ -150,7 +328,8 @@ PlaceholderTaskManager::RequestKey PlaceholderTaskManager::GenerateRequestKeyLoc
         for (size_t index = 0; index < reqKey.size(); ++index) {
             reqKey[index] = static_cast<uint8_t>(requestValue >> (index * BITS_PER_BYTE));
         }
-        if (taskMap_.find(reqKey) == taskMap_.end() && tombstoneMap_.find(reqKey) == tombstoneMap_.end()) {
+        if (taskMap_.find(reqKey) == taskMap_.end() &&
+            cancellationRecordMap_.find(reqKey) == cancellationRecordMap_.end()) {
             return reqKey;
         }
     } while (nextReqKeyValue_ != INITIAL_REQUEST_VALUE);
@@ -164,7 +343,7 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
                                                          RequestKey &reqKey)
 {
     if (stopping_) {
-        LOGW("Reject hydrate task while worker pool is stopping");
+        LOGW("Reject hydrate task while scheduler is stopping");
         return E_TRY_AGAIN;
     }
     for (const auto &[key, task] : taskMap_) {
@@ -176,17 +355,29 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
         }
     }
 
-    size_t appTaskCount =
-        static_cast<size_t>(std::count_if(taskMap_.begin(), taskMap_.end(), [&bundleName](const auto &item) {
-            return item.second->bundleName == bundleName;
-        }));
-    if (appTaskCount >= MAX_ACTIVE_TASKS_PER_APP || taskMap_.size() >= MAX_ACTIVE_TASKS_GLOBAL) {
-        LOGW("Reject hydrate task because active task limit was reached");
+    size_t appPendingCount = 0;
+    size_t globalPendingCount = 0;
+    for (const auto &[key, task] : taskMap_) {
+        (void)key;
+        if (task->state != PlaceholderTaskState::PENDING) {
+            continue;
+        }
+        ++globalPendingCount;
+        if (task->bundleName == bundleName) {
+            ++appPendingCount;
+        }
+    }
+    if (appPendingCount >= CLOUD_DISK_MAX_PENDING_TASKS_PER_APP ||
+        globalPendingCount >= CLOUD_DISK_MAX_PENDING_TASKS_GLOBAL) {
+        LOGW(
+            "Reject hydrate task because pending task limit was reached, "
+            "app:%{public}zu, global:%{public}zu",
+            appPendingCount, globalPendingCount);
         return E_HYDRATION_TASK_LIMIT_REACHED;
     }
 
     if (nextCreateSeq_ == std::numeric_limits<uint64_t>::max()) {
-        if (!pendingQueue_.empty()) {
+        if (!taskMap_.empty()) {
             LOGE("Hydration queue sequence exhausted");
             return E_TRY_AGAIN;
         }
@@ -205,53 +396,58 @@ int32_t PlaceholderTaskManager::CreateHydrateTask(const std::string &syncFolder,
                                                   const std::string &bundleName,
                                                   uint32_t syncFolderIndex,
                                                   CloudDiskHydratePriority priority,
-                                                  UniqueFd outputFd,
+                                                  UniqueFd validationFd,
                                                   RequestKey &reqKey,
                                                   const PlaceholderProgressContext &progressContext)
 {
     reqKey.clear();
-    if (syncFolder.empty() || filePath.empty() || bundleName.empty() || outputFd < 0 || !IsValidPriority(priority)) {
+    if (syncFolder.empty() || filePath.empty() || bundleName.empty() || validationFd < 0 ||
+        !IsValidPriority(priority)) {
         LOGE("Invalid hydrate task context");
         return E_INVALID_ARG;
     }
     struct stat metadata {};
-    if (fstat(outputFd, &metadata) != 0 || metadata.st_size < 0) {
+    if (fstat(validationFd, &metadata) != 0 || metadata.st_size < 0) {
         LOGE("Read hydration metadata failed, errno:%{public}d", errno);
         return E_TRY_AGAIN;
     }
 
-    std::lock_guard<std::mutex> lock(mapMutex_);
-    int32_t ret = PrepareHydrateTaskLocked(syncFolder, filePath, bundleName, syncFolderIndex, reqKey);
-    if (ret != E_OK) {
-        LOGW("Prepare hydrate task failed, ret:%{public}d", ret);
-        return ret;
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        int32_t ret = PrepareHydrateTaskLocked(syncFolder, filePath, bundleName, syncFolderIndex, reqKey);
+        if (ret != E_OK) {
+            LOGW("Prepare hydrate task failed, ret:%{public}d", ret);
+            return ret;
+        }
+        auto task = std::make_shared<PlaceholderTaskRecord>();
+        if (task == nullptr) {
+            return E_TRY_AGAIN;
+        }
+        task->reqKey = reqKey;
+        task->syncFolder = syncFolder;
+        task->filePath = filePath;
+        task->bundleName = bundleName;
+        task->syncFolderIndex = syncFolderIndex;
+        task->priority = priority;
+        task->absolutePath =
+            progressContext.absolutePath.empty() ? syncFolder + "/" + filePath : progressContext.absolutePath;
+        task->hmdfsPath = progressContext.hmdfsPath;
+        task->mountSyncFolder = progressContext.mountSyncFolder;
+        task->userId = progressContext.userId;
+        task->deviceId = static_cast<uint64_t>(metadata.st_dev);
+        task->inodeId = static_cast<uint64_t>(metadata.st_ino);
+        task->totalSize = static_cast<uint64_t>(metadata.st_size);
+        task->createSeq = nextCreateSeq_++;
+        taskMap_[reqKey] = task;
+        NotifyProgressLocked(task);
     }
-    auto task = std::make_shared<PlaceholderTaskRecord>();
-    if (task == nullptr) {
-        return E_TRY_AGAIN;
-    }
-    task->reqKey = reqKey;
-    task->syncFolder = syncFolder;
-    task->filePath = filePath;
-    task->bundleName = bundleName;
-    task->syncFolderIndex = syncFolderIndex;
-    task->priority = priority;
-    task->absolutePath =
-        progressContext.absolutePath.empty() ? syncFolder + "/" + filePath : progressContext.absolutePath;
-    task->userId = progressContext.userId;
-    task->totalSize = static_cast<uint64_t>(metadata.st_size);
-    task->outputFd = std::move(outputFd);
-    task->createSeq = nextCreateSeq_++;
-    taskMap_[reqKey] = task;
-    pendingQueue_.push(QueueEntry{reqKey, priority, task->createSeq});
-    NotifyProgressLocked(task);
-    taskCv_.notify_one();
+    ScheduleDispatch();
     return E_OK;
 }
 
-bool PlaceholderTaskManager::HasActiveTask(const std::string &syncFolder,
-                                           const std::string &filePath,
-                                           uint32_t syncFolderIndex)
+bool PlaceholderTaskManager::HasOutstandingTask(const std::string &syncFolder,
+                                                const std::string &filePath,
+                                                uint32_t syncFolderIndex)
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
     for (const auto &[reqKey, task] : taskMap_) {
@@ -287,9 +483,9 @@ int32_t PlaceholderTaskManager::CancelTask(const std::string &syncFolder,
             cancelled = true;
         }
     }
-    taskCv_.notify_all();
+    ScheduleDispatch();
     if (!cancelled) {
-        LOGW("Cancel hydrate task failed: no active task");
+        LOGW("Cancel hydrate task failed: no outstanding task");
     }
     return cancelled ? E_OK : E_NO_HYDRATION_IN_PROGRESS;
 }
@@ -314,7 +510,7 @@ void PlaceholderTaskManager::CancelTasksBySyncFolder(const std::string &bundleNa
             CancelTaskRecordLocked(task, reason);
         }
     }
-    taskCv_.notify_all();
+    ScheduleDispatch();
 }
 
 void PlaceholderTaskManager::CancelAllTasks(PlaceholderTaskCancelReason reason)
@@ -331,15 +527,15 @@ void PlaceholderTaskManager::CancelAllTasks(PlaceholderTaskCancelReason reason)
         std::lock_guard<std::mutex> lock(task->mutex);
         CancelTaskRecordLocked(task, reason);
     }
-    taskCv_.notify_all();
+    ScheduleDispatch();
     deadlineCv_.notify_all();
 }
 
-void PlaceholderTaskManager::ClearTombstones()
+void PlaceholderTaskManager::ClearCancellationRecords()
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
-    tombstoneMap_.clear();
-    tombstoneOrder_.clear();
+    cancellationRecordMap_.clear();
+    cancellationOrder_.clear();
 }
 
 std::shared_ptr<PlaceholderTaskRecord> PlaceholderTaskManager::FindTask(const RequestKey &reqKey)
@@ -360,70 +556,124 @@ bool PlaceholderTaskManager::GetTaskState(const RequestKey &reqKey, PlaceholderT
     return true;
 }
 
-std::shared_ptr<PlaceholderTaskRecord> PlaceholderTaskManager::GetNextTask()
+std::shared_ptr<PlaceholderTaskRecord> PlaceholderTaskManager::SelectNextTaskLocked()
 {
-    std::unique_lock<std::mutex> lock(mapMutex_);
-    while (true) {
-        taskCv_.wait(lock, [this] { return !running_ || !pendingQueue_.empty(); });
-        if (!running_) {
-            return nullptr;
+    size_t globalActiveCount = 0;
+    std::map<std::string, size_t> appActiveCounts;
+    for (const auto &[reqKey, task] : taskMap_) {
+        (void)reqKey;
+        if (task->state == PlaceholderTaskState::IN_PROGRESS) {
+            ++globalActiveCount;
+            ++appActiveCounts[task->bundleName];
         }
-        QueueEntry entry = pendingQueue_.top();
-        pendingQueue_.pop();
-        auto item = taskMap_.find(entry.reqKey);
-        if (item == taskMap_.end()) {
+    }
+    if (globalActiveCount >= CLOUD_DISK_MAX_ACTIVE_TASKS_GLOBAL) {
+        return nullptr;
+    }
+
+    std::shared_ptr<PlaceholderTaskRecord> selected;
+    for (const auto &[reqKey, task] : taskMap_) {
+        (void)reqKey;
+        if (task->state != PlaceholderTaskState::PENDING ||
+            appActiveCounts[task->bundleName] >= CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP) {
             continue;
         }
-        auto task = item->second;
-        lock.unlock();
+        if (selected == nullptr || task->priority > selected->priority ||
+            (task->priority == selected->priority && task->createSeq < selected->createSeq)) {
+            selected = task;
+        }
+    }
+    return selected;
+}
+
+void PlaceholderTaskManager::ScheduleDispatch()
+{
+    std::lock_guard<std::mutex> lock(mapMutex_);
+    if (!running_ || stopping_ || dispatchScheduled_) {
+        return;
+    }
+    dispatchScheduled_ = true;
+    dispatchQueue_.submit([this] { DispatchLoop(); });
+}
+
+void PlaceholderTaskManager::DispatchLoop()
+{
+    bool dispatching = true;
+    while (dispatching) {
+        std::shared_ptr<PlaceholderTaskRecord> task;
         {
-            std::lock_guard<std::mutex> taskLock(task->mutex);
-            if (task->state == PlaceholderTaskState::PENDING) {
-                return task;
+            std::lock_guard<std::mutex> lock(mapMutex_);
+            if (!running_ || stopping_) {
+                dispatchScheduled_ = false;
+                dispatching = false;
+                continue;
+            }
+            task = SelectNextTaskLocked();
+            if (task == nullptr) {
+                dispatchScheduled_ = false;
+                dispatching = false;
+                continue;
             }
         }
-        lock.lock();
+        ActivateAndDispatch(task);
     }
 }
 
-void PlaceholderTaskManager::WorkerLoop()
+void PlaceholderTaskManager::ActivateAndDispatch(const std::shared_ptr<PlaceholderTaskRecord> &task)
 {
-    while (true) {
-        auto task = GetNextTask();
-        if (task == nullptr) {
-            return;
-        }
-        std::lock_guard<std::mutex> lock(task->mutex);
-        if (task->state != PlaceholderTaskState::PENDING) {
-            continue;
-        }
-        CloudDiskCallbackReqHead reqHead{};
-        reqHead.syncFolderPath = {task->syncFolder.data(), task->syncFolder.length()};
-        reqHead.reqKey = {task->reqKey.data(), task->reqKey.size()};
-        CloudDiskPathInfo pathInfo{task->filePath.data(), task->filePath.length()};
-        int32_t ret = PlaceholderCallbackManager::GetInstance().DispatchFetchData(
-            task->bundleName, task->syncFolderIndex, reqHead, pathInfo, task->priority);
-        if (ret != E_OK) {
-            LOGE("Dispatch fetch data failed, ret:%{public}d", ret);
-            CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::DISPATCH_FAILED);
-            continue;
-        }
-        task->fetchDispatched = true;
-        task->state = PlaceholderTaskState::IN_PROGRESS;
-        RefreshDeadlineLocked(task);
-        NotifyProgressLocked(task);
+    std::lock_guard<std::mutex> fileLock(GetPlaceholderFileMutex(task->hmdfsPath));
+    std::lock_guard<std::mutex> lock(task->mutex);
+    if (task->state != PlaceholderTaskState::PENDING) {
+        return;
     }
+
+    UniqueFd outputFd;
+    HydrationFileMetadata metadata;
+    int32_t ret = OpenValidatedHydrationFile(task->mountSyncFolder, task->hmdfsPath, outputFd, metadata);
+    if (ret != E_OK) {
+        LOGW(
+            "Cancel pending hydration because activation validation failed, "
+            "ret:%{public}d",
+            ret);
+        CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::INTERNAL_ERROR);
+        return;
+    }
+    if (metadata.deviceId != task->deviceId || metadata.inodeId != task->inodeId) {
+        LOGW("Cancel pending hydration because file identity changed");
+        CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::INTERNAL_ERROR);
+        return;
+    }
+
+    CloudDiskCallbackReqHead reqHead{};
+    reqHead.syncFolderPath = {task->syncFolder.data(), task->syncFolder.length()};
+    reqHead.reqKey = {task->reqKey.data(), task->reqKey.size()};
+    CloudDiskPathInfo pathInfo{task->filePath.data(), task->filePath.length()};
+    ret = PlaceholderCallbackManager::GetInstance().DispatchFetchData(task->bundleName, task->syncFolderIndex, reqHead,
+                                                                      pathInfo, task->priority);
+    if (ret != E_OK) {
+        LOGE("Dispatch fetch data failed, ret:%{public}d", ret);
+        CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::DISPATCH_FAILED);
+        return;
+    }
+    task->outputFd = std::move(outputFd);
+    task->totalSize = metadata.logicalSize;
+    task->fetchDispatched = true;
+    task->state = PlaceholderTaskState::IN_PROGRESS;
+    RefreshDeadlineLocked(task);
+    NotifyProgressLocked(task);
 }
 
 void PlaceholderTaskManager::DeadlineLoop()
 {
-    while (true) {
+    bool monitoring = true;
+    while (monitoring) {
         std::vector<RequestKey> expiredKeys;
         {
             std::unique_lock<std::mutex> lock(mapMutex_);
             deadlineCv_.wait(lock, [this] { return !running_ || !deadlineMap_.empty(); });
             if (!running_) {
-                return;
+                monitoring = false;
+                continue;
             }
             auto earliest =
                 std::min_element(deadlineMap_.begin(), deadlineMap_.end(),
@@ -456,6 +706,7 @@ void PlaceholderTaskManager::DeadlineLoop()
                 CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::TIMEOUT);
             }
         }
+        ScheduleDispatch();
     }
 }
 
@@ -476,9 +727,16 @@ int32_t PlaceholderTaskManager::EnsurePartialStateLocked(const std::shared_ptr<P
     }
     uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
     int32_t ret = GetFilePlaceholderState(task->outputFd, placeholderState);
-    if (ret != E_OK || (placeholderState != PLACEHOLDER_STATE_UNHYDRATED &&
-                        placeholderState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED)) {
+    if (ret != E_OK) {
         LOGE("Read hydration state failed, ret:%{public}d, state:%{public}u", ret, placeholderState);
+        return ConvertHydrationStateError(ret);
+    }
+    if (!IsValidPlaceholderState(placeholderState)) {
+        LOGE("Invalid hydration state, state:%{public}u", placeholderState);
+        return E_INVALID_PLACEHOLDER_STATE;
+    }
+    if (placeholderState != PLACEHOLDER_STATE_UNHYDRATED && placeholderState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED) {
+        LOGE("Unexpected hydration state, state:%{public}u", placeholderState);
         return E_TRY_AGAIN;
     }
     if (placeholderState == PLACEHOLDER_STATE_UNHYDRATED) {
@@ -486,6 +744,14 @@ int32_t PlaceholderTaskManager::EnsurePartialStateLocked(const std::shared_ptr<P
         ret = SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_PARTIALLY_HYDRATED, oldState);
         if (ret != E_OK) {
             LOGE("Set partial hydration state failed, ret:%{public}d", ret);
+            return ConvertHydrationIoError(ret);
+        }
+        if (!IsValidPlaceholderState(oldState)) {
+            LOGE("Invalid old hydration state, state:%{public}u", oldState);
+            return E_INVALID_PLACEHOLDER_STATE;
+        }
+        if (oldState != PLACEHOLDER_STATE_UNHYDRATED && oldState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED) {
+            LOGE("Unexpected old hydration state, state:%{public}u", oldState);
             return E_TRY_AGAIN;
         }
     }
@@ -495,10 +761,32 @@ int32_t PlaceholderTaskManager::EnsurePartialStateLocked(const std::shared_ptr<P
 
 int32_t PlaceholderTaskManager::SetCompleteStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task)
 {
+    uint8_t placeholderState = PLACEHOLDER_STATE_NONE;
+    int32_t ret = GetFilePlaceholderState(task->outputFd, placeholderState);
+    if (ret != E_OK) {
+        LOGE("Read hydration state before completion failed, ret:%{public}d", ret);
+        return ConvertHydrationStateError(ret);
+    }
+    if (!IsValidPlaceholderState(placeholderState)) {
+        LOGE("Invalid hydration state before completion, state:%{public}u", placeholderState);
+        return E_INVALID_PLACEHOLDER_STATE;
+    }
+    if (placeholderState != PLACEHOLDER_STATE_UNHYDRATED && placeholderState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED) {
+        LOGE("Unexpected hydration state before completion, state:%{public}u", placeholderState);
+        return E_TRY_AGAIN;
+    }
     uint8_t oldState = PLACEHOLDER_STATE_NONE;
-    int32_t ret = SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_FULLY_HYDRATED, oldState);
+    ret = SetFilePlaceholderState(task->outputFd, PLACEHOLDER_STATE_FULLY_HYDRATED, oldState);
     if (ret != E_OK) {
         LOGE("Set complete hydration state failed, ret:%{public}d", ret);
+        return ConvertHydrationIoError(ret);
+    }
+    if (!IsValidPlaceholderState(oldState)) {
+        LOGE("Invalid old hydration state before completion, state:%{public}u", oldState);
+        return E_INVALID_PLACEHOLDER_STATE;
+    }
+    if (oldState != PLACEHOLDER_STATE_UNHYDRATED && oldState != PLACEHOLDER_STATE_PARTIALLY_HYDRATED) {
+        LOGE("Unexpected old hydration state before completion, state:%{public}u", oldState);
         return E_TRY_AGAIN;
     }
     return E_OK;
@@ -517,7 +805,7 @@ int32_t PlaceholderTaskManager::Execute(const std::string &callerBundleName,
     auto task = FindTask(request.reqKey);
     if (task == nullptr) {
         std::lock_guard<std::mutex> lock(mapMutex_);
-        return FindTombstoneResultLocked(callerBundleName, syncFolderIndex, request);
+        return FindCancellationResultLocked(callerBundleName, syncFolderIndex, request);
     }
     if (task->bundleName != callerBundleName || task->syncFolderIndex != syncFolderIndex) {
         LOGE("Execute provider does not match task");
@@ -542,6 +830,7 @@ int32_t PlaceholderTaskManager::Execute(const std::string &callerBundleName,
     }
     if (request.callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA)) {
         CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::USER_REQUEST);
+        ScheduleDispatch();
         return E_OK;
     }
     return ExecuteFetchDataLocked(task, request);
@@ -550,20 +839,14 @@ int32_t PlaceholderTaskManager::Execute(const std::string &callerBundleName,
 int32_t PlaceholderTaskManager::ExecuteFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
                                                        const CallbackExecuteRequest &request)
 {
-    constexpr uint64_t MAX_OFFSET = static_cast<uint64_t>(std::numeric_limits<off_t>::max());
-    if (request.size != request.data.size() || request.size > MAX_EXECUTE_DATA_SIZE ||
-        request.offset > request.totalSize || request.size > request.totalSize - request.offset ||
-        request.offset > MAX_OFFSET || request.size > MAX_OFFSET - request.offset ||
-        (!request.isComplete && request.size == 0) ||
-        (request.isComplete && request.totalSize != 0 && request.size == 0) ||
-        (request.totalSize == 0 && (request.offset != 0 || request.size != 0 || !request.isComplete)) ||
-        task->cachedSize > request.totalSize || (task->totalSizeInitialized && task->totalSize != request.totalSize)) {
+    if (IsInvalidFetchDataRequest(task, request)) {
         LOGE("Invalid Execute data bounds");
         return E_INVALID_ARG;
     }
     if (task->outputFd < 0) {
         LOGE("Invalid Execute task fd");
         CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::INTERNAL_ERROR);
+        ScheduleDispatch();
         return E_TRY_AGAIN;
     }
     task->totalSize = request.totalSize;
@@ -572,19 +855,9 @@ int32_t PlaceholderTaskManager::ExecuteFetchDataLocked(const std::shared_ptr<Pla
     if (ret != E_OK) {
         return ret;
     }
-    if (request.isComplete) {
-        if (fsync(task->outputFd) < 0) {
-            LOGE("Flush completed hydration failed, errno:%{public}d", errno);
-            return errno == ENOSPC ? E_NO_SPACE_LEFT : E_TRY_AGAIN;
-        }
-        if (request.size != 0 && EnsurePartialStateLocked(task) != E_OK) {
-            return E_TRY_AGAIN;
-        }
-        if (SetCompleteStateLocked(task) != E_OK) {
-            return E_TRY_AGAIN;
-        }
-    } else if (EnsurePartialStateLocked(task) != E_OK) {
-        return E_TRY_AGAIN;
+    ret = CommitFetchDataLocked(task, request);
+    if (ret != E_OK) {
+        return ret;
     }
 
     uint64_t remainingSize = task->cachedSize < task->totalSize ? task->totalSize - task->cachedSize : 0;
@@ -593,11 +866,32 @@ int32_t PlaceholderTaskManager::ExecuteFetchDataLocked(const std::shared_ptr<Pla
         task->state = PlaceholderTaskState::COMPLETED;
         NotifyProgressLocked(task);
         EraseTaskLocked(task);
+        ScheduleDispatch();
     } else {
         RefreshDeadlineLocked(task);
         NotifyProgressLocked(task);
     }
     return E_OK;
+}
+
+int32_t PlaceholderTaskManager::CommitFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
+                                                      const CallbackExecuteRequest &request)
+{
+    if (!request.isComplete) {
+        return EnsurePartialStateLocked(task);
+    }
+    if (fsync(task->outputFd) < 0) {
+        int32_t error = errno;
+        LOGE("Flush completed hydration failed, errno:%{public}d", error);
+        return ConvertHydrationIoError(error);
+    }
+    if (request.size != 0) {
+        int32_t ret = EnsurePartialStateLocked(task);
+        if (ret != E_OK) {
+            return ret;
+        }
+    }
+    return SetCompleteStateLocked(task);
 }
 
 void PlaceholderTaskManager::CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
@@ -606,106 +900,112 @@ void PlaceholderTaskManager::CancelTaskRecordLocked(const std::shared_ptr<Placeh
     if (task->state != PlaceholderTaskState::PENDING && task->state != PlaceholderTaskState::IN_PROGRESS) {
         return;
     }
-    bool notifyCallback = task->fetchDispatched && !task->cancelCallbackSent && ShouldNotifyCancellation(reason);
-    task->cancelCallbackSent = notifyCallback;
+    bool notifyCallback = !task->cancelCallbackAttempted && ShouldNotifyCancellation(reason);
     task->state = PlaceholderTaskState::CANCELLED;
     NotifyProgressLocked(task);
-    if (ShouldKeepTombstone(reason)) {
-        AddTombstoneLocked(task);
+    if (notifyCallback) {
+        task->cancelCallbackAttempted = true;
+    }
+    if (ShouldKeepCancellationRecord(reason) && (task->fetchDispatched || task->cancelCallbackAttempted)) {
+        AddCancellationRecordLocked(task);
+    }
+    if (notifyCallback) {
+        CloudDiskCallbackReqHead reqHead{};
+        reqHead.syncFolderPath = {task->syncFolder.data(), task->syncFolder.length()};
+        reqHead.reqKey = {task->reqKey.data(), task->reqKey.size()};
+        CloudDiskPathInfo pathInfo{task->filePath.data(), task->filePath.length()};
+        int32_t ret = PlaceholderCallbackManager::GetInstance().DispatchCancelFetchData(
+            task->bundleName, task->syncFolderIndex, reqHead, pathInfo);
+        if (ret != E_OK) {
+            LOGW("Dispatch hydration cancellation failed, ret:%{public}d", ret);
+        }
     }
     EraseTaskLocked(task);
-    if (!notifyCallback) {
-        return;
-    }
-    CloudDiskCallbackReqHead reqHead{};
-    reqHead.syncFolderPath = {task->syncFolder.data(), task->syncFolder.length()};
-    reqHead.reqKey = {task->reqKey.data(), task->reqKey.size()};
-    CloudDiskPathInfo pathInfo{task->filePath.data(), task->filePath.length()};
-    int32_t ret = PlaceholderCallbackManager::GetInstance().DispatchCancelFetchData(
-        task->bundleName, task->syncFolderIndex, reqHead, pathInfo);
-    if (ret != E_OK) {
-        LOGW("Dispatch hydration cancellation failed, ret:%{public}d", ret);
-    }
 }
 
-void PlaceholderTaskManager::PurgeExpiredTombstonesLocked()
+void PlaceholderTaskManager::PurgeExpiredCancellationRecordsLocked()
 {
     auto now = std::chrono::steady_clock::now();
-    for (auto item = tombstoneMap_.begin(); item != tombstoneMap_.end();) {
+    for (auto item = cancellationRecordMap_.begin(); item != cancellationRecordMap_.end();) {
         if (item->second.expiresAt <= now) {
-            item = tombstoneMap_.erase(item);
+            item = cancellationRecordMap_.erase(item);
         } else {
             ++item;
         }
     }
-    tombstoneOrder_.erase(std::remove_if(tombstoneOrder_.begin(), tombstoneOrder_.end(),
-                                         [this](const auto &item) {
-                                             auto tombstone = tombstoneMap_.find(item.first);
-                                             return tombstone == tombstoneMap_.end() ||
-                                                    tombstone->second.createSeq != item.second;
-                                         }),
-                          tombstoneOrder_.end());
+    cancellationOrder_.erase(std::remove_if(cancellationOrder_.begin(), cancellationOrder_.end(),
+                                            [this](const auto &item) {
+                                                auto cancellationRecord = cancellationRecordMap_.find(item.first);
+                                                return cancellationRecord == cancellationRecordMap_.end() ||
+                                                       cancellationRecord->second.createSeq != item.second;
+                                            }),
+                             cancellationOrder_.end());
 }
 
-void PlaceholderTaskManager::AddTombstoneLocked(const std::shared_ptr<PlaceholderTaskRecord> &task)
+void PlaceholderTaskManager::AddCancellationRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task)
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
-    PurgeExpiredTombstonesLocked();
-    if (nextTombstoneSeq_ == std::numeric_limits<uint64_t>::max()) {
-        nextTombstoneSeq_ = INITIAL_REQUEST_VALUE;
+    PurgeExpiredCancellationRecordsLocked();
+    if (nextCancellationSeq_ == std::numeric_limits<uint64_t>::max()) {
+        nextCancellationSeq_ = INITIAL_REQUEST_VALUE;
     }
-    CancelledTaskTombstone tombstone;
-    tombstone.reqKey = task->reqKey;
-    tombstone.syncFolder = task->syncFolder;
-    tombstone.filePath = task->filePath;
-    tombstone.bundleName = task->bundleName;
-    tombstone.syncFolderIndex = task->syncFolderIndex;
-    tombstone.expiresAt = std::chrono::steady_clock::now() + TOMBSTONE_TTL;
-    tombstone.createSeq = nextTombstoneSeq_++;
-    tombstoneMap_[task->reqKey] = tombstone;
-    tombstoneOrder_.emplace_back(task->reqKey, tombstone.createSeq);
+    CancelledTaskRecord cancellationRecord;
+    cancellationRecord.reqKey = task->reqKey;
+    cancellationRecord.syncFolder = task->syncFolder;
+    cancellationRecord.filePath = task->filePath;
+    cancellationRecord.bundleName = task->bundleName;
+    cancellationRecord.syncFolderIndex = task->syncFolderIndex;
+    cancellationRecord.expiresAt = std::chrono::steady_clock::now() + CANCELLATION_RECORD_TTL;
+    cancellationRecord.createSeq = nextCancellationSeq_++;
+    cancellationRecordMap_[task->reqKey] = cancellationRecord;
+    cancellationOrder_.emplace_back(task->reqKey, cancellationRecord.createSeq);
 
     auto countForApp = [this, &task] {
-        return static_cast<size_t>(std::count_if(tombstoneMap_.begin(), tombstoneMap_.end(), [&task](const auto &item) {
-            return item.second.bundleName == task->bundleName;
-        }));
+        return static_cast<size_t>(
+            std::count_if(cancellationRecordMap_.begin(), cancellationRecordMap_.end(),
+                          [&task](const auto &item) { return item.second.bundleName == task->bundleName; }));
     };
-    while (countForApp() > MAX_TOMBSTONES_PER_APP) {
-        auto oldest = std::find_if(tombstoneOrder_.begin(), tombstoneOrder_.end(), [this, &task](const auto &item) {
-            auto tombstone = tombstoneMap_.find(item.first);
-            return tombstone != tombstoneMap_.end() && tombstone->second.createSeq == item.second &&
-                   tombstone->second.bundleName == task->bundleName;
-        });
-        if (oldest == tombstoneOrder_.end()) {
+    while (countForApp() > MAX_CANCELLATION_RECORDS_PER_APP) {
+        auto oldest =
+            std::find_if(cancellationOrder_.begin(), cancellationOrder_.end(), [this, &task](const auto &item) {
+                auto cancellationRecord = cancellationRecordMap_.find(item.first);
+                return cancellationRecord != cancellationRecordMap_.end() &&
+                       cancellationRecord->second.createSeq == item.second &&
+                       cancellationRecord->second.bundleName == task->bundleName;
+            });
+        if (oldest == cancellationOrder_.end()) {
             break;
         }
-        tombstoneMap_.erase(oldest->first);
-        tombstoneOrder_.erase(oldest);
+        cancellationRecordMap_.erase(oldest->first);
+        cancellationOrder_.erase(oldest);
     }
-    while (tombstoneMap_.size() > MAX_TOMBSTONES_GLOBAL && !tombstoneOrder_.empty()) {
-        const auto oldest = tombstoneOrder_.front();
-        tombstoneOrder_.pop_front();
-        auto tombstone = tombstoneMap_.find(oldest.first);
-        if (tombstone != tombstoneMap_.end() && tombstone->second.createSeq == oldest.second) {
-            tombstoneMap_.erase(tombstone);
+    while (cancellationRecordMap_.size() > MAX_CANCELLATION_RECORDS_GLOBAL && !cancellationOrder_.empty()) {
+        const auto oldest = cancellationOrder_.front();
+        cancellationOrder_.pop_front();
+        auto cancellationRecord = cancellationRecordMap_.find(oldest.first);
+        if (cancellationRecord != cancellationRecordMap_.end() &&
+            cancellationRecord->second.createSeq == oldest.second) {
+            cancellationRecordMap_.erase(cancellationRecord);
         }
     }
 }
 
-int32_t PlaceholderTaskManager::FindTombstoneResultLocked(const std::string &callerBundleName,
-                                                          uint32_t syncFolderIndex,
-                                                          const CallbackExecuteRequest &request)
+int32_t PlaceholderTaskManager::FindCancellationResultLocked(const std::string &callerBundleName,
+                                                             uint32_t syncFolderIndex,
+                                                             const CallbackExecuteRequest &request)
 {
-    PurgeExpiredTombstonesLocked();
-    auto tombstone = tombstoneMap_.find(request.reqKey);
-    if (tombstone == tombstoneMap_.end()) {
+    PurgeExpiredCancellationRecordsLocked();
+    auto cancellationRecord = cancellationRecordMap_.find(request.reqKey);
+    if (cancellationRecord == cancellationRecordMap_.end()) {
         LOGW("Execute hydrate request failed: task not found");
         return E_NO_HYDRATION_IN_PROGRESS;
     }
-    if (tombstone->second.bundleName != callerBundleName || tombstone->second.syncFolderIndex != syncFolderIndex) {
+    if (cancellationRecord->second.bundleName != callerBundleName ||
+        cancellationRecord->second.syncFolderIndex != syncFolderIndex) {
         return E_CALLBACK_NOT_REGISTERED;
     }
-    if (tombstone->second.syncFolder != request.syncFolder || tombstone->second.filePath != request.filePath) {
+    if (cancellationRecord->second.syncFolder != request.syncFolder ||
+        cancellationRecord->second.filePath != request.filePath) {
         return E_INVALID_ARG;
     }
     return E_CANCELLED;

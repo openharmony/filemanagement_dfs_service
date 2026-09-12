@@ -24,7 +24,6 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -33,8 +32,20 @@
 #include "nocopyable.h"
 #include "unique_fd.h"
 
-#ifndef CLOUD_DISK_HYDRATE_WORKER_COUNT
-#define CLOUD_DISK_HYDRATE_WORKER_COUNT 4
+#ifndef CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP
+#define CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP 5U
+#endif
+
+#ifndef CLOUD_DISK_MAX_ACTIVE_TASKS_GLOBAL
+#define CLOUD_DISK_MAX_ACTIVE_TASKS_GLOBAL 10U
+#endif
+
+#ifndef CLOUD_DISK_MAX_PENDING_TASKS_PER_APP
+#define CLOUD_DISK_MAX_PENDING_TASKS_PER_APP 20U
+#endif
+
+#ifndef CLOUD_DISK_MAX_PENDING_TASKS_GLOBAL
+#define CLOUD_DISK_MAX_PENDING_TASKS_GLOBAL 40U
 #endif
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -59,7 +70,20 @@ enum class PlaceholderTaskCancelReason {
 struct PlaceholderProgressContext {
     int32_t userId = -1;
     std::string absolutePath;
+    std::string hmdfsPath;
+    std::string mountSyncFolder;
 };
+
+struct HydrationFileMetadata {
+    uint64_t deviceId = 0;
+    uint64_t inodeId = 0;
+    uint64_t logicalSize = 0;
+};
+
+int32_t OpenValidatedHydrationFile(const std::string &syncRoot,
+                                   const std::string &path,
+                                   UniqueFd &fd,
+                                   HydrationFileMetadata &metadata);
 
 struct PlaceholderTaskRecord {
     std::vector<uint8_t> reqKey;
@@ -69,6 +93,10 @@ struct PlaceholderTaskRecord {
     uint32_t syncFolderIndex = 0;
     CloudDiskCallbackType callbackType = CloudDiskCallbackType::FETCH_DATA;
     CloudDiskHydratePriority priority = CLOUD_DISK_HYDRATE_PRIORITY_NORMAL;
+    std::string hmdfsPath;
+    std::string mountSyncFolder;
+    uint64_t deviceId = 0;
+    uint64_t inodeId = 0;
     UniqueFd outputFd;
     std::atomic<PlaceholderTaskState> state{PlaceholderTaskState::PENDING};
     std::string absolutePath;
@@ -79,7 +107,7 @@ struct PlaceholderTaskRecord {
     bool totalSizeInitialized = false;
     bool hasPartialState = false;
     bool fetchDispatched = false;
-    bool cancelCallbackSent = false;
+    bool cancelCallbackAttempted = false;
     uint64_t createSeq = 0;
     std::mutex mutex;
 };
@@ -90,45 +118,29 @@ public:
 
     static PlaceholderTaskManager &GetInstance();
 
-    void StartWorkerPool();
-    void StopWorkerPool();
+    void StartScheduler();
+    void StopScheduler();
     int32_t CreateHydrateTask(const std::string &syncFolder,
                               const std::string &filePath,
                               const std::string &bundleName,
                               uint32_t syncFolderIndex,
                               CloudDiskHydratePriority priority,
-                              UniqueFd outputFd,
+                              UniqueFd validationFd,
                               RequestKey &reqKey,
                               const PlaceholderProgressContext &progressContext = {});
-    bool HasActiveTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
+    bool HasOutstandingTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
     int32_t CancelTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
     void CancelTasksBySyncFolder(const std::string &bundleName,
                                  uint32_t syncFolderIndex,
                                  PlaceholderTaskCancelReason reason = PlaceholderTaskCancelReason::UNREGISTER);
     void CancelAllTasks(PlaceholderTaskCancelReason reason);
-    void ClearTombstones();
+    void ClearCancellationRecords();
     int32_t
         Execute(const std::string &callerBundleName, uint32_t syncFolderIndex, const CallbackExecuteRequest &request);
     bool GetTaskState(const RequestKey &reqKey, PlaceholderTaskState &state);
 
 private:
-    struct QueueEntry {
-        RequestKey reqKey;
-        CloudDiskHydratePriority priority;
-        uint64_t createSeq;
-    };
-
-    struct PriorityComparator {
-        bool operator()(const QueueEntry &left, const QueueEntry &right) const
-        {
-            if (left.priority != right.priority) {
-                return left.priority < right.priority;
-            }
-            return left.createSeq > right.createSeq;
-        }
-    };
-
-    struct CancelledTaskTombstone {
+    struct CancelledTaskRecord {
         RequestKey reqKey;
         std::string syncFolder;
         std::string filePath;
@@ -146,38 +158,42 @@ private:
                                      uint32_t syncFolderIndex,
                                      RequestKey &reqKey);
     std::shared_ptr<PlaceholderTaskRecord> FindTask(const RequestKey &reqKey);
-    std::shared_ptr<PlaceholderTaskRecord> GetNextTask();
-    void WorkerLoop();
+    std::shared_ptr<PlaceholderTaskRecord> SelectNextTaskLocked();
+    void ScheduleDispatch();
+    void DispatchLoop();
+    void ActivateAndDispatch(const std::shared_ptr<PlaceholderTaskRecord> &task);
     void DeadlineLoop();
     void RefreshDeadlineLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
     int32_t EnsurePartialStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
     int32_t SetCompleteStateLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    int32_t CommitFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
+                                  const CallbackExecuteRequest &request);
     int32_t ExecuteFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
                                    const CallbackExecuteRequest &request);
     void CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task, PlaceholderTaskCancelReason reason);
-    void AddTombstoneLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
-    void PurgeExpiredTombstonesLocked();
-    int32_t FindTombstoneResultLocked(const std::string &callerBundleName,
-                                      uint32_t syncFolderIndex,
-                                      const CallbackExecuteRequest &request);
+    void AddCancellationRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    void PurgeExpiredCancellationRecordsLocked();
+    int32_t FindCancellationResultLocked(const std::string &callerBundleName,
+                                         uint32_t syncFolderIndex,
+                                         const CallbackExecuteRequest &request);
     void EraseTaskLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
 
     std::map<RequestKey, std::shared_ptr<PlaceholderTaskRecord>> taskMap_;
-    std::priority_queue<QueueEntry, std::vector<QueueEntry>, PriorityComparator> pendingQueue_;
-    std::map<RequestKey, CancelledTaskTombstone> tombstoneMap_;
-    std::deque<std::pair<RequestKey, uint64_t>> tombstoneOrder_;
+    std::map<RequestKey, CancelledTaskRecord> cancellationRecordMap_;
+    std::deque<std::pair<RequestKey, uint64_t>> cancellationOrder_;
     std::map<RequestKey, std::chrono::steady_clock::time_point> deadlineMap_;
-    std::vector<ffrt::task_handle> workerHandles_;
+    std::vector<ffrt::task_handle> monitorHandles_;
     uint64_t nextReqKeyValue_ = 1;
     uint64_t nextCreateSeq_ = 1;
-    uint64_t nextTombstoneSeq_ = 1;
+    uint64_t nextCancellationSeq_ = 1;
     bool running_ = false;
     bool stopping_ = false;
+    bool dispatchScheduled_ = false;
     // Never wait on a record mutex while holding mapMutex_. Record ownership keeps its mutex alive after erase.
     std::mutex mapMutex_;
-    std::mutex workerMutex_;
-    std::condition_variable taskCv_;
+    std::mutex lifecycleMutex_;
     std::condition_variable deadlineCv_;
+    ffrt::queue dispatchQueue_{"clouddisk_hydration_dispatch"};
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

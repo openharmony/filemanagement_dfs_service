@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "cloud_disk_service_callback_proxy.h"
+#include "cloud_disk_service_error.h"
 
 #include "cloud_disk_service_callback_mock.h"
 #include "dfs_error.h"
@@ -290,6 +291,76 @@ HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableSync_001, TestSize.Leve
         }));
     EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_OK);
     EXPECT_TRUE(dehydrateInfo.allow);
+}
+
+/**
+ * @tc.name: CallbackTableInvalidParcel_001
+ * @tc.desc: Reject invalid callback headers and missing callback-specific contexts before IPC.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableInvalidParcel_001, TestSize.Level2)
+{
+    auto callbackProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(mock_);
+    std::string syncFolder = "/sync";
+    CloudDiskCallbackReqHead reqHead{
+        {syncFolder.data(), syncFolder.size()}, CloudDiskCallbackType::FETCH_DATA, {nullptr, 0}};
+    CloudDiskCallbackContext context{};
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(0);
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_INVALID_ARG);
+
+    reqHead.syncFolderPath = {nullptr, 1};
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_INVALID_ARG);
+    reqHead.syncFolderPath = {syncFolder.data(), syncFolder.size()};
+    reqHead.callbackType = static_cast<CloudDiskCallbackType>(99);
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_INVALID_ARG);
+}
+
+/**
+ * @tc.name: CallbackTableTransportFailure_001
+ * @tc.desc: Map a missing remote and Binder send failure to the callback IPC error.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableTransportFailure_001, TestSize.Level2)
+{
+    std::string syncFolder = "/sync";
+    std::string filePath = "file.txt";
+    CloudDiskCallbackReqHead reqHead{
+        {syncFolder.data(), syncFolder.size()}, CloudDiskCallbackType::CANCEL_FETCH_DATA, {nullptr, 0}};
+    CloudDiskPathInfo pathInfo{filePath.data(), filePath.size()};
+    CloudDiskCallbackContext context{};
+    context.cancelFetchData = &pathInfo;
+
+    auto nullRemoteProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(nullptr);
+    EXPECT_EQ(nullRemoteProxy->SendCallback(reqHead, context), E_IPC_FAILED);
+
+    auto callbackProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(mock_);
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_IPC_FAILED));
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_IPC_FAILED);
+}
+
+/**
+ * @tc.name: CallbackTableMalformedReply_001
+ * @tc.desc: Reject an empty synchronous dehydrate reply and keep the caller's decision unchanged.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceCallbackProxyTest, CallbackTableMalformedReply_001, TestSize.Level2)
+{
+    auto callbackProxy = std::make_shared<CloudDiskServiceCallbackTableProxy>(mock_);
+    std::string syncFolder = "/sync";
+    std::string filePath = "file.txt";
+    CloudDiskCallbackReqHead reqHead{
+        {syncFolder.data(), syncFolder.size()}, CloudDiskCallbackType::DEHYDRATE, {nullptr, 0}};
+    CloudDiskPathInfo pathInfo{filePath.data(), filePath.size()};
+    CloudDiskDehydrateInfo dehydrateInfo{pathInfo, false};
+    CloudDiskCallbackContext context{};
+    context.dehydrateData = &dehydrateInfo;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+
+    EXPECT_EQ(callbackProxy->SendCallback(reqHead, context), E_IPC_FAILED);
+    EXPECT_FALSE(dehydrateInfo.allow);
 }
 } // namespace Test
 } // namespace FileManagement::CloudDiskService

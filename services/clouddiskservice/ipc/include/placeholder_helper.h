@@ -42,6 +42,7 @@ uint8_t GetSyncStateFromFileSyncState(uint8_t state);
 uint8_t MakeFileSyncState(uint8_t placeholderState, uint8_t syncState);
 uint8_t SanitizeDentryPlaceholderState(uint8_t placeholderState);
 std::mutex &GetPlaceholderStateMutex();
+std::mutex &GetPlaceholderFileMutex(const std::string &path);
 
 int32_t GetFileSyncStateByte(const std::string &path, uint8_t &state, bool missingAsZero);
 int32_t GetFilePlaceholderState(const std::string &path, uint8_t &placeholderState);

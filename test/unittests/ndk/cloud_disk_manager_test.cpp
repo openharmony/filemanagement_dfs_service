@@ -332,8 +332,8 @@ HWTEST_F(CloudDiskManagerTest, ConvertToErrorCodeTest003, TestSize.Level1)
         EXPECT_EQ(ConvertToErrorCode(E_FILE_NOT_EXIST), CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_NOT_EXIST);
         EXPECT_EQ(ConvertToErrorCode(E_NAME_TOO_LONG), CloudDisk_ErrorCode::OH_CLOUD_DISK_NAME_TOO_LONG);
         EXPECT_EQ(ConvertToErrorCode(E_FILE_TOO_LARGE), CloudDisk_ErrorCode::OH_CLOUD_DISK_FILE_TOO_LARGE);
-        EXPECT_EQ(ConvertToErrorCode(E_PERM), static_cast<CloudDisk_ErrorCode>(E_PERM));
-        EXPECT_EQ(ConvertToErrorCode(E_ACCES), static_cast<CloudDisk_ErrorCode>(E_ACCES));
+        EXPECT_EQ(ConvertToErrorCode(E_PERM), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
+        EXPECT_EQ(ConvertToErrorCode(E_ACCES), CloudDisk_ErrorCode::CLOUD_DISK_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ConvertToErrorCodeTest003 failed";

@@ -136,4 +136,55 @@ HWTEST_F(CallbackExecuteRequestTest, Unmarshalling_002, TestSize.Level2)
     std::unique_ptr<CallbackExecuteRequest> result(CallbackExecuteRequest::Unmarshalling(parcel));
     EXPECT_EQ(result, nullptr);
 }
+
+/**
+ * @tc.name: Marshalling_003
+ * @tc.desc: Accept both request-key and Execute-data buffers at their exact limits.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CallbackExecuteRequestTest, Marshalling_003, TestSize.Level1)
+{
+    request_.reqKey.assign(MAX_CALLBACK_REQUEST_KEY_SIZE, 1);
+    request_.data.assign(MAX_EXECUTE_DATA_SIZE, 2);
+    request_.size = request_.data.size();
+    request_.totalSize = request_.size;
+    request_.offset = 0;
+    Parcel parcel;
+    ASSERT_TRUE(request_.Marshalling(parcel));
+    std::unique_ptr<CallbackExecuteRequest> result(CallbackExecuteRequest::Unmarshalling(parcel));
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->reqKey.size(), MAX_CALLBACK_REQUEST_KEY_SIZE);
+    EXPECT_EQ(result->data.size(), MAX_EXECUTE_DATA_SIZE);
+
+    request_.reqKey.push_back(3);
+    Parcel oversizedKey;
+    EXPECT_FALSE(request_.Marshalling(oversizedKey));
+}
+
+/**
+ * @tc.name: Unmarshalling_003
+ * @tc.desc: Reject an empty key and a negative Execute-data vector length.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CallbackExecuteRequestTest, Unmarshalling_003, TestSize.Level2)
+{
+    Parcel emptyKey;
+    ASSERT_TRUE(emptyKey.WriteUInt8Vector(std::vector<uint8_t>{}));
+    std::unique_ptr<CallbackExecuteRequest> emptyResult(CallbackExecuteRequest::Unmarshalling(emptyKey));
+    EXPECT_EQ(emptyResult, nullptr);
+
+    Parcel negativeData;
+    ASSERT_TRUE(negativeData.WriteUInt8Vector(request_.reqKey));
+    ASSERT_TRUE(negativeData.WriteString(request_.syncFolder));
+    ASSERT_TRUE(negativeData.WriteString(request_.filePath));
+    ASSERT_TRUE(negativeData.WriteInt32(request_.callbackType));
+    ASSERT_TRUE(negativeData.WriteUint64(request_.offset));
+    ASSERT_TRUE(negativeData.WriteUint64(request_.size));
+    ASSERT_TRUE(negativeData.WriteUint64(request_.totalSize));
+    ASSERT_TRUE(negativeData.WriteInt32(-1));
+    std::unique_ptr<CallbackExecuteRequest> negativeResult(CallbackExecuteRequest::Unmarshalling(negativeData));
+    EXPECT_EQ(negativeResult, nullptr);
+}
 } // namespace OHOS::FileManagement::CloudDiskService::Test

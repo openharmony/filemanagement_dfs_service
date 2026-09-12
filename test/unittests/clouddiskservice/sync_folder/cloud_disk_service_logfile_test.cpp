@@ -29,6 +29,17 @@
 #undef stat
 #undef access
 
+namespace OHOS::FileManagement::CloudDiskService {
+void ResetPlaceholderMetaFileMock();
+void SetPlaceholderMetaFileLookupResult(int32_t result, uint8_t state);
+void SetMetaFileCreateResult(int32_t result);
+uint8_t GetLastMetaFileCreatePlaceholderState();
+void SetMetaFileRemoveResult(int32_t result);
+void SetMetaFileRenameOldResult(int32_t result);
+void SetMetaFileRenameNewResult(int32_t result);
+uint8_t GetLastMetaFileRenameNewPlaceholderState();
+} // namespace OHOS::FileManagement::CloudDiskService
+
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -60,9 +71,18 @@ void CloudDiskServiceLogFileTest::TearDownTestCase(void)
     insMock_ = nullptr;
 }
 
-void CloudDiskServiceLogFileTest::SetUp() {}
+void CloudDiskServiceLogFileTest::SetUp()
+{
+    ResetPlaceholderMetaFileMock();
+    logFile_->syncFolderPath_.clear();
+    logFile_->renamePlaceholderState_ = PLACEHOLDER_STATE_NONE;
+}
 
-void CloudDiskServiceLogFileTest::TearDown() {}
+void CloudDiskServiceLogFileTest::TearDown()
+{
+    Mock::VerifyAndClearExpectations(insMock_.get());
+    ResetPlaceholderMetaFileMock();
+}
 
 /**
  * @tc.name: WriteLogFileTest001
@@ -930,6 +950,56 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ProduceCreateLogTest005
+ * @tc.desc: Persist the file placeholder state in a create log entry.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest005, TestSize.Level1)
+{
+    auto parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+    struct stat statInfo {};
+    statInfo.st_mode = S_IFREG;
+    EXPECT_CALL(*insMock_, MockStat(StrEq("path/name"), _))
+        .WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
+    EXPECT_CALL(*insMock_, getxattr(StrEq("path/name"), StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+        .WillOnce(Invoke([](const char *, const char *, void *value, size_t size) {
+            *static_cast<uint8_t *>(value) = MakeFileSyncState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED, 1);
+            return static_cast<ssize_t>(size);
+        }));
+    SetMetaFileCreateResult(E_OK);
+    LogGenerateCtx ctx;
+
+    EXPECT_EQ(logFile_->ProduceCreateLog(parentMetaFile, "path", "name", ctx), E_OK);
+    EXPECT_EQ(GetLastMetaFileCreatePlaceholderState(), PLACEHOLDER_STATE_PARTIALLY_HYDRATED);
+}
+
+/**
+ * @tc.name: ProduceCreateLogTest006
+ * @tc.desc: Fall back to a non-placeholder create entry when the source xattr cannot be read.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceCreateLogTest006, TestSize.Level2)
+{
+    auto parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+    struct stat statInfo {};
+    statInfo.st_mode = S_IFREG;
+    EXPECT_CALL(*insMock_, MockStat(StrEq("path/name"), _))
+        .WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
+    EXPECT_CALL(*insMock_, getxattr(StrEq("path/name"), StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+        .WillOnce(Invoke([](const char *, const char *, void *, size_t) {
+            errno = EIO;
+            return static_cast<ssize_t>(-1);
+        }));
+    SetMetaFileCreateResult(E_OK);
+    LogGenerateCtx ctx;
+
+    EXPECT_EQ(logFile_->ProduceCreateLog(parentMetaFile, "path", "name", ctx), E_OK);
+    EXPECT_EQ(GetLastMetaFileCreatePlaceholderState(), PLACEHOLDER_STATE_NONE);
+}
+
+/**
  * @tc.name: ProduceUnlinkLogTest001
  * @tc.desc: Verify the ProduceUnlinkLog function
  * @tc.type: FUNC
@@ -980,6 +1050,22 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ProduceUnlinkLogTest003
+ * @tc.desc: Complete removal when the deleted dentry is a placeholder.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceUnlinkLogTest003, TestSize.Level1)
+{
+    auto parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+    SetPlaceholderMetaFileLookupResult(E_OK, PLACEHOLDER_STATE_UNHYDRATED);
+    SetMetaFileRemoveResult(E_OK);
+    LogGenerateCtx ctx;
+
+    EXPECT_EQ(logFile_->ProduceUnlinkLog(parentMetaFile, "path", "name", ctx), E_OK);
+}
+
+/**
  * @tc.name: ProduceRenameOldLogTest001
  * @tc.desc: Verify the ProduceRenameOldLog function
  * @tc.type: FUNC
@@ -1027,6 +1113,38 @@ HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenameOldLogTest002, TestSize.Level
         GTEST_LOG_(INFO) << "ProduceRenameOldLogTest002 failed";
     }
     GTEST_LOG_(INFO) << "ProduceRenameOldLogTest002 end";
+}
+
+/**
+ * @tc.name: ProduceRenamePlaceholderStateTest001
+ * @tc.desc: Carry placeholder state across rename-old and rename-new and clear it after lookup failure.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceLogFileTest, ProduceRenamePlaceholderStateTest001, TestSize.Level1)
+{
+    auto parentMetaFile = make_shared<CloudDiskServiceMetaFile>(0, 0, 0);
+    SetPlaceholderMetaFileLookupResult(E_OK, PLACEHOLDER_STATE_FULLY_HYDRATED);
+    SetMetaFileRenameOldResult(E_OK);
+    LogGenerateCtx oldCtx;
+    oldCtx.recordId = "record";
+    ASSERT_EQ(logFile_->ProduceRenameOldLog(parentMetaFile, "old", "name", oldCtx), E_OK);
+    EXPECT_EQ(logFile_->renamePlaceholderState_, PLACEHOLDER_STATE_FULLY_HYDRATED);
+
+    struct stat statInfo {};
+    statInfo.st_mode = S_IFREG;
+    EXPECT_CALL(*insMock_, MockStat(StrEq("new/name"), _))
+        .WillOnce(DoAll(SetArgPointee<1>(statInfo), Return(0)));
+    SetMetaFileRenameNewResult(E_OK);
+    LogGenerateCtx newCtx;
+    ASSERT_EQ(logFile_->ProduceRenameNewLog(parentMetaFile, "new", "name", newCtx), E_OK);
+    EXPECT_EQ(GetLastMetaFileRenameNewPlaceholderState(), PLACEHOLDER_STATE_FULLY_HYDRATED);
+    EXPECT_EQ(newCtx.recordId, "record");
+
+    SetPlaceholderMetaFileLookupResult(EIO, PLACEHOLDER_STATE_UNHYDRATED);
+    LogGenerateCtx failedLookupCtx;
+    EXPECT_EQ(logFile_->ProduceRenameOldLog(parentMetaFile, "old", "name", failedLookupCtx), E_OK);
+    EXPECT_EQ(logFile_->renamePlaceholderState_, PLACEHOLDER_STATE_NONE);
 }
 
 /**

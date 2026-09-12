@@ -2603,7 +2603,7 @@ HWTEST_F(CloudDiskServiceTest, UpdatePlaceholderInner_GetHmdfsPathFail_004, Test
         uint32_t ret = cloudDiskService_->UpdatePlaceholderInner(syncFolder, path, metaData);
         CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(ret, E_FILE_NOT_EXIST);
 #else
         EXPECT_EQ(ret, E_NOT_SUPPORTED);
 #endif

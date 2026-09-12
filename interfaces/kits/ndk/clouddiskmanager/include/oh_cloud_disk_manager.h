@@ -476,13 +476,11 @@ typedef struct OH_CloudDisk_DataBuf {
  */
 typedef enum OH_CloudDisk_CallbackType {
     /** Fetch all data for placeholder hydration. */
-    CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA = 0,
+    OH_CLOUD_DISK_CALLBACK_TYPE_FETCH_DATA = 0,
     /** Cancel placeholder hydration. */
-    CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA = 1,
-    /** Fetch data in a specified range. */
-    CLOUD_DISK_CALLBACK_TYPE_FETCH_RANGE_DATA = 2,
+    OH_CLOUD_DISK_CALLBACK_TYPE_CANCEL_FETCH_DATA = 1,
     /** Request authorization to dehydrate a placeholder file. */
-    CLOUD_DISK_CALLBACK_TYPE_DEHYDRATE = 3,
+    OH_CLOUD_DISK_CALLBACK_TYPE_DEHYDRATE = 2,
 } OH_CloudDisk_CallbackType;
 
 /**
@@ -491,11 +489,11 @@ typedef enum OH_CloudDisk_CallbackType {
  */
 typedef enum OH_CloudDisk_HydratePriority {
     /** Low priority, such as background prefetch. */
-    CLOUD_DISK_HYDRATE_PRIORITY_LOW = 0,
+    OH_CLOUD_DISK_HYDRATE_PRIORITY_LOW = 0,
     /** Normal priority. */
-    CLOUD_DISK_HYDRATE_PRIORITY_NORMAL = 1,
+    OH_CLOUD_DISK_HYDRATE_PRIORITY_NORMAL = 1,
     /** High priority, such as a user-initiated file open. */
-    CLOUD_DISK_HYDRATE_PRIORITY_HIGH = 2,
+    OH_CLOUD_DISK_HYDRATE_PRIORITY_HIGH = 2,
 } OH_CloudDisk_HydratePriority;
 
 /**
@@ -510,21 +508,6 @@ typedef struct OH_CloudDisk_CallbackReqHead {
     /** Opaque request key. */
     OH_CloudDisk_DataBuf reqKey;
 } OH_CloudDisk_CallbackReqHead;
-
-/**
- * @brief Defines range data request information.
- * @since 26.1.0
- */
-typedef struct OH_CloudDisk_RangeInfo {
-    /** File path relative to the sync folder. */
-    CloudDisk_PathInfo filePath;
-    /** Start offset, in bytes. */
-    uint64_t offset;
-    /** Requested data size, in bytes. */
-    uint64_t size;
-    /** Buffer filled by the callback provider. */
-    OH_CloudDisk_DataBuf data;
-} OH_CloudDisk_RangeInfo;
 
 /**
  * @brief Defines placeholder dehydration authorization information.
@@ -557,8 +540,6 @@ typedef union OH_CloudDisk_CallbackContext {
     OH_CloudDisk_FetchDataRequest *fetchData;
     /** File path used for a cancel-fetch-data callback. */
     CloudDisk_PathInfo *cancelFetchData;
-    /** Range information used for a fetch-range-data callback. */
-    OH_CloudDisk_RangeInfo *fetchRangeData;
     /** Authorization information used for a dehydrate callback. */
     OH_CloudDisk_DehydrateInfo *dehydrateData;
 } OH_CloudDisk_CallbackContext;
@@ -898,8 +879,10 @@ CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderCustomInfo(const CloudDisk_SyncFo
  * @brief Registers a placeholder callback table for a sync folder.
  *
  * FETCH_DATA and CANCEL_FETCH_DATA are asynchronous notifications. All pointers in the callback request are borrowed
- * and remain valid only until the callback returns. The application must deep-copy the request before returning and
- * call {@link OH_CloudDisk_Execute} later with the copied request. DEHYDRATE and FETCH_RANGE_DATA remain synchronous.
+ * and remain valid only until the callback returns. For FETCH_DATA, the application must deep-copy the request before
+ * returning and call {@link OH_CloudDisk_Execute} later with the copied request. For CANCEL_FETCH_DATA, the application
+ * must stop the matching download without calling OH_CloudDisk_Execute as an acknowledgement. DEHYDRATE remains
+ * synchronous.
  *
  * @param syncFolderPath Indicates the registered sync folder path.
  * @param callback Indicates the callback function to register.
@@ -930,7 +913,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UnregisterCallbackTable(const CloudDisk_SyncFol
  * @since 26.1.0
  */
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderEx(const OH_CloudDisk_SyncFolderEx *syncFolder);
- 
+
 /**
  * @brief Gets the sync folders with placeholder support info.
  *

@@ -46,8 +46,7 @@ struct CloudDiskDataBuf {
 enum class CloudDiskCallbackType : int32_t {
     FETCH_DATA = 0,
     CANCEL_FETCH_DATA,
-    FETCH_RANGE_DATA,
-    DEHYDRATE,
+    DEHYDRATE = 2,
 };
 
 enum CloudDiskHydratePriority : uint32_t {
@@ -60,13 +59,6 @@ struct CloudDiskCallbackReqHead {
     CloudDiskSyncFolderPath syncFolderPath;
     CloudDiskCallbackType callbackType;
     CloudDiskDataBuf reqKey;
-};
-
-struct CloudDiskRangeInfo {
-    CloudDiskPathInfo filePath;
-    uint64_t offset;
-    uint64_t size;
-    CloudDiskDataBuf data;
 };
 
 struct CloudDiskDehydrateInfo {
@@ -82,7 +74,6 @@ struct CloudDiskFetchDataRequest {
 union CloudDiskCallbackContext {
     CloudDiskFetchDataRequest *fetchData;
     CloudDiskPathInfo *cancelFetchData;
-    CloudDiskRangeInfo *fetchRangeData;
     CloudDiskDehydrateInfo *dehydrateData;
 };
 
@@ -136,10 +127,8 @@ struct CallbackParcelStorage {
     std::string syncFolder;
     std::vector<uint8_t> reqKey;
     std::string filePath;
-    std::vector<uint8_t> rangeData;
     CloudDiskPathInfo pathInfo{};
     CloudDiskFetchDataRequest fetchDataRequest{};
-    CloudDiskRangeInfo rangeInfo{};
     CloudDiskDehydrateInfo dehydrateInfo{};
 };
 
@@ -196,10 +185,7 @@ bool ReadCallbackParcel(Parcel &parcel,
                         CloudDiskCallbackReqHead &reqHead,
                         CloudDiskCallbackContext &context,
                         CallbackParcelStorage &storage);
-bool WriteCallbackReply(Parcel &parcel,
-                        CloudDiskCallbackType callbackType,
-                        const CloudDiskCallbackContext &context,
-                        uint64_t rangeDataCapacity);
+bool WriteCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, const CloudDiskCallbackContext &context);
 bool ReadCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, CloudDiskCallbackContext &context);
 
 struct ChangesResult : public Parcelable {

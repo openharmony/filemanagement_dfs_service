@@ -51,10 +51,6 @@ public:
                                     uint32_t syncFolderIndex,
                                     CloudDiskCallbackReqHead &reqHead,
                                     CloudDiskPathInfo &filePath);
-    int32_t DispatchFetchRangeData(const std::string &bundleName,
-                                   uint32_t syncFolderIndex,
-                                   CloudDiskCallbackReqHead &reqHead,
-                                   CloudDiskRangeInfo &rangeInfo);
     int32_t DispatchDehydrate(const std::string &bundleName,
                               uint32_t syncFolderIndex,
                               CloudDiskCallbackReqHead &reqHead,

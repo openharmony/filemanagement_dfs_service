@@ -46,14 +46,6 @@ public:
                     filePath = std::string(reqContext.cancelFetchData->value, reqContext.cancelFetchData->length);
                 }
                 break;
-            case CloudDiskCallbackType::FETCH_RANGE_DATA:
-                if (reqContext.fetchRangeData != nullptr) {
-                    filePath = std::string(reqContext.fetchRangeData->filePath.value,
-                                           reqContext.fetchRangeData->filePath.length);
-                    rangeOffset = reqContext.fetchRangeData->offset;
-                    rangeSize = reqContext.fetchRangeData->size;
-                }
-                break;
             case CloudDiskCallbackType::DEHYDRATE:
                 if (reqContext.dehydrateData != nullptr) {
                     filePath = std::string(reqContext.dehydrateData->filePath.value,
@@ -73,9 +65,94 @@ public:
     CloudDiskCallbackType callbackType = CloudDiskCallbackType::FETCH_DATA;
     std::string filePath;
     CloudDiskHydratePriority priority = CLOUD_DISK_HYDRATE_PRIORITY_LOW;
-    uint64_t rangeOffset = 0;
-    uint64_t rangeSize = 0;
     bool allowDehydrate = false;
+};
+
+class ErrorCallbackTableStub final : public IRemoteStub<ICloudDiskServiceCallbackTable> {
+public:
+    explicit ErrorCallbackTableStub(int32_t result) : result_(result) {}
+
+    void OnCallback(const CloudDiskCallbackReqHead &, CloudDiskCallbackContext &) override {}
+
+    int32_t SendCallback(const CloudDiskCallbackReqHead &, CloudDiskCallbackContext &) override
+    {
+        ++sendCount_;
+        return result_;
+    }
+
+    int32_t OnRemoteRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override
+    {
+        return E_OK;
+    }
+
+    int32_t result_;
+    uint32_t sendCount_ = 0;
+};
+
+class NullRemoteCallbackTable final : public ICloudDiskServiceCallbackTable {
+public:
+    void OnCallback(const CloudDiskCallbackReqHead &, CloudDiskCallbackContext &) override {}
+
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+};
+
+class ControlledCallbackRemote final : public IRemoteObject {
+public:
+    ControlledCallbackRemote() : IRemoteObject(u"controlled_callback_proxy") {}
+
+    int32_t GetObjectRefCount() override
+    {
+        return 1;
+    }
+
+    int SendRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override
+    {
+        return E_OK;
+    }
+
+    bool IsProxyObject() const override
+    {
+        return true;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        ++addCount;
+        return recipient != nullptr && addResult;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        ++removeCount;
+        return recipient != nullptr;
+    }
+
+    int Dump(int, const std::vector<std::u16string> &) override
+    {
+        return E_OK;
+    }
+
+    bool addResult = false;
+    int32_t addCount = 0;
+    int32_t removeCount = 0;
+};
+
+class ProxyBackedCallbackTable final : public ICloudDiskServiceCallbackTable {
+public:
+    explicit ProxyBackedCallbackTable(const sptr<IRemoteObject> &remote) : remote_(remote) {}
+
+    void OnCallback(const CloudDiskCallbackReqHead &, CloudDiskCallbackContext &) override {}
+
+    sptr<IRemoteObject> AsObject() override
+    {
+        return remote_;
+    }
+
+private:
+    sptr<IRemoteObject> remote_;
 };
 } // namespace
 
@@ -83,9 +160,8 @@ class PlaceholderCallbackManagerTest : public testing::Test {
 public:
     void TearDown() override
     {
-        PlaceholderTaskManager::GetInstance().StopWorkerPool();
-        PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX);
-        PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1);
+        PlaceholderTaskManager::GetInstance().StopScheduler();
+        PlaceholderCallbackManager::GetInstance().ClearAll();
     }
 };
 
@@ -131,7 +207,7 @@ HWTEST_F(PlaceholderCallbackManagerTest, RegisterDispatchAndUnregisterTest001, T
     executeRequest.filePath = "dir/file.txt";
     executeRequest.isComplete = true;
     EXPECT_EQ(PlaceholderTaskManager::GetInstance().Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, executeRequest),
-              E_CANCELLED);
+              E_NO_HYDRATION_IN_PROGRESS);
     EXPECT_EQ(manager.UnregisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX), E_CALLBACK_NOT_REGISTERED);
 }
 
@@ -239,15 +315,13 @@ HWTEST_F(PlaceholderCallbackManagerTest, InvalidArguments_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: DispatchCallbackKinds_001
- * @tc.desc: Verify cancel and range callbacks preserve their discriminated context and shared-remote cleanup.
+ * @tc.name: DispatchCancelAndSharedRemoteCleanup_001
+ * @tc.desc: Verify cancel callbacks preserve their context and shared-remote cleanup is correct.
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(PlaceholderCallbackManagerTest, DispatchCallbackKinds_001, TestSize.Level1)
+HWTEST_F(PlaceholderCallbackManagerTest, DispatchCancelAndSharedRemoteCleanup_001, TestSize.Level1)
 {
-    constexpr uint64_t RANGE_OFFSET = 8;
-    constexpr uint64_t RANGE_SIZE = 16;
     auto &manager = PlaceholderCallbackManager::GetInstance();
     auto callback = sptr(new CallbackTableStub());
     ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
@@ -261,12 +335,6 @@ HWTEST_F(PlaceholderCallbackManagerTest, DispatchCallbackKinds_001, TestSize.Lev
     EXPECT_EQ(callback->callbackType, CloudDiskCallbackType::CANCEL_FETCH_DATA);
     EXPECT_EQ(callback->filePath, path);
 
-    CloudDiskRangeInfo rangeInfo{pathInfo, RANGE_OFFSET, RANGE_SIZE, {nullptr, 0}};
-    EXPECT_EQ(manager.DispatchFetchRangeData(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, reqHead, rangeInfo), E_OK);
-    EXPECT_EQ(callback->callbackType, CloudDiskCallbackType::FETCH_RANGE_DATA);
-    EXPECT_EQ(callback->rangeOffset, RANGE_OFFSET);
-    EXPECT_EQ(callback->rangeSize, RANGE_SIZE);
-
     manager.ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX);
     EXPECT_FALSE(manager.IsCallbackRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX));
     EXPECT_TRUE(manager.IsCallbackRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1));
@@ -274,5 +342,157 @@ HWTEST_F(PlaceholderCallbackManagerTest, DispatchCallbackKinds_001, TestSize.Lev
     manager.ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1);
     EXPECT_EQ(manager.remoteCallbackMap_.count(remoteKey), 0U);
     EXPECT_EQ(manager.deathRecipientMap_.count(remoteKey), 0U);
+}
+
+/**
+ * @tc.name: RegisterCallbackTable_001
+ * @tc.desc: Reject a callback table whose remote object cannot be obtained.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, RegisterCallbackTable_001, TestSize.Level2)
+{
+    auto callback = sptr<ICloudDiskServiceCallbackTable>(new NullRemoteCallbackTable());
+    EXPECT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                                                              callback),
+              E_INVALID_ARG);
+}
+
+/**
+ * @tc.name: RegisterCallbackTable_002
+ * @tc.desc: Retry death-recipient registration after the remote rejects the first attempt.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, RegisterCallbackTable_002, TestSize.Level2)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    auto remote = sptr(new ControlledCallbackRemote());
+    auto callback = sptr<ICloudDiskServiceCallbackTable>(new ProxyBackedCallbackTable(remote));
+    const void *remoteKey = remote.GetRefPtr();
+
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
+    EXPECT_EQ(remote->addCount, 1);
+    EXPECT_EQ(manager.deathRecipientMap_.count(remoteKey), 0U);
+
+    remote->addResult = true;
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1, callback), E_OK);
+    EXPECT_EQ(remote->addCount, 2);
+    EXPECT_EQ(manager.deathRecipientMap_.count(remoteKey), 1U);
+
+    manager.ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX);
+    EXPECT_EQ(remote->removeCount, 0);
+    manager.ClearBySyncFolder(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1);
+    EXPECT_EQ(remote->removeCount, 1);
+}
+
+/**
+ * @tc.name: GetCallback_001
+ * @tc.desc: Return the exact registered callback and nullptr after it is removed.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, GetCallback_001, TestSize.Level1)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    auto callback = sptr(new CallbackTableStub());
+    sptr<ICloudDiskServiceCallbackTable> callbackBase = callback;
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
+    EXPECT_EQ(manager.GetCallback(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX), callbackBase);
+    EXPECT_EQ(manager.GetCallback(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1), nullptr);
+
+    ASSERT_EQ(manager.UnregisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX), E_OK);
+    EXPECT_EQ(manager.GetCallback(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX), nullptr);
+}
+
+/**
+ * @tc.name: RunIfRegistered_001
+ * @tc.desc: Cover argument validation, missing registration and operation result forwarding.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, RunIfRegistered_001, TestSize.Level1)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    std::function<int32_t()> emptyOperation;
+    EXPECT_EQ(manager.RunIfRegistered("", TEST_SYNC_FOLDER_INDEX, []() { return E_OK; }), E_INVALID_ARG);
+    EXPECT_EQ(manager.RunIfRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, emptyOperation), E_INVALID_ARG);
+    EXPECT_EQ(manager.RunIfRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, []() { return E_OK; }),
+              E_CALLBACK_NOT_REGISTERED);
+
+    auto callback = sptr(new CallbackTableStub());
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
+    uint32_t callCount = 0;
+    EXPECT_EQ(manager.RunIfRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+                                      [&callCount]() {
+                                          ++callCount;
+                                          return E_TRY_AGAIN;
+                                      }),
+              E_TRY_AGAIN);
+    EXPECT_EQ(callCount, 1U);
+}
+
+/**
+ * @tc.name: DispatchCallbackFailure_001
+ * @tc.desc: Propagate callback transport failures for each callback request type.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, DispatchCallbackFailure_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    auto callback = sptr(new ErrorCallbackTableStub(E_IPC_FAILED));
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
+    std::string path = "dir/file.txt";
+    CloudDiskPathInfo pathInfo{path.data(), path.length()};
+    CloudDiskCallbackReqHead reqHead{};
+
+    EXPECT_EQ(manager.DispatchFetchData(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, reqHead, pathInfo), E_IPC_FAILED);
+    EXPECT_EQ(manager.DispatchCancelFetchData(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, reqHead, pathInfo),
+              E_IPC_FAILED);
+    EXPECT_EQ(manager.DispatchDehydrate(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, reqHead, pathInfo), E_IPC_FAILED);
+    EXPECT_EQ(callback->sendCount_, 3U);
+}
+
+/**
+ * @tc.name: ClearAll_001
+ * @tc.desc: Clear entries for shared and distinct remotes, including death-recipient bookkeeping.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, ClearAll_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    auto sharedCallback = sptr(new CallbackTableStub());
+    auto otherCallback = sptr(new CallbackTableStub());
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, sharedCallback), E_OK);
+    ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX + 1, sharedCallback), E_OK);
+    ASSERT_EQ(manager.RegisterCallbackTable("com.example.other", TEST_SYNC_FOLDER_INDEX, otherCallback), E_OK);
+
+    manager.ClearAll();
+    EXPECT_TRUE(manager.callbackMap_.empty());
+    EXPECT_TRUE(manager.remoteCallbackMap_.empty());
+    EXPECT_TRUE(manager.deathRecipientMap_.empty());
+    manager.ClearAll();
+    EXPECT_TRUE(manager.callbackMap_.empty());
+}
+
+/**
+ * @tc.name: RemoveRemoteKeyLocked_001
+ * @tc.desc: Removing a null or untracked remote is a safe no-op.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderCallbackManagerTest, RemoveRemoteKeyLocked_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderCallbackManager::GetInstance();
+    PlaceholderCallbackManager::CallbackKey key{TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX};
+    sptr<ICloudDiskServiceCallbackTable> nullCallback;
+    manager.RemoveRemoteKeyLocked(nullCallback, key);
+
+    auto callback = sptr(new CallbackTableStub());
+    manager.RemoveRemoteKeyLocked(callback, key);
+    EXPECT_TRUE(manager.remoteCallbackMap_.empty());
+    EXPECT_TRUE(manager.deathRecipientMap_.empty());
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

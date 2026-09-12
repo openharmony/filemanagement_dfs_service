@@ -18,13 +18,67 @@
 #include "placeholder_task_manager.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+namespace {
+uint32_t callbackClearCount = 0;
+uint32_t taskCancelCount = 0;
+uint32_t cancellationRecordClearCount = 0;
+uint32_t progressDrainCount = 0;
+uint32_t progressClearCount = 0;
+PlaceholderTaskCancelReason lastCancelReason = PlaceholderTaskCancelReason::USER_SWITCH;
+} // namespace
+
+namespace Test {
+void ResetPlaceholderLifecycleCallCounts()
+{
+    callbackClearCount = 0;
+    taskCancelCount = 0;
+    cancellationRecordClearCount = 0;
+    progressDrainCount = 0;
+    progressClearCount = 0;
+    lastCancelReason = PlaceholderTaskCancelReason::USER_SWITCH;
+}
+
+uint32_t GetPlaceholderCallbackClearCount()
+{
+    return callbackClearCount;
+}
+
+uint32_t GetPlaceholderTaskCancelCount()
+{
+    return taskCancelCount;
+}
+
+uint32_t GetPlaceholderCancellationRecordClearCount()
+{
+    return cancellationRecordClearCount;
+}
+
+uint32_t GetPlaceholderProgressDrainCount()
+{
+    return progressDrainCount;
+}
+
+uint32_t GetPlaceholderProgressClearCount()
+{
+    return progressClearCount;
+}
+
+PlaceholderTaskCancelReason GetLastPlaceholderTaskCancelReason()
+{
+    return lastCancelReason;
+}
+} // namespace Test
+
 PlaceholderCallbackManager &PlaceholderCallbackManager::GetInstance()
 {
     static PlaceholderCallbackManager instance;
     return instance;
 }
 
-void PlaceholderCallbackManager::ClearAll() {}
+void PlaceholderCallbackManager::ClearAll()
+{
+    ++callbackClearCount;
+}
 
 PlaceholderTaskManager &PlaceholderTaskManager::GetInstance()
 {
@@ -34,10 +88,14 @@ PlaceholderTaskManager &PlaceholderTaskManager::GetInstance()
 
 void PlaceholderTaskManager::CancelAllTasks(PlaceholderTaskCancelReason reason)
 {
-    (void)reason;
+    ++taskCancelCount;
+    lastCancelReason = reason;
 }
 
-void PlaceholderTaskManager::ClearTombstones() {}
+void PlaceholderTaskManager::ClearCancellationRecords()
+{
+    ++cancellationRecordClearCount;
+}
 
 PlaceholderProgressManager &PlaceholderProgressManager::GetInstance()
 {
@@ -45,7 +103,13 @@ PlaceholderProgressManager &PlaceholderProgressManager::GetInstance()
     return instance;
 }
 
-void PlaceholderProgressManager::Drain() {}
+void PlaceholderProgressManager::Drain()
+{
+    ++progressDrainCount;
+}
 
-void PlaceholderProgressManager::Clear() {}
+void PlaceholderProgressManager::Clear()
+{
+    ++progressClearCount;
+}
 } // namespace OHOS::FileManagement::CloudDiskService

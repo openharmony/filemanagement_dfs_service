@@ -226,6 +226,7 @@ ohos_unittest("cloud_disk_service_callback_proxy_test_new") {
     "${services_path}/clouddiskservice/ipc/include",
     "${services_path}/clouddiskservice/utils/include",
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/clouddiskservice/include",
     "${distributedfile_path}/utils/inner_api",
   ]
 
