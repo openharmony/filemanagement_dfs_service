@@ -21,6 +21,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+#include "operation_log_handler.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
@@ -43,6 +44,10 @@ void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event
         } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT) {
             LOGI("account logout");
             listener->DoCleanVideoCache();
+            int32_t result = CloudDisk::OperationLogHandler::GetInstance().CleanAllRecords();
+            if (result != NativeRdb::E_OK) {
+                LOGE("CleanAllRecords failed, ret: %{public}d", result);
+            }
         }
     });
 }

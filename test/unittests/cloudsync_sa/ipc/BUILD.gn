@@ -103,6 +103,7 @@ ohos_unittest("cloud_sync_service_test") {
 
   include_dirs = [
     "${clouddisk_database_path}/include",
+    "${clouddisk_database_path}/include/operation_log",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
     "${innerkits_native_path}/cloud_file_kit_inner",
     "${innerkits_native_path}/cloudsync_kit_inner",
