@@ -507,8 +507,8 @@ int32_t CloudDiskServiceManagerImpl::GetPlaceholderCustomInfo(const std::string 
 #endif
 }
 
-int32_t
-    CloudDiskServiceManagerImpl::StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority)
+int32_t CloudDiskServiceManagerImpl::StartHydrationByPath(
+    const std::string &path, int32_t callbackType, int32_t priority)
 {
     LOGI("StartHydrationByPath begin, path:%{private}s, callbackType:%{public}d, priority:%{public}d", path.c_str(),
          callbackType, priority);

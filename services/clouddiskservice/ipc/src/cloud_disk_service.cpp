@@ -632,8 +632,10 @@ static int32_t GetErrorNum(int32_t error)
     return errNum;
 }
 
-static bool
-    SetFileSyncStates(const FileSyncState &fileSyncStates, int32_t userId, FailedList &failed, const string &syncFolder)
+static bool SetFileSyncStates(const FileSyncState &fileSyncStates,
+                              int32_t userId,
+                              FailedList &failed,
+                              const string &syncFolder)
 {
     std::string setXattrPath;
     if (CloudDiskSyncFolder::GetInstance().PathToMntPathBySandboxPath(fileSyncStates.path, std::to_string(userId),
@@ -856,8 +858,8 @@ static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t
     return E_OK;
 }
 
-static int32_t
-    ResolvePlaceholderQueryPath(const std::string &syncFolder, const std::string &relativePath, std::string &queryPath)
+static int32_t ResolvePlaceholderQueryPath(
+    const std::string &syncFolder, const std::string &relativePath, std::string &queryPath)
 {
     if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
         relativePath.back() == '/') {
@@ -1050,8 +1052,8 @@ int32_t CloudDiskService::GetPlaceholderStateInner(const std::string &syncFolder
 #endif
 }
 
-int32_t
-    CloudDiskService::RegisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path)
+int32_t CloudDiskService::RegisterSyncFolderInner(
+    int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin RegisterSyncFolderInner");
@@ -1088,8 +1090,8 @@ int32_t
 #endif
 }
 
-int32_t
-    CloudDiskService::UnregisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path)
+int32_t CloudDiskService::UnregisterSyncFolderInner(
+    int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin UnregisterSyncFolderInner");
@@ -1244,8 +1246,10 @@ static bool IsValidPlaceholderRelativePath(const std::string &relativePath)
            relativePath.back() != '/';
 }
 
-static int32_t
-    GetHmdfsPath(const std::string &syncFolder, const std::string &relativePath, int32_t userId, std::string &hmdfsPath)
+static int32_t GetHmdfsPath(const std::string &syncFolder,
+                            const std::string &relativePath,
+                            int32_t userId,
+                            std::string &hmdfsPath)
 {
     // 校验相对路径合法性
     if (!IsValidPlaceholderRelativePath(relativePath)) {
@@ -1525,8 +1529,9 @@ static int32_t ChangePlaceholderStateOnly(const PlaceholderStatePathContext &con
                                           const std::string &relativePath = "")
 {
     std::lock_guard<std::mutex> lock(GetPlaceholderFileMutex(context.hmdfsPath));
-    if (!relativePath.empty() && PlaceholderTaskManager::GetInstance().HasOutstandingTask(
-                                     context.syncFolder, relativePath, context.syncFolderIndex)) {
+    if (!relativePath.empty() &&
+        PlaceholderTaskManager::GetInstance().HasOutstandingTask(
+            context.syncFolder, relativePath, context.syncFolderIndex)) {
         LOGW("Placeholder state transition rejected: hydration is outstanding");
         return E_HYDRATE_IN_PROGRESS;
     }
@@ -1946,28 +1951,14 @@ static int32_t ResolveSystemAccessorTaskPath(const std::string &path,
     return E_OK;
 }
 
-static int32_t ResolveSystemAccessorPath(const std::string &path,
-                                         PlaceholderStatePathContext &context,
-                                         std::string &relativePath,
-                                         bool resolveTarget = true)
+static int32_t ResolveSystemAccessorTargetPath(const std::string &path,
+                                               PlaceholderStatePathContext &context,
+                                               std::string &relativePath)
 {
-    LOGI("Begin, path:%{private}s, resolveTarget:%{public}d", path.c_str(), static_cast<int32_t>(resolveTarget));
-    if (!IsValidSystemAccessorPath(path)) {
-        LOGE("Invalid system accessor path, path:%{private}s", path.c_str());
-        return E_INVALID_ARG;
-    }
-    int32_t ret = ResolveSystemAccessorUser(context.userId);
-    if (ret != E_OK) {
-        LOGE("Resolve path account failed, ret:%{public}d", ret);
-        return ret;
-    }
-    if (!resolveTarget) {
-        return ResolveSystemAccessorTaskPath(path, context.userId, context, relativePath);
-    }
     auto &folders = CloudDiskSyncFolder::GetInstance();
     std::string physicalPath;
     std::string user = std::to_string(context.userId);
-    ret = folders.PathToPhysicalPath(path, user, physicalPath);
+    int32_t ret = folders.PathToPhysicalPath(path, user, physicalPath);
     const std::string userRoot = "/data/service/el2/" + user + "/hmdfs/account/files/Docs";
     if (ret != E_OK) {
         LOGE("Resolve system accessor physical path failed, path:%{private}s, ret:%{public}d", path.c_str(), ret);
@@ -2006,6 +1997,27 @@ static int32_t ResolveSystemAccessorPath(const std::string &path,
     LOGI("Path resolved, syncFolderIndex:%{private}u, bundleName:%{private}s, hmdfsPath:%{private}s",
          context.syncFolderIndex, context.bundleName.c_str(), context.hmdfsPath.c_str());
     return E_OK;
+}
+
+static int32_t ResolveSystemAccessorPath(const std::string &path,
+                                         PlaceholderStatePathContext &context,
+                                         std::string &relativePath,
+                                         bool resolveTarget = true)
+{
+    LOGI("Begin, path:%{private}s, resolveTarget:%{public}d", path.c_str(), static_cast<int32_t>(resolveTarget));
+    if (!IsValidSystemAccessorPath(path)) {
+        LOGE("Invalid system accessor path, path:%{private}s", path.c_str());
+        return E_INVALID_ARG;
+    }
+    int32_t ret = ResolveSystemAccessorUser(context.userId);
+    if (ret != E_OK) {
+        LOGE("Resolve path account failed, ret:%{public}d", ret);
+        return ret;
+    }
+    if (!resolveTarget) {
+        return ResolveSystemAccessorTaskPath(path, context.userId, context, relativePath);
+    }
+    return ResolveSystemAccessorTargetPath(path, context, relativePath);
 }
 #endif
 

@@ -255,12 +255,10 @@ void PlaceholderCallbackManager::RemoveRemoteKeyLocked(const sptr<ICloudDiskServ
         return;
     }
     auto &keys = remoteCallbacks->second;
-    keys.erase(std::remove_if(keys.begin(), keys.end(),
-                              [&key](const CallbackKey &current) {
-                                  return current.bundleName == key.bundleName &&
-                                         current.syncFolderIndex == key.syncFolderIndex;
-                              }),
-               keys.end());
+    auto keyMatches = [&key](const CallbackKey &current) {
+        return current.bundleName == key.bundleName && current.syncFolderIndex == key.syncFolderIndex;
+    };
+    keys.erase(std::remove_if(keys.begin(), keys.end(), keyMatches), keys.end());
     if (!keys.empty()) {
         return;
     }

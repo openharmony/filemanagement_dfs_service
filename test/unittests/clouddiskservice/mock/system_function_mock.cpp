@@ -16,6 +16,7 @@
 
 #include <cerrno>
 #include <cstdarg>
+#include <cstring>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/fanotify.h>
@@ -24,6 +25,18 @@
 #include "file_utils.h"
 
 using namespace OHOS::FileManagement::CloudDiskService;
+
+namespace {
+constexpr char DEVICE_PATH[] = "/dev";
+constexpr char DEVICE_PATH_PREFIX[] = "/dev/";
+
+bool IsDevicePath(const char *path)
+{
+    return path != nullptr &&
+           (std::strcmp(path, DEVICE_PATH) == 0 ||
+            std::strncmp(path, DEVICE_PATH_PREFIX, sizeof(DEVICE_PATH_PREFIX) - 1) == 0);
+}
+} // namespace
 
 ssize_t readlink(const char *pathname, char *buf, size_t bufsiz)
 {
@@ -51,7 +64,15 @@ DIR* opendir(const char* path)
 
 int closedir(DIR *dir)
 {
-    return Assistant::ins->CloseDir(dir);
+    if (Assistant::ins != nullptr) {
+        return Assistant::ins->CloseDir(dir);
+    }
+    static auto realClosedir = reinterpret_cast<int (*)(DIR *)>(dlsym(RTLD_NEXT, "closedir"));
+    if (realClosedir == nullptr) {
+        errno = EIO;
+        return -1;
+    }
+    return realClosedir(dir);
 }
 
 int dirfd(DIR *d)
@@ -137,12 +158,29 @@ int fsetxattr(int fd, const char *name, const void *value, size_t size, int flag
 
 ssize_t fgetxattr(int fd, const char *name, void *value, size_t size)
 {
-    return Assistant::ins->fgetxattr(fd, name, value, size);
+    if (Assistant::ins != nullptr) {
+        return Assistant::ins->fgetxattr(fd, name, value, size);
+    }
+    static auto realFgetxattr = reinterpret_cast<ssize_t (*)(int, const char *, void *, size_t)>(
+        dlsym(RTLD_NEXT, "fgetxattr"));
+    if (realFgetxattr == nullptr) {
+        errno = EIO;
+        return -1;
+    }
+    return realFgetxattr(fd, name, value, size);
 }
 
 int access(const char *name, int type)
 {
-    return Assistant::ins->access(name, type);
+    if (Assistant::ins != nullptr) {
+        return Assistant::ins->access(name, type);
+    }
+    static auto realAccess = reinterpret_cast<int (*)(const char *, int)>(dlsym(RTLD_NEXT, "access"));
+    if (realAccess == nullptr) {
+        errno = EIO;
+        return -1;
+    }
+    return realAccess(name, type);
 }
 
 int open(const char *path, int flags, ...)
@@ -154,25 +192,24 @@ int open(const char *path, int flags, ...)
         mode = static_cast<mode_t>(va_arg(args, int));
         va_end(args);
     }
-    if (Assistant::mockFdApi) {
-        if (Assistant::ins == nullptr) {
-            errno = ENOENT;
-            return -1;
-        }
-        errno = Assistant::mockErrno;
-        return Assistant::ins->Open(path, flags, mode);
-    }
-
     static int (*realOpen)(const char *, int, ...) = []() {
         return reinterpret_cast<int (*)(const char *, int, ...)>(dlsym(RTLD_NEXT, "open"));
     }();
-    if (realOpen == nullptr) {
+    if (!Assistant::mockFdApi || IsDevicePath(path)) {
+        if (realOpen == nullptr) {
+            return -1;
+        }
+        if ((flags & O_CREAT) != 0) {
+            return realOpen(path, flags, mode);
+        }
+        return realOpen(path, flags);
+    }
+    if (Assistant::ins == nullptr) {
+        errno = ENOENT;
         return -1;
     }
-    if ((flags & O_CREAT) != 0) {
-        return realOpen(path, flags, mode);
-    }
-    return realOpen(path, flags);
+    errno = Assistant::mockErrno;
+    return Assistant::ins->Open(path, flags, mode);
 }
 
 int openat(int dirfd, const char *path, int flags, ...)
@@ -184,25 +221,24 @@ int openat(int dirfd, const char *path, int flags, ...)
         mode = static_cast<mode_t>(va_arg(args, int));
         va_end(args);
     }
-    if (Assistant::mockFdApi) {
-        if (Assistant::ins == nullptr) {
-            errno = ENOENT;
-            return -1;
-        }
-        errno = Assistant::mockErrno;
-        return Assistant::ins->OpenAt(dirfd, path, flags, mode);
-    }
-
     static int (*realOpenAt)(int, const char *, int, ...) = []() {
         return reinterpret_cast<int (*)(int, const char *, int, ...)>(dlsym(RTLD_NEXT, "openat"));
     }();
-    if (realOpenAt == nullptr) {
+    if (!Assistant::mockFdApi || IsDevicePath(path)) {
+        if (realOpenAt == nullptr) {
+            return -1;
+        }
+        if ((flags & O_CREAT) != 0) {
+            return realOpenAt(dirfd, path, flags, mode);
+        }
+        return realOpenAt(dirfd, path, flags);
+    }
+    if (Assistant::ins == nullptr) {
+        errno = ENOENT;
         return -1;
     }
-    if ((flags & O_CREAT) != 0) {
-        return realOpenAt(dirfd, path, flags, mode);
-    }
-    return realOpenAt(dirfd, path, flags);
+    errno = Assistant::mockErrno;
+    return Assistant::ins->OpenAt(dirfd, path, flags, mode);
 }
 
 int unlink(const char *path)

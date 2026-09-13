@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <climits>
+#include <iterator>
 #include <memory>
 
 #include "assistant.h"
@@ -48,6 +49,14 @@ using namespace testing;
 using namespace testing::ext;
 
 namespace {
+constexpr char DOT_ENTRY_NAME[] = ".";
+constexpr char DOT_DOT_ENTRY_NAME[] = "..";
+constexpr char FAILED_ENTRY_NAME[] = "failed";
+constexpr char PLACEHOLDER_ENTRY_NAME[] = "placeholder";
+constexpr ino_t TEST_DIRECTORY_INODE = 123;
+constexpr int32_t DIRECTORY_STAT_CALL_COUNT = 2;
+constexpr int32_t READ_DIRECTORY_CALL_COUNT = 5;
+
 void EncodeTestPlaceholderCount(void *value, uint32_t count)
 {
     auto *bytes = static_cast<uint8_t *>(value);
@@ -76,12 +85,12 @@ struct RecountChildEntries {
 
     RecountChildEntries()
     {
-        std::copy_n(".", 2, dotEntry.d_name);
-        std::copy_n("..", 3, dotDotEntry.d_name);
-        std::copy_n("failed", 7, failedEntry.d_name);
-        std::copy_n("placeholder", 12, placeholderEntry.d_name);
+        std::copy(std::begin(DOT_ENTRY_NAME), std::end(DOT_ENTRY_NAME), dotEntry.d_name);
+        std::copy(std::begin(DOT_DOT_ENTRY_NAME), std::end(DOT_DOT_ENTRY_NAME), dotDotEntry.d_name);
+        std::copy(std::begin(FAILED_ENTRY_NAME), std::end(FAILED_ENTRY_NAME), failedEntry.d_name);
+        std::copy(std::begin(PLACEHOLDER_ENTRY_NAME), std::end(PLACEHOLDER_ENTRY_NAME), placeholderEntry.d_name);
         directoryStat.st_mode = S_IFDIR;
-        directoryStat.st_ino = 123;
+        directoryStat.st_ino = TEST_DIRECTORY_INODE;
         fileStat.st_mode = S_IFREG;
     }
 
@@ -99,7 +108,7 @@ void ExpectRecountChildTraversal(const std::shared_ptr<AssistantMock> &mock,
 {
     DIR *dir = entries.GetDir();
     EXPECT_CALL(*mock, MockStat(StrEq(root), _))
-        .Times(2)
+        .Times(DIRECTORY_STAT_CALL_COUNT)
         .WillRepeatedly(DoAll(SetArgPointee<1>(entries.directoryStat), Return(0)));
     EXPECT_CALL(*mock, MockStat(StrEq(failedChild), _)).WillOnce(Invoke([](const char *, struct stat *) {
         errno = EIO;
@@ -109,7 +118,7 @@ void ExpectRecountChildTraversal(const std::shared_ptr<AssistantMock> &mock,
         .WillOnce(DoAll(SetArgPointee<1>(entries.fileStat), Return(0)));
     EXPECT_CALL(*mock, opendir(StrEq(root))).WillOnce(Return(dir));
     EXPECT_CALL(*mock, readdir(dir))
-        .Times(5)
+        .Times(READ_DIRECTORY_CALL_COUNT)
         .WillOnce(Return(&entries.dotEntry))
         .WillOnce(Return(&entries.dotDotEntry))
         .WillOnce(Return(&entries.failedEntry))

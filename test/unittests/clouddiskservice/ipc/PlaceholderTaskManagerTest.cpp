@@ -37,6 +37,7 @@ using namespace testing;
 using namespace testing::ext;
 
 namespace {
+const std::string TEST_TEMP_ROOT = "/data/test";
 const std::string TEST_SYNC_FOLDER = "/storage/Users/currentUser/sync";
 const std::string TEST_BUNDLE_NAME = "com.example.cloud.disk";
 constexpr uint32_t TEST_SYNC_FOLDER_INDEX = 100;
@@ -50,7 +51,7 @@ static_assert(NON_EXECUTE_CALLBACK_TYPE == 2);
 
 UniqueFd OpenTaskFd()
 {
-    char pathTemplate[] = "/tmp/cloud_disk_task_XXXXXX";
+    char pathTemplate[] = "/data/test/cloud_disk_task_XXXXXX";
     UniqueFd fd(mkstemp(pathTemplate));
     if (fd < 0) {
         return UniqueFd(-1);
@@ -65,7 +66,7 @@ class HydrationTestFile {
 public:
     HydrationTestFile()
     {
-        char pathTemplate[] = "/tmp/cloud_disk_hydration_XXXXXX";
+        char pathTemplate[] = "/data/test/cloud_disk_hydration_XXXXXX";
         fd_ = mkstemp(pathTemplate);
         path_ = pathTemplate;
         if (fd_ < 0) {
@@ -371,13 +372,13 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFileErrorMapping_001,
     ASSERT_TRUE(file.Remove());
     UniqueFd outputFd;
     HydrationFileMetadata metadata;
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", path, outputFd, metadata), E_FILE_NOT_EXIST);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, path, outputFd, metadata), E_FILE_NOT_EXIST);
 
     HydrationTestFile malformedFile;
     ASSERT_TRUE(malformedFile.IsValid());
     ExpectAdmissionMetadata(TEST_INODE_ID);
     EXPECT_CALL(*mock_, fgetxattr(_, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t))).WillOnce(Return(0));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", malformedFile.GetPath(), outputFd, metadata),
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, malformedFile.GetPath(), outputFd, metadata),
               E_INVALID_PLACEHOLDER_STATE);
 
     Mock::VerifyAndClearExpectations(mock_.get());
@@ -387,7 +388,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFileErrorMapping_001,
             errno = ERANGE;
             return -1;
         }));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", malformedFile.GetPath(), outputFd, metadata),
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, malformedFile.GetPath(), outputFd, metadata),
               E_INVALID_PLACEHOLDER_STATE);
 }
 
@@ -619,7 +620,7 @@ HWTEST_F(PlaceholderTaskManagerTest, PendingFileRemoved_001, TestSize.Level1)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     ASSERT_TRUE(file.Remove());
     manager.StartScheduler();
@@ -653,7 +654,7 @@ HWTEST_F(PlaceholderTaskManagerTest, PendingFileReplaced_001, TestSize.Level1)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     ASSERT_TRUE(file.Replace());
     manager.StartScheduler();
@@ -684,7 +685,7 @@ HWTEST_F(PlaceholderTaskManagerTest, PendingFileResize_001, TestSize.Level1)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     manager.StartScheduler();
     {
@@ -874,7 +875,7 @@ HWTEST_F(PlaceholderTaskManagerTest, StartScheduler_001, TestSize.Level1)
     PlaceholderTaskManager::RequestKey reqKey;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_HIGH, file.DuplicateFd(), reqKey,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     manager.StartScheduler();
     bool called = false;
@@ -920,7 +921,7 @@ HWTEST_F(PlaceholderTaskManagerTest, IdleTimeout_001, TestSize.Level1)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     manager.StartScheduler();
     {
@@ -1414,11 +1415,11 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_001, TestSize.Le
     UniqueFd outputFd;
     HydrationFileMetadata metadata;
     EXPECT_EQ(OpenValidatedHydrationFile("", file.GetPath(), outputFd, metadata), E_INVALID_ARG);
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", "", outputFd, metadata), E_INVALID_ARG);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, "", outputFd, metadata), E_INVALID_ARG);
     EXPECT_EQ(OpenValidatedHydrationFile(file.GetPath() + "-missing", file.GetPath(), outputFd, metadata),
               E_SYNC_FOLDER_PATH_NOT_EXIST);
     EXPECT_EQ(OpenValidatedHydrationFile("/dev", file.GetPath(), outputFd, metadata), E_INVALID_ARG);
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", "/tmp", outputFd, metadata), E_INVALID_ARG);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, TEST_TEMP_ROOT, outputFd, metadata), E_INVALID_ARG);
 }
 
 /**
@@ -1434,33 +1435,38 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_002, TestSize.Le
     UniqueFd outputFd;
     HydrationFileMetadata metadata;
 
+    UniqueFd rootFd = OpenTaskFd();
+    UniqueFd nestedRootFd = OpenTaskFd();
+    UniqueFd dataDirFd = OpenTaskFd();
+    UniqueFd testDirFd = OpenTaskFd();
+    ASSERT_GE(rootFd.Get(), 0);
+    ASSERT_GE(nestedRootFd.Get(), 0);
+    ASSERT_GE(dataDirFd.Get(), 0);
+    ASSERT_GE(testDirFd.Get(), 0);
+
     Assistant::mockFdApi = true;
     Assistant::mockErrno = EACCES;
     EXPECT_CALL(*mock_, Open(_, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_ACCES);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_ACCES);
     Mock::VerifyAndClearExpectations(mock_.get());
 
-    UniqueFd rootFd = OpenTaskFd();
-    ASSERT_GE(rootFd.Get(), 0);
     int32_t rawRootFd = rootFd.Release();
     Assistant::mockErrno = ELOOP;
     EXPECT_CALL(*mock_, Open(_, _, _)).WillOnce(Return(rawRootFd));
     EXPECT_CALL(*mock_, OpenAt(rawRootFd, _, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_INVALID_ARG);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_INVALID_ARG);
     Mock::VerifyAndClearExpectations(mock_.get());
 
-    UniqueFd nestedRootFd = OpenTaskFd();
-    UniqueFd intermediateFd = OpenTaskFd();
-    ASSERT_GE(nestedRootFd.Get(), 0);
-    ASSERT_GE(intermediateFd.Get(), 0);
     int32_t rawNestedRootFd = nestedRootFd.Release();
-    int32_t rawIntermediateFd = intermediateFd.Release();
+    int32_t rawDataDirFd = dataDirFd.Release();
+    int32_t rawTestDirFd = testDirFd.Release();
     Assistant::mockErrno = EACCES;
     {
         InSequence sequence;
         EXPECT_CALL(*mock_, Open(StrEq("/"), _, _)).WillOnce(Return(rawNestedRootFd));
-        EXPECT_CALL(*mock_, OpenAt(rawNestedRootFd, StrEq("tmp"), _, _)).WillOnce(Return(rawIntermediateFd));
-        EXPECT_CALL(*mock_, OpenAt(rawIntermediateFd, _, _, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*mock_, OpenAt(rawNestedRootFd, StrEq("data"), _, _)).WillOnce(Return(rawDataDirFd));
+        EXPECT_CALL(*mock_, OpenAt(rawDataDirFd, StrEq("test"), _, _)).WillOnce(Return(rawTestDirFd));
+        EXPECT_CALL(*mock_, OpenAt(rawTestDirFd, _, _, _)).WillOnce(Return(-1));
     }
     EXPECT_EQ(OpenValidatedHydrationFile("/", file.GetPath(), outputFd, metadata), E_ACCES);
     Mock::VerifyAndClearExpectations(mock_.get());
@@ -1485,7 +1491,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_004, TestSize.Le
         errno = EACCES;
         return -1;
     }));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_ACCES);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_ACCES);
     Mock::VerifyAndClearExpectations(mock_.get());
 
     EXPECT_CALL(*mock_, fstat(_, _)).WillOnce(Invoke([](int, struct stat *fileStat) {
@@ -1493,7 +1499,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_004, TestSize.Le
         fileStat->st_size = 0;
         return 0;
     }));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_INVALID_ARG);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_INVALID_ARG);
     Mock::VerifyAndClearExpectations(mock_.get());
 
     EXPECT_CALL(*mock_, fstat(_, _)).WillOnce(Invoke([](int, struct stat *fileStat) {
@@ -1501,7 +1507,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_004, TestSize.Le
         fileStat->st_size = -1;
         return 0;
     }));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_INVALID_ARG);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_INVALID_ARG);
 }
 
 /**
@@ -1520,7 +1526,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_003, TestSize.Le
         ExpectAdmissionMetadata(TEST_INODE_ID, 7);
         EXPECT_CALL(*mock_, fgetxattr(_, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
             .WillOnce(Invoke(ReturnPlaceholderState(state)));
-        EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), expected);
+        EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), expected);
         Mock::VerifyAndClearExpectations(mock_.get());
     };
 
@@ -1533,7 +1539,7 @@ HWTEST_F(PlaceholderTaskManagerTest, OpenValidatedHydrationFile_003, TestSize.Le
             errno = ENOENT;
             return -1;
         }));
-    EXPECT_EQ(OpenValidatedHydrationFile("/tmp", file.GetPath(), outputFd, metadata), E_FILE_NOT_EXIST);
+    EXPECT_EQ(OpenValidatedHydrationFile(TEST_TEMP_ROOT, file.GetPath(), outputFd, metadata), E_FILE_NOT_EXIST);
     Mock::VerifyAndClearExpectations(mock_.get());
 
     runState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED, E_OK);
@@ -1683,7 +1689,7 @@ HWTEST_F(PlaceholderTaskManagerTest, ActivateAndDispatch_001, TestSize.Level2)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     manager.ActivateAndDispatch(manager.taskMap_.at(key));
     PlaceholderTaskState state;
@@ -1726,7 +1732,7 @@ HWTEST_F(PlaceholderTaskManagerTest, ActivateAndDispatch_002, TestSize.Level2)
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, file.DuplicateFd(), key,
-                                        {-1, "", file.GetPath(), "/tmp"}),
+                                        {-1, "", file.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
     manager.ActivateAndDispatch(manager.taskMap_.at(key));
     EXPECT_EQ(manager.taskMap_.count(key), 0U);
@@ -2165,7 +2171,7 @@ HWTEST_F(PlaceholderTaskManagerTest, DispatchLoop_001, TestSize.Level1)
     const std::string pendingPath = "pending.txt";
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, pendingPath, TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_HIGH, pendingFile.DuplicateFd(), pendingKey,
-                                        {-1, "", pendingFile.GetPath(), "/tmp"}),
+                                        {-1, "", pendingFile.GetPath(), TEST_TEMP_ROOT}),
               E_OK);
 
     manager.StartScheduler();

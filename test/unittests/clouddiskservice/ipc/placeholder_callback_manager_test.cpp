@@ -423,11 +423,11 @@ HWTEST_F(PlaceholderCallbackManagerTest, RunIfRegistered_001, TestSize.Level1)
     auto callback = sptr(new CallbackTableStub());
     ASSERT_EQ(manager.RegisterCallbackTable(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, callback), E_OK);
     uint32_t callCount = 0;
-    EXPECT_EQ(manager.RunIfRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-                                      [&callCount]() {
-                                          ++callCount;
-                                          return E_TRY_AGAIN;
-                                      }),
+    auto operation = [&callCount]() {
+        ++callCount;
+        return E_TRY_AGAIN;
+    };
+    EXPECT_EQ(manager.RunIfRegistered(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, operation),
               E_TRY_AGAIN);
     EXPECT_EQ(callCount, 1U);
 }

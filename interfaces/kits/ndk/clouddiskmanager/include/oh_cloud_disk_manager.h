@@ -579,11 +579,11 @@ typedef union OH_CloudDisk_CallbackResponse {
  * <br> returns an error code defined in {@link cloud_disk_error_code.h} otherwise.
  * @since 21
  */
-CloudDisk_ErrorCode
-    OH_CloudDisk_RegisterSyncFolderChanges(const CloudDisk_SyncFolderPath syncFolderPath,
-                                           void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
-                                                            const CloudDisk_ChangeData changeDatas[],
-                                                            size_t bufferLength));
+CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolderChanges(
+    const CloudDisk_SyncFolderPath syncFolderPath,
+    void (*callback)(const CloudDisk_SyncFolderPath syncFolderPath,
+                     const CloudDisk_ChangeData changeDatas[],
+                     size_t bufferLength));
 
 /**
  * @brief Unregisters a callback function for sync folder changes.

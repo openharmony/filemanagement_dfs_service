@@ -16,7 +16,6 @@
 #include "placeholder_task_manager.h"
 
 #include <algorithm>
-#include <array>
 #include <cerrno>
 #include <climits>
 #include <fcntl.h>
@@ -147,20 +146,20 @@ int32_t ResolveHydrationPath(const std::string &syncRoot,
     if (syncRoot.empty() || path.empty()) {
         return E_INVALID_ARG;
     }
-    std::array<char, PATH_MAX> resolvedRoot{};
-    if (realpath(syncRoot.c_str(), resolvedRoot.data()) == nullptr) {
+    char resolvedRoot[PATH_MAX] = {'\0'};
+    if (realpath(syncRoot.c_str(), resolvedRoot) == nullptr) {
         int32_t error = errno;
         LOGE("Resolve hydration root failed, errno:%{public}d", error);
         return ConvertErrnoToCloudDiskError(error);
     }
-    rootPath = resolvedRoot.data();
-    std::array<char, PATH_MAX> resolvedFile{};
-    if (realpath(path.c_str(), resolvedFile.data()) == nullptr) {
+    rootPath = resolvedRoot;
+    char resolvedFile[PATH_MAX] = {'\0'};
+    if (realpath(path.c_str(), resolvedFile) == nullptr) {
         int32_t error = errno;
         LOGE("Resolve hydration target failed, errno:%{public}d", error);
         return ConvertHydrationTargetError(error);
     }
-    filePath = resolvedFile.data();
+    filePath = resolvedFile;
     if (!IsPathInSyncFolder(rootPath, filePath)) {
         LOGE("Hydration path escapes sync folder");
         return E_INVALID_ARG;
