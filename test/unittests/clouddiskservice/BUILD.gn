@@ -25,6 +25,9 @@ ohos_unittest("cloud_disk_service_static_test") {
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_metafile_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_static_dependency_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_stub.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_comm.h",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_manager.h",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/disk_monitor_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/system_function_mock.cpp",
@@ -81,11 +84,11 @@ ohos_unittest("cloud_disk_service_static_test") {
     "private=public",
     "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskService\"",
+    "SUPPORT_CLOUD_DISK_SERVICE",
   ]
 
   if (dfs_service_feature_enable_cloud_disk) {
     external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
-    defines += [ "SUPPORT_CLOUD_DISK_SERVICE" ]
   }
 
   use_exceptions = true

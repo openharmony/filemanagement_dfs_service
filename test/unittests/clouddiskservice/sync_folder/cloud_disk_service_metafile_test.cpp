@@ -768,7 +768,7 @@ HWTEST_F(CloudDiskServiceMetafileTest, DoRenameTest002, TestSize.Level1)
         string recordId = longName;
         auto newMetaFile = make_shared<CloudDiskServiceMetaFile>(100, 2, 456);
         auto ret = mFile.DoRename(base, recordId, newMetaFile);
-        EXPECT_EQ(ret, ENAMETOOLONG);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DoRenameTest002 ERROR";

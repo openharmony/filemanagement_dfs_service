@@ -928,8 +928,7 @@ HWTEST_F(PlaceholderHelperTest, RecountPlaceholderStateSuccess_001, TestSize.Lev
 
     Assistant::mockLstatApi = true;
     EXPECT_CALL(*mock_, MockStat(StrEq(root), _))
-        .Times(2)
-        .WillRepeatedly(DoAll(SetArgPointee<1>(directoryStat), Return(0)));
+        .WillOnce(DoAll(SetArgPointee<1>(directoryStat), Return(0)));
     EXPECT_CALL(*mock_, MockStat(StrEq(child), _)).WillOnce(DoAll(SetArgPointee<1>(fileStat), Return(0)));
     EXPECT_CALL(*mock_, opendir(StrEq(root))).WillOnce(Return(dir));
     EXPECT_CALL(*mock_, readdir(dir)).Times(2).WillOnce(Return(&childEntry)).WillOnce(Return(nullptr));

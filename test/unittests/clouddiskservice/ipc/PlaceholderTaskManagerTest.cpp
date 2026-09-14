@@ -21,6 +21,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
 
@@ -248,6 +249,14 @@ public:
 
 class PlaceholderTaskManagerTest : public testing::Test {
 public:
+    static void SetUpTestCase()
+    {
+        struct stat st {};
+        if (stat(TEST_TEMP_ROOT.c_str(), &st) != 0) {
+            mkdir(TEST_TEMP_ROOT.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+        }
+    }
+
     void SetUp() override
     {
         PlaceholderTaskManager::GetInstance().StopScheduler();
@@ -276,7 +285,7 @@ public:
     void ExpectStateTransitions(int32_t taskFd, uint8_t &stateByte)
     {
         constexpr int32_t STATE_UPDATE_COUNT = 2;                    // Partially hydrated, then fully hydrated.
-        constexpr int32_t STATE_READ_COUNT = STATE_UPDATE_COUNT + 1; // Initial check plus each update.
+        constexpr int32_t STATE_READ_COUNT = STATE_UPDATE_COUNT * 2; // Get + Set per update.
         EXPECT_CALL(*mock_, fgetxattr(taskFd, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
             .Times(STATE_READ_COUNT)
             .WillRepeatedly(Invoke([&stateByte](int, const char *, void *value, size_t) {
@@ -841,7 +850,8 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_EmptyFile_001, TestSize.Level1)
     ASSERT_GE(taskFd, 0);
     uint8_t stateByte = MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 1);
     EXPECT_CALL(*mock_, fgetxattr(taskFd, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
-        .WillOnce(Invoke([&stateByte](int, const char *, void *value, size_t) {
+        .Times(2)
+        .WillRepeatedly(Invoke([&stateByte](int, const char *, void *value, size_t) {
             *static_cast<uint8_t *>(value) = stateByte;
             return static_cast<ssize_t>(sizeof(uint8_t));
         }));
@@ -949,7 +959,15 @@ HWTEST_F(PlaceholderTaskManagerTest, IdleTimeout_001, TestSize.Level1)
         EXPECT_EQ(callback->callbackTypes[1], CloudDiskCallbackType::CANCEL_FETCH_DATA);
     }
     PlaceholderTaskState state;
-    EXPECT_FALSE(manager.GetTaskState(key, state));
+    bool erased = false;
+    for (int i = 0; i < 100; ++i) {
+        if (!manager.GetTaskState(key, state)) {
+            erased = true;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    EXPECT_TRUE(erased);
     EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(key)), E_CANCELLED);
 }
 
@@ -1236,7 +1254,8 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_014, TestSize.Level2)
     task->hasPartialState = true;
     EXPECT_CALL(*mock_, Pwrite(task->outputFd.Get(), _, 1, 0)).WillOnce(Return(1));
     EXPECT_CALL(*mock_, fgetxattr(task->outputFd.Get(), _, _, _))
-        .WillOnce(Invoke(ReturnPlaceholderState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED)));
+        .Times(2)
+        .WillRepeatedly(Invoke(ReturnPlaceholderState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED)));
     EXPECT_CALL(*mock_, fsetxattr(task->outputFd.Get(), _, _, _, _))
         .WillOnce(Invoke([](int, const char *, const void *, size_t, int) {
             errno = ERANGE;

@@ -69,6 +69,8 @@ void CloudDiskServiceStaticTest::SetUp()
 
 void CloudDiskServiceStaticTest::TearDown()
 {
+    Mock::VerifyAndClearExpectations(insMock_.get());
+    Mock::VerifyAndClearExpectations(dfsuAccessToken_.get());
 }
 
 /**
@@ -430,6 +432,8 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest004, TestSize.Level1)
         string filePath = "/invalid/path/file";
         string syncFolderPath = "/invalid/path";
         int32_t testUserId = 1;
+        EXPECT_CALL(*insMock_, stat(_, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENOENT, -1)));
         auto res = GetFileSyncState(filePath, testUserId, syncFolderPath);
         EXPECT_EQ(res.isSuccess, false);
         EXPECT_EQ(res.error, ErrorReason::NO_SUCH_FILE);

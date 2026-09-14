@@ -231,6 +231,7 @@ void CloudDiskServiceStaticTest::TearDown()
     DfsMessageParcel::messageParcel = nullptr;
     messageParcelMock_ = nullptr;
     Assistant::mockFdApi = false;
+    Assistant::mockErrno = 0;
     CloudDiskSyncFolder::GetInstance().ClearMap();
     PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(PLACEHOLDER_TEST_BUNDLE_NAME, 1);
 }
@@ -396,6 +397,11 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
+        EXPECT_CALL(*insMock_, getxattr(_, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+            .WillOnce(Invoke([](const char *, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = 0;
+                return static_cast<ssize_t>(size);
+            }));
         EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(0));
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_TRUE(res);
@@ -471,6 +477,12 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
+        Assistant::mockErrno = EACCES;
+        EXPECT_CALL(*insMock_, getxattr(_, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+            .WillOnce(Invoke([](const char *, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = 0;
+                return static_cast<ssize_t>(size);
+            }));
         EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);
@@ -497,6 +509,12 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
         fileSyncStates.state = SyncState::SYNCING;
         int32_t userId = 1;
         FailedList failed;
+        Assistant::mockErrno = EACCES;
+        EXPECT_CALL(*insMock_, getxattr(_, StrEq(CLOUD_DISK_FILE_SYNC_STATE_XATTR), _, sizeof(uint8_t)))
+            .WillOnce(Invoke([](const char *, const char *, void *value, size_t size) {
+                *static_cast<uint8_t *>(value) = 0;
+                return static_cast<ssize_t>(size);
+            }));
         EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
         auto res = SetFileSyncStates(fileSyncStates, userId, failed, syncFolder);
         EXPECT_FALSE(res);

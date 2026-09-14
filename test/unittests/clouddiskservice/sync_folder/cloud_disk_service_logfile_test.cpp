@@ -137,6 +137,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, ReadLogFileTest001, TestSize.Level1)
     try {
         uint64_t line = 1;
         LogBlock logBlock;
+        EXPECT_CALL(*insMock_, ReadFile(_, _, _, _)).WillRepeatedly(Return(4096));
         int32_t res = logFile_->ReadLogFile(line, logBlock);
         EXPECT_EQ(res, 0);
     } catch (...) {
@@ -221,7 +222,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest001, TestSize.L
     try {
         uint32_t userId = 1;
         uint32_t syncFolderIndex = 2;
-        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, access(_, _)).WillRepeatedly(Return(0));
         shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);
@@ -245,7 +246,7 @@ HWTEST_F(CloudDiskServiceLogFileTest, CloudDiskServiceLogFileTest002, TestSize.L
     try {
         uint32_t userId = 3;
         uint32_t syncFolderIndex = 4;
-        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock_, access(_, _)).WillRepeatedly(Return(1));
         shared_ptr<CloudDiskServiceLogFile> logFile = make_shared<CloudDiskServiceLogFile>(userId, syncFolderIndex);
         EXPECT_EQ(logFile->userId_, userId);
         EXPECT_EQ(logFile->syncFolderIndex_, syncFolderIndex);

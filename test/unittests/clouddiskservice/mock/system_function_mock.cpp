@@ -148,12 +148,20 @@ int lstat(const char *path, struct stat *buf)
 
 int setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 {
-    return Assistant::ins->setxattr(path, name, value, size, flags);
+    int ret = Assistant::ins->setxattr(path, name, value, size, flags);
+    if (ret != 0 && Assistant::mockErrno != 0) {
+        errno = Assistant::mockErrno;
+    }
+    return ret;
 }
 
 int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags)
 {
-    return Assistant::ins->fsetxattr(fd, name, value, size, flags);
+    int ret = Assistant::ins->fsetxattr(fd, name, value, size, flags);
+    if (ret != 0 && Assistant::mockErrno != 0) {
+        errno = Assistant::mockErrno;
+    }
+    return ret;
 }
 
 ssize_t fgetxattr(int fd, const char *name, void *value, size_t size)
