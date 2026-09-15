@@ -289,7 +289,6 @@ bool CreateInnerFile(const std::string &sourcePath, const std::string &targetPat
     return success;
 }
 
-
 bool CheckBundleSupported(const std::string &bundleName, const bool isKeepAlive)
 {
     if (isKeepAlive) {
