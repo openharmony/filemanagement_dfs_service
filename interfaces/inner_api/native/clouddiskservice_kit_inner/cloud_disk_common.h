@@ -17,11 +17,120 @@
 #define OHOS_FILEMGMT_CLOUD_DISK_COMMON_H
 
 #include <bitset>
+#include <cstddef>
+#include <cstdint>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "parcel.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+constexpr uint64_t MAX_EXECUTE_DATA_SIZE = 128ULL * 1024;
+
+constexpr size_t MAX_CALLBACK_REQUEST_KEY_SIZE = sizeof(uint64_t);
+
+struct CloudDiskPathInfo {
+    char *value;
+    size_t length;
+};
+
+using CloudDiskFileIdInfo = CloudDiskPathInfo;
+using CloudDiskSyncFolderPath = CloudDiskPathInfo;
+
+struct CloudDiskDataBuf {
+    uint8_t *data;
+    uint64_t dataSize;
+};
+
+enum class CloudDiskCallbackType : int32_t {
+    FETCH_DATA = 0,
+    CANCEL_FETCH_DATA,
+    DEHYDRATE = 2,
+};
+
+enum CloudDiskHydratePriority : uint32_t {
+    CLOUD_DISK_HYDRATE_PRIORITY_LOW = 0,
+    CLOUD_DISK_HYDRATE_PRIORITY_NORMAL = 1,
+    CLOUD_DISK_HYDRATE_PRIORITY_HIGH = 2,
+};
+
+struct CloudDiskCallbackReqHead {
+    CloudDiskSyncFolderPath syncFolderPath;
+    CloudDiskCallbackType callbackType;
+    CloudDiskDataBuf reqKey;
+};
+
+struct CloudDiskDehydrateInfo {
+    CloudDiskPathInfo filePath;
+    bool allow;
+};
+
+struct CloudDiskFetchDataRequest {
+    CloudDiskPathInfo filePath;
+    CloudDiskHydratePriority priority;
+};
+
+union CloudDiskCallbackContext {
+    CloudDiskFetchDataRequest *fetchData;
+    CloudDiskPathInfo *cancelFetchData;
+    CloudDiskDehydrateInfo *dehydrateData;
+};
+
+struct CloudDiskFetchData {
+    uint64_t offset;
+    uint64_t size;
+    uint64_t totalSize;
+    CloudDiskDataBuf data;
+    bool isComplete;
+};
+
+union CloudDiskCallbackResponse {
+    CloudDiskFetchData *fetchData;
+};
+
+struct CallbackExecuteRequest final : public Parcelable {
+    std::vector<uint8_t> reqKey;
+    std::string syncFolder;
+    std::string filePath;
+    int32_t callbackType = static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA);
+    uint64_t offset = 0;
+    uint64_t size = 0;
+    uint64_t totalSize = 0;
+    std::vector<uint8_t> data;
+    bool isComplete = false;
+
+    bool Marshalling(Parcel &parcel) const override;
+    bool ReadFromParcel(Parcel &parcel);
+    static CallbackExecuteRequest *Unmarshalling(Parcel &parcel);
+};
+
+enum class HydrateProgressState : int32_t {
+    PENDING = 0,
+    IN_PROGRESS,
+    COMPLETED,
+    CANCELLED,
+};
+
+struct HydrateProgress final : public Parcelable {
+    std::string filePath;
+    int32_t state = static_cast<int32_t>(HydrateProgressState::PENDING);
+    uint64_t processedSize = 0;
+    uint64_t totalSize = 0;
+
+    bool Marshalling(Parcel &parcel) const override;
+    bool ReadFromParcel(Parcel &parcel);
+    static HydrateProgress *Unmarshalling(Parcel &parcel);
+};
+
+struct CallbackParcelStorage {
+    std::string syncFolder;
+    std::vector<uint8_t> reqKey;
+    std::string filePath;
+    CloudDiskPathInfo pathInfo{};
+    CloudDiskFetchDataRequest fetchDataRequest{};
+    CloudDiskDehydrateInfo dehydrateInfo{};
+};
 
 /*
 When adding new enumeration values, pay attention to the maximum enumeration value judgment of the getxattr method in
@@ -69,6 +178,16 @@ struct ChangeData : public Parcelable {
     static ChangeData *Unmarshalling(Parcel &parcel);
 };
 
+bool WriteCallbackParcel(Parcel &parcel,
+                         const CloudDiskCallbackReqHead &reqHead,
+                         const CloudDiskCallbackContext &context);
+bool ReadCallbackParcel(Parcel &parcel,
+                        CloudDiskCallbackReqHead &reqHead,
+                        CloudDiskCallbackContext &context,
+                        CallbackParcelStorage &storage);
+bool WriteCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, const CloudDiskCallbackContext &context);
+bool ReadCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, CloudDiskCallbackContext &context);
+
 struct ChangesResult : public Parcelable {
     uint64_t nextUsn;
     bool isEof;
@@ -110,6 +229,13 @@ struct PlaceholderInfo : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
     static PlaceholderInfo *Unmarshalling(Parcel &parcel);
+};
+
+struct PlaceholderCustomInfo : public Parcelable {
+    std::vector<uint8_t> data;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static PlaceholderCustomInfo *Unmarshalling(Parcel &parcel);
 };
 
 #define RETURN_ON_ERR(ret)   \

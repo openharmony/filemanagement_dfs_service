@@ -53,6 +53,26 @@
     },
     {
         "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_MarkFileAsPlaceholder"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_UnmarkPlaceholderFile"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_DehydrateFile"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_HydratePlaceholder"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_Execute"
+    },
+    {
+        "first_introduced": "26.1.0",
         "name": "OH_CloudDisk_IsPlaceholderFile"
     },
     {
@@ -66,5 +86,21 @@
     {
         "first_introduced": "26.1.0",
         "name": "OH_CloudDisk_GetSyncFoldersEx"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_GetPlaceholderCustomInfo"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_RegisterCallbackTable"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_UnregisterCallbackTable"
+    },
+    {
+        "first_introduced": "26.1.0",
+        "name": "OH_CloudDisk_GetPlaceholderState"
     }
 ]

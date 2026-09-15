@@ -24,6 +24,7 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "if_system_ability_manager_mock.h"
+#include "placeholder_task_manager.h"
 #include "system_ability_manager_client_mock.h"
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
@@ -41,6 +42,13 @@ constexpr int32_t TEST_STOPPED_USER_ID = 101;
 
 void ResetCloudDiskSyncFolderSizeCallCount();
 int32_t GetCloudDiskSyncFolderSizeCallCount();
+void ResetPlaceholderLifecycleCallCounts();
+uint32_t GetPlaceholderCallbackClearCount();
+uint32_t GetPlaceholderTaskCancelCount();
+uint32_t GetPlaceholderCancellationRecordClearCount();
+uint32_t GetPlaceholderProgressDrainCount();
+uint32_t GetPlaceholderProgressClearCount();
+PlaceholderTaskCancelReason GetLastPlaceholderTaskCancelReason();
 
 class AccountStatusSubscriberTest : public testing::Test {
 public:
@@ -76,6 +84,7 @@ void AccountStatusSubscriberTest::TearDownTestCase(void)
 void AccountStatusSubscriberTest::SetUp(void)
 {
     subscriber_->SetCurrentUserId(INVALID_USER_ID);
+    ResetPlaceholderLifecycleCallCounts();
 }
 
 void AccountStatusSubscriberTest::TearDown(void)
@@ -101,6 +110,16 @@ HWTEST_F(AccountStatusSubscriberTest, OnStateChangedTest001, TestSize.Level1)
         ResetCloudDiskSyncFolderSizeCallCount();
         subscriber_->OnStateChanged(osAccountStateData);
         EXPECT_EQ(GetCloudDiskSyncFolderSizeCallCount(), EXPECTED_SYNC_FOLDER_SIZE_CALL_COUNT);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(GetPlaceholderCallbackClearCount(), 1U);
+        EXPECT_EQ(GetPlaceholderTaskCancelCount(), 1U);
+        EXPECT_EQ(GetPlaceholderCancellationRecordClearCount(), 1U);
+        EXPECT_EQ(GetPlaceholderProgressDrainCount(), 1U);
+        EXPECT_EQ(GetPlaceholderProgressClearCount(), 1U);
+        EXPECT_EQ(GetLastPlaceholderTaskCancelReason(), PlaceholderTaskCancelReason::USER_SWITCH);
+#else
+        EXPECT_EQ(GetPlaceholderCallbackClearCount(), 0U);
+#endif
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStateChangedTest001 failed";

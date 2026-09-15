@@ -15,6 +15,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_DISK_SERVICE_MOCK
 #define OHOS_FILEMGMT_CLOUD_DISK_SERVICE_MOCK
 
+#include "i_cloud_disk_service_callback.h"
 #include "iremote_stub.h"
 
 namespace OHOS::FileManagement::CloudDiskService {

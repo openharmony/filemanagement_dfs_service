@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -234,6 +234,15 @@ bool Parcel::WriteUint16(uint16_t value)
     return DfsMessageParcel::messageParcel->WriteUint16(value);
 }
 
+bool Parcel::WriteUInt8Vector(const std::vector<uint8_t> &value)
+{
+    if (DfsMessageParcel::messageParcel == nullptr) {
+        std::cout << "WriteUInt8Vector mock failed, messageParcel is nullptr" << std::endl;
+        return false;
+    }
+    return DfsMessageParcel::messageParcel->WriteUInt8Vector(value);
+}
+
 bool Parcel::ReadUint64(uint64_t &value)
 {
     if (DfsMessageParcel::messageParcel == nullptr) {
@@ -241,6 +250,15 @@ bool Parcel::ReadUint64(uint64_t &value)
         return false;
     }
     return DfsMessageParcel::messageParcel->ReadUint64(value);
+}
+
+bool Parcel::ReadUInt8Vector(std::vector<uint8_t> *value)
+{
+    if (DfsMessageParcel::messageParcel == nullptr) {
+        std::cout << "ReadUInt8Vector mock failed, messageParcel is nullptr" << std::endl;
+        return false;
+    }
+    return DfsMessageParcel::messageParcel->ReadUInt8Vector(value);
 }
 
 bool Parcel::WriteStringVector(const std::vector<std::string> &val)

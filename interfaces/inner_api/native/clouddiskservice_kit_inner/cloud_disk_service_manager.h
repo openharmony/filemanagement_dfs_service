@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "cloud_disk_service_callback.h"
+#include "cloud_disk_service_callback_table.h"
+#include "i_cloud_disk_progress_callback.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 class CloudDiskServiceManager {
@@ -28,6 +30,9 @@ public:
     virtual int32_t RegisterSyncFolderChanges(const std::string &syncFolder,
                                               const std::shared_ptr<CloudDiskServiceCallback> callback) = 0;
     virtual int32_t UnregisterSyncFolderChanges(const std::string &syncFolder) = 0;
+    virtual int32_t RegisterCallbackTable(const std::string &syncFolder,
+                                          const std::shared_ptr<CloudDiskServiceCallbackTable> &callbackTable) = 0;
+    virtual int32_t UnregisterCallbackTable(const std::string &syncFolder) = 0;
     virtual int32_t GetSyncFolderChanges(const std::string &syncFolder,
                                          uint64_t count,
                                          uint64_t startUsn,
@@ -40,17 +45,34 @@ public:
                                       std::vector<ResultList> &resultList) = 0;
     virtual int32_t CreatePlaceholderFile(const std::string &syncFolder,
                                           const std::string &relativePath,
-                                          const PlaceholderInfo &info) = 0;
+                                          const PlaceholderInfo &info,
+                                          const PlaceholderCustomInfo &customInfo) = 0;
     virtual int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path,
                                       bool &isPlaceholder) = 0;
     virtual int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) = 0;
     virtual int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) = 0;
 
     virtual int32_t ConvertPlaceholderToFile(const std::string &syncFolder, const std::string &relativePath) = 0;
+    virtual int32_t MarkFileAsPlaceholder(const std::string &syncFolder, const std::string &relativePath) = 0;
+    virtual int32_t UnmarkPlaceholderFile(const std::string &syncFolder, const std::string &relativePath) = 0;
+    virtual int32_t StartHydration(const std::string &syncFolder, const std::string &relativePath,
+                                   CloudDiskHydratePriority priority) = 0;
+    virtual int32_t CancelHydration(const std::string &syncFolder, const std::string &relativePath) = 0;
+    virtual int32_t Execute(const CallbackExecuteRequest &request) = 0;
+    virtual int32_t DehydrateFile(const std::string &syncFolder, const std::string &relativePath) = 0;
     virtual int32_t UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
-        const PlaceholderInfo &metaData) = 0;
+        const PlaceholderInfo &metaData, const PlaceholderCustomInfo &customInfo) = 0;
+    virtual int32_t GetPlaceholderCustomInfo(const std::string &syncFolder, const std::string &relativePath,
+        PlaceholderCustomInfo &customInfo) = 0;
+
+    virtual int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority) = 0;
+    virtual int32_t DehydrateFileByPath(const std::string &path) = 0;
+    virtual int32_t RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback) = 0;
+    virtual int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) = 0;
 
     virtual int32_t UnregisterForSa(const std::string &path) = 0;
+    virtual int32_t
+        GetPlaceholderState(const std::string &syncFolder, const std::string &relativePath, int32_t &state) = 0;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

@@ -18,6 +18,7 @@
 #include "cloud_disk_service_error.h"
 #include "ipc_skeleton.h"
 #include "os_account_manager.h"
+#include "tokenid_kit.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
@@ -25,6 +26,13 @@ using namespace std;
 using namespace Security::AccessToken;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BASE_USER_RANGE = 200000;
+bool CloudDiskServiceAccessToken::IsSystemApp()
+{
+    auto type = AccessTokenKit::GetTokenTypeFlag(IPCSkeleton::GetCallingTokenID());
+    return type == TOKEN_NATIVE ||
+        (type == TOKEN_HAP && TokenIdKit::IsSystemAppByFullTokenID(IPCSkeleton::GetCallingFullTokenID()));
+}
+
 bool CloudDiskServiceAccessToken::CheckCallerPermission(const std::string &permissionName)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();

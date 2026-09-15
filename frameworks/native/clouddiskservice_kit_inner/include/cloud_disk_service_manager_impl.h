@@ -17,10 +17,13 @@
 #define OHOS_FILEMGMT_CLOUD_DISK_SERVICE_MANAGER_IMPL_H
 
 #include <atomic>
+#include <map>
 
 #include "nocopyable.h"
 
+#include "cloud_disk_progress_callback_client.h"
 #include "cloud_disk_service_callback_client.h"
+#include "cloud_disk_service_callback_table_client.h"
 #include "cloud_disk_service_manager.h"
 #include "svc_death_recipient.h"
 
@@ -32,6 +35,9 @@ public:
     int32_t RegisterSyncFolderChanges(const std::string &syncFolder,
                                       const std::shared_ptr<CloudDiskServiceCallback> callback) override;
     int32_t UnregisterSyncFolderChanges(const std::string &syncFolder) override;
+    int32_t RegisterCallbackTable(const std::string &syncFolder,
+                                  const std::shared_ptr<CloudDiskServiceCallbackTable> &callbackTable) override;
+    int32_t UnregisterCallbackTable(const std::string &syncFolder) override;
     int32_t GetSyncFolderChanges(const std::string &syncFolder,
                                  uint64_t count,
                                  uint64_t startUsn,
@@ -44,23 +50,47 @@ public:
                               std::vector<ResultList> &resultList) override;
     int32_t CreatePlaceholderFile(const std::string &syncFolder,
                                   const std::string &relativePath,
-                                  const PlaceholderInfo &info) override;
-    int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path,
-                              bool &isPlaceholder) override;
+                                  const PlaceholderInfo &info,
+                                  const PlaceholderCustomInfo &customInfo) override;
+    int32_t IsPlaceholderFile(const std::string &syncFolder, const std::string &path, bool &isPlaceholder) override;
     int32_t RegisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
     int32_t UnregisterSyncFolder(int32_t userId, const std::string &bundleName, const std::string &path) override;
 
     int32_t ConvertPlaceholderToFile(const std::string &syncFolder, const std::string &relativePath) override;
-    int32_t UpdatePlaceholder(const std::string &syncFolder, const std::string &relativePath,
-        const PlaceholderInfo &metaData) override;
+    int32_t MarkFileAsPlaceholder(const std::string &syncFolder, const std::string &relativePath) override;
+    int32_t UnmarkPlaceholderFile(const std::string &syncFolder, const std::string &relativePath) override;
+    int32_t StartHydration(const std::string &syncFolder,
+                           const std::string &relativePath,
+                           CloudDiskHydratePriority priority) override;
+    int32_t CancelHydration(const std::string &syncFolder, const std::string &relativePath) override;
+    int32_t Execute(const CallbackExecuteRequest &request) override;
+    int32_t DehydrateFile(const std::string &syncFolder, const std::string &relativePath) override;
+    int32_t UpdatePlaceholder(const std::string &syncFolder,
+                              const std::string &relativePath,
+                              const PlaceholderInfo &metaData,
+                              const PlaceholderCustomInfo &customInfo) override;
+    int32_t GetPlaceholderCustomInfo(const std::string &syncFolder,
+                                     const std::string &relativePath,
+                                     PlaceholderCustomInfo &customInfo) override;
+
+    int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority) override;
+    int32_t DehydrateFileByPath(const std::string &path) override;
+    int32_t RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback) override;
+    int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) override;
 
     int32_t UnregisterForSa(const std::string &path) override;
+    int32_t
+        GetPlaceholderState(const std::string &syncFolder, const std::string &relativePath, int32_t &state) override;
 
 private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     std::shared_ptr<CloudDiskServiceCallback> callback_;
+    std::map<std::string, std::shared_ptr<CloudDiskServiceCallbackTable>> callbackTables_;
+    std::map<std::string, sptr<CloudDiskServiceCallbackTableClient>> callbackTableClients_;
     sptr<SvcDeathRecipient> deathRecipient_;
     std::mutex callbackMutex_;
+    std::mutex progressMutex_;
+    sptr<CloudDiskProgressCallbackClient> progressClient_;
     std::atomic_flag isFirstCall_{false};
 };
 } // namespace OHOS::FileManagement::CloudDiskService

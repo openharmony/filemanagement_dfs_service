@@ -27,6 +27,9 @@ public:
     static inline std::shared_ptr<Assistant> ins = nullptr;
     static inline int32_t mockErrno = 0;
     static inline bool mockFdApi = false;
+    static inline bool mockPwriteApi = false;
+    static inline bool mockFsyncApi = false;
+    static inline bool mockLstatApi = false;
 
     virtual ~Assistant() = default;
     virtual ssize_t readlink(const char *pathname, char *buf, size_t bufsiz) = 0;
@@ -34,11 +37,13 @@ public:
     virtual int fanotify_mark(int fanotify_fd, unsigned flags, unsigned long long mask, int dfd,
         const char *pathname) = 0;
     virtual DIR *opendir(const char *path) = 0;
+    virtual int CloseDir(DIR *dir) = 0;
     virtual int dirfd(DIR *d) = 0;
     virtual int setxattr(const char *path, const char *name, const void *value, size_t size, int flags) = 0;
     virtual int fstat(int fd, struct stat *buf) = 0;
     virtual int ftruncate(int fd, off_t length) = 0;
     virtual int fsetxattr(int fd, const char *name, const void *value, size_t size, int flags) = 0;
+    virtual ssize_t fgetxattr(int fd, const char *name, void *value, size_t size) = 0;
     virtual int futimens(int fd, const struct timespec *times) = 0;
     virtual int removexattr(const char *path, const char *name) = 0;
     virtual ssize_t getxattr(const char *path, const char *name, void *value, size_t size) = 0;
@@ -48,6 +53,8 @@ public:
     virtual int Unlink(const char *path) = 0;
     virtual int UnlinkAt(int dirfd, const char *path, int flags) = 0;
     virtual int Ioctl(int fd, int request, void *arg) = 0;
+    virtual ssize_t Pwrite(int fd, const void *data, size_t size, off_t offset) = 0;
+    virtual int Fsync(int fd) = 0;
 
     // file_utils
     virtual int64_t ReadFile(int fd, off_t offset, size_t size, void *data) = 0;
@@ -64,11 +71,13 @@ public:
     MOCK_METHOD2(fanotify_init, int(unsigned, unsigned));
     MOCK_METHOD5(fanotify_mark, int(int, unsigned, unsigned long long, int, const char *));
     MOCK_METHOD1(opendir, DIR *(const char *));
+    MOCK_METHOD1(CloseDir, int(DIR *));
     MOCK_METHOD1(dirfd, int(DIR *));
     MOCK_METHOD5(setxattr, int(const char *, const char *, const void *, size_t, int));
     MOCK_METHOD2(fstat, int(int, struct stat *));
     MOCK_METHOD2(ftruncate, int(int, off_t));
     MOCK_METHOD5(fsetxattr, int(int, const char *, const void *, size_t, int));
+    MOCK_METHOD4(fgetxattr, ssize_t(int, const char *, void *, size_t));
     MOCK_METHOD2(futimens, int(int, const struct timespec *));
     MOCK_METHOD2(removexattr, int(const char *, const char *));
     MOCK_METHOD4(getxattr, ssize_t(const char *, const char *, void *, size_t));
@@ -78,6 +87,8 @@ public:
     MOCK_METHOD1(Unlink, int(const char *));
     MOCK_METHOD3(UnlinkAt, int(int, const char *, int));
     MOCK_METHOD3(Ioctl, int(int, int, void *));
+    MOCK_METHOD4(Pwrite, ssize_t(int, const void *, size_t, off_t));
+    MOCK_METHOD1(Fsync, int(int));
 
     // file_utils
     MOCK_METHOD4(ReadFile, int64_t(int, off_t, size_t, void *));

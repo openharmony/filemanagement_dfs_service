@@ -22,6 +22,7 @@
 
 #include "assistant.h"
 #include "cloud_disk_sync_folder_system_mock.h"
+#include "placeholder_helper.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -1272,7 +1273,7 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest002, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('1'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)));
         EXPECT_CALL(*syncFolderMock, unlink(_)).WillOnce(Return(0));
 
         string path = "/data/test_tdd_placeholder";
@@ -1306,7 +1307,7 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest003, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('2'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED, 0)));
         EXPECT_CALL(*syncFolderMock, unlink(_)).WillOnce(Return(0));
 
         string path = "/data/test_tdd_placeholder";
@@ -1340,7 +1341,8 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest004, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('0'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_NONE, 0)));
+        EXPECT_CALL(*syncFolderMock, unlink(_)).Times(0);
 
         string path = "/data/test_tdd_placeholder";
         CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(path);
@@ -1374,6 +1376,7 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest005, TestSize.L
 
         errno = ENODATA;
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*syncFolderMock, unlink(_)).Times(0);
 
         string path = "/data/test_tdd_placeholder";
         CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(path);
@@ -1417,8 +1420,8 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest006, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('1'))
-            .WillOnce(SetByteXattr('1'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)))
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)));
         EXPECT_CALL(*syncFolderMock, unlink(_)).Times(2).WillRepeatedly(Return(0));
 
         string path = "/data/test_tdd_placeholder";
@@ -1453,6 +1456,7 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest007, TestSize.L
 
         errno = EACCES;
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*syncFolderMock, unlink(_)).Times(0);
 
         string path = "/data/test_tdd_placeholder";
         CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(path);
@@ -1485,7 +1489,7 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest008, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('1'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)));
         errno = EACCES;
         EXPECT_CALL(*syncFolderMock, unlink(_)).WillOnce(Return(-1));
 
@@ -1557,9 +1561,9 @@ HWTEST_F(CloudDiskSyncFolderTest, RemovePlaceholderFilesBatchTest010, TestSize.L
             ));
 
         EXPECT_CALL(*syncFolderMock, getxattr(_, _, _, _))
-            .WillOnce(SetByteXattr('1'))
-            .WillOnce(SetByteXattr('1'))
-            .WillOnce(SetByteXattr('0'));
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)))
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0)))
+            .WillOnce(SetByteXattr(MakeFileSyncState(PLACEHOLDER_STATE_NONE, 0)));
         EXPECT_CALL(*syncFolderMock, unlink(_)).Times(2).WillRepeatedly(Return(0));
 
         string path = "/data/test_tdd_placeholder";

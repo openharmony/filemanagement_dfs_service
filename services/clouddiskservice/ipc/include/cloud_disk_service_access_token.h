@@ -23,6 +23,7 @@ inline const std::string PERM_CLOUD_DISK_SERVICE = "ohos.permission.ACCESS_CLOUD
 
 class CloudDiskServiceAccessToken final {
 public:
+    static bool IsSystemApp();
     static bool CheckCallerPermission(const std::string &permissionName);
     static bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
     static int32_t GetCallerBundleName(std::string &bundleName);

@@ -15,11 +15,155 @@
 
 #include "cloud_disk_common.h"
 
+#include <algorithm>
+#include <limits>
+#include <memory>
 #include <sstream>
 
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+bool HydrateProgress::Marshalling(Parcel &parcel) const
+{
+    if (state < static_cast<int32_t>(HydrateProgressState::PENDING) ||
+        state > static_cast<int32_t>(HydrateProgressState::CANCELLED) ||
+        !parcel.WriteString(filePath) || !parcel.WriteInt32(state) ||
+        !parcel.WriteUint64(processedSize) || !parcel.WriteUint64(totalSize)) {
+        LOGE("Write hydration progress failed");
+        return false;
+    }
+    return true;
+}
+
+bool HydrateProgress::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadString(filePath) || !parcel.ReadInt32(state) ||
+        !parcel.ReadUint64(processedSize) || !parcel.ReadUint64(totalSize) ||
+        state < static_cast<int32_t>(HydrateProgressState::PENDING) ||
+        state > static_cast<int32_t>(HydrateProgressState::CANCELLED)) {
+        LOGE("Read hydration progress failed");
+        return false;
+    }
+    return true;
+}
+
+HydrateProgress *HydrateProgress::Unmarshalling(Parcel &parcel)
+{
+    auto progress = std::make_unique<HydrateProgress>();
+    return progress->ReadFromParcel(parcel) ? progress.release() : nullptr;
+}
+
+namespace {
+bool IsValidCallbackType(int32_t callbackType)
+{
+    return callbackType == static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA) ||
+           callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA) ||
+           callbackType == static_cast<int32_t>(CloudDiskCallbackType::DEHYDRATE);
+}
+
+bool IsValidHydratePriority(int32_t priority)
+{
+    return priority >= static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_LOW) &&
+           priority <= static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_HIGH);
+}
+
+bool ReadExecuteVector(Parcel &parcel, std::vector<uint8_t> &value, uint64_t maxSize)
+{
+    size_t position = parcel.GetReadPosition();
+    int32_t size = 0;
+    if (!parcel.ReadInt32(size) || size < 0 || static_cast<uint64_t>(size) > maxSize ||
+        !parcel.RewindRead(position) || !parcel.ReadUInt8Vector(&value)) {
+        LOGE("Failed to read bounded Execute vector");
+        return false;
+    }
+    return true;
+}
+
+bool WritePathInfo(Parcel &parcel, const CloudDiskPathInfo &pathInfo, const char *fieldName)
+{
+    if (pathInfo.value == nullptr && pathInfo.length != 0) {
+        LOGE("Failed to write %{public}s: invalid path info", fieldName);
+        return false;
+    }
+    std::string path(pathInfo.value == nullptr ? "" : std::string(pathInfo.value, pathInfo.length));
+    if (!parcel.WriteString(path)) {
+        LOGE("Failed to write %{public}s", fieldName);
+        return false;
+    }
+    return true;
+}
+
+bool WriteDataBuf(Parcel &parcel, const CloudDiskDataBuf &dataBuf, const char *fieldName)
+{
+    if (dataBuf.data == nullptr && dataBuf.dataSize != 0) {
+        LOGE("Failed to write %{public}s: invalid data buffer", fieldName);
+        return false;
+    }
+    if (dataBuf.dataSize > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        LOGE("Failed to write %{public}s: invalid data size", fieldName);
+        return false;
+    }
+    size_t dataSize = static_cast<size_t>(dataBuf.dataSize);
+    std::vector<uint8_t> data(dataSize);
+    if (dataBuf.data != nullptr && dataSize != 0) {
+        std::copy(dataBuf.data, dataBuf.data + dataSize, data.begin());
+    }
+    if (!parcel.WriteUInt8Vector(data)) {
+        LOGE("Failed to write %{public}s", fieldName);
+        return false;
+    }
+    return true;
+}
+
+void AssignPathInfo(CloudDiskPathInfo &pathInfo, std::string &path)
+{
+    pathInfo.value = path.empty() ? nullptr : path.data();
+    pathInfo.length = path.length();
+}
+
+void AssignDataBuf(CloudDiskDataBuf &dataBuf, std::vector<uint8_t> &data)
+{
+    dataBuf.data = data.empty() ? nullptr : data.data();
+    dataBuf.dataSize = data.size();
+}
+} // namespace
+
+bool CallbackExecuteRequest::Marshalling(Parcel &parcel) const
+{
+    if (reqKey.empty() || reqKey.size() > MAX_CALLBACK_REQUEST_KEY_SIZE || data.size() > MAX_EXECUTE_DATA_SIZE) {
+        LOGE("Invalid Execute parcel buffer size");
+        return false;
+    }
+    if (!parcel.WriteUInt8Vector(reqKey) || !parcel.WriteString(syncFolder) || !parcel.WriteString(filePath) ||
+        !parcel.WriteInt32(callbackType) || !parcel.WriteUint64(offset) || !parcel.WriteUint64(size) ||
+        !parcel.WriteUint64(totalSize) || !parcel.WriteUInt8Vector(data) || !parcel.WriteBool(isComplete)) {
+        LOGE("Failed to write Execute request");
+        return false;
+    }
+    return true;
+}
+
+CallbackExecuteRequest *CallbackExecuteRequest::Unmarshalling(Parcel &parcel)
+{
+    auto *request = new (std::nothrow) CallbackExecuteRequest();
+    if (request != nullptr && !request->ReadFromParcel(parcel)) {
+        delete request;
+        request = nullptr;
+    }
+    return request;
+}
+
+bool CallbackExecuteRequest::ReadFromParcel(Parcel &parcel)
+{
+    if (!ReadExecuteVector(parcel, reqKey, MAX_CALLBACK_REQUEST_KEY_SIZE) || reqKey.empty() ||
+        !parcel.ReadString(syncFolder) || !parcel.ReadString(filePath) || !parcel.ReadInt32(callbackType) ||
+        !parcel.ReadUint64(offset) || !parcel.ReadUint64(size) || !parcel.ReadUint64(totalSize) ||
+        !ReadExecuteVector(parcel, data, MAX_EXECUTE_DATA_SIZE) || !parcel.ReadBool(isComplete)) {
+        LOGE("Failed to read Execute request");
+        return false;
+    }
+    return true;
+}
 
 bool FileSyncState::Marshalling(Parcel &parcel) const
 {
@@ -165,6 +309,126 @@ bool ChangeData::ReadFromParcel(Parcel &parcel)
     }
 
     return true;
+}
+
+bool WriteCallbackParcel(Parcel &parcel,
+                         const CloudDiskCallbackReqHead &reqHead,
+                         const CloudDiskCallbackContext &context)
+{
+    if (!WritePathInfo(parcel, reqHead.syncFolderPath, "syncFolderPath") ||
+        !parcel.WriteInt32(static_cast<int32_t>(reqHead.callbackType)) ||
+        !WriteDataBuf(parcel, reqHead.reqKey, "reqKey")) {
+        LOGE("Failed to write callback request header");
+        return false;
+    }
+
+    switch (reqHead.callbackType) {
+        case CloudDiskCallbackType::FETCH_DATA:
+            return context.fetchData != nullptr && WritePathInfo(parcel, context.fetchData->filePath, "fetchData") &&
+                   parcel.WriteInt32(static_cast<int32_t>(context.fetchData->priority));
+        case CloudDiskCallbackType::CANCEL_FETCH_DATA:
+            return context.cancelFetchData != nullptr &&
+                   WritePathInfo(parcel, *context.cancelFetchData, "cancelFetchData");
+        case CloudDiskCallbackType::DEHYDRATE:
+            return context.dehydrateData != nullptr &&
+                   WritePathInfo(parcel, context.dehydrateData->filePath, "dehydrateFilePath");
+        default:
+            LOGE("Failed to write callback context: invalid callback type");
+            return false;
+    }
+}
+
+static bool ReadCallbackRequestHead(Parcel &parcel, CloudDiskCallbackReqHead &reqHead, CallbackParcelStorage &storage)
+{
+    if (!parcel.ReadString(storage.syncFolder)) {
+        LOGE("Failed to read syncFolderPath");
+        return false;
+    }
+    AssignPathInfo(reqHead.syncFolderPath, storage.syncFolder);
+
+    int32_t callbackType = 0;
+    if (!parcel.ReadInt32(callbackType) || !IsValidCallbackType(callbackType)) {
+        LOGE("Failed to read callbackType");
+        return false;
+    }
+    reqHead.callbackType = static_cast<CloudDiskCallbackType>(callbackType);
+    if (!parcel.ReadUInt8Vector(&storage.reqKey)) {
+        LOGE("Failed to read reqKey");
+        return false;
+    }
+    AssignDataBuf(reqHead.reqKey, storage.reqKey);
+    if (!parcel.ReadString(storage.filePath)) {
+        LOGE("Failed to read filePath");
+        return false;
+    }
+    AssignPathInfo(storage.pathInfo, storage.filePath);
+    return true;
+}
+
+bool ReadCallbackParcel(Parcel &parcel,
+                        CloudDiskCallbackReqHead &reqHead,
+                        CloudDiskCallbackContext &context,
+                        CallbackParcelStorage &storage)
+{
+    if (!ReadCallbackRequestHead(parcel, reqHead, storage)) {
+        return false;
+    }
+    if (reqHead.callbackType == CloudDiskCallbackType::FETCH_DATA) {
+        int32_t priority = 0;
+        if (!parcel.ReadInt32(priority) || !IsValidHydratePriority(priority)) {
+            LOGE("Failed to read hydrate priority");
+            return false;
+        }
+        storage.fetchDataRequest.filePath = storage.pathInfo;
+        storage.fetchDataRequest.priority = static_cast<CloudDiskHydratePriority>(priority);
+        context.fetchData = &storage.fetchDataRequest;
+        return true;
+    }
+    if (reqHead.callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
+        context.cancelFetchData = &storage.pathInfo;
+        return true;
+    }
+    if (reqHead.callbackType == CloudDiskCallbackType::DEHYDRATE) {
+        storage.dehydrateInfo.filePath = storage.pathInfo;
+        storage.dehydrateInfo.allow = false;
+        context.dehydrateData = &storage.dehydrateInfo;
+        return true;
+    }
+
+    LOGE("Failed to read callback context: invalid callback type");
+    return false;
+}
+
+bool WriteCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, const CloudDiskCallbackContext &context)
+{
+    if (callbackType == CloudDiskCallbackType::DEHYDRATE) {
+        if (context.dehydrateData == nullptr) {
+            LOGE("Failed to write dehydrate callback reply: context is nullptr");
+            return false;
+        }
+        return parcel.WriteBool(context.dehydrateData->allow);
+    }
+    if (callbackType == CloudDiskCallbackType::FETCH_DATA || callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
+        return true;
+    }
+    LOGE("Failed to write callback reply: invalid callback type");
+    return false;
+}
+
+bool ReadCallbackReply(Parcel &parcel, CloudDiskCallbackType callbackType, CloudDiskCallbackContext &context)
+{
+    if (callbackType == CloudDiskCallbackType::DEHYDRATE) {
+        if (context.dehydrateData == nullptr) {
+            LOGE("Failed to read dehydrate callback reply: context is nullptr");
+            return false;
+        }
+        return parcel.ReadBool(context.dehydrateData->allow);
+    }
+    if (callbackType == CloudDiskCallbackType::FETCH_DATA || callbackType == CloudDiskCallbackType::CANCEL_FETCH_DATA) {
+        return true;
+    }
+    LOGE("Failed to read callback reply: invalid callback type");
+    return false;
 }
 
 bool ChangesResult::Marshalling(Parcel &parcel) const
@@ -385,6 +649,35 @@ bool PlaceholderInfo::ReadFromParcel(Parcel &parcel)
     }
     if (!parcel.ReadUint64(mtimeMs)) {
         LOGE("failed to read mtimeMs");
+        return false;
+    }
+    return true;
+}
+
+bool PlaceholderCustomInfo::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteUInt8Vector(data)) {
+        LOGE("failed to write placeholder custom info");
+        return false;
+    }
+    return true;
+}
+
+PlaceholderCustomInfo *PlaceholderCustomInfo::Unmarshalling(Parcel &parcel)
+{
+    PlaceholderCustomInfo *info = new (std::nothrow) PlaceholderCustomInfo();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read placeholder custom info from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool PlaceholderCustomInfo::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadUInt8Vector(&data)) {
+        LOGE("failed to read placeholder custom info");
         return false;
     }
     return true;

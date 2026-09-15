@@ -89,27 +89,46 @@ public:
 
 private:
     int32_t ProductLogForOperate(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
-                                 const std::string &path, const std::string &name, struct LogGenerateCtx &ctx,
+                                 const std::string &path,
+                                 const std::string &name,
+                                 struct LogGenerateCtx &ctx,
                                  OperationType operationType);
-    int32_t ProduceCreateLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile, const std::string &path,
-                             const std::string &name, struct LogGenerateCtx &ctx);
-    int32_t ProduceUnlinkLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile, const std::string &name,
+    int32_t ProduceCreateLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                             const std::string &path,
+                             const std::string &name,
                              struct LogGenerateCtx &ctx);
-    int32_t ProduceRenameOldLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile, const std::string &name,
+    int32_t ProduceUnlinkLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                             const std::string &path,
+                             const std::string &name,
+                             struct LogGenerateCtx &ctx);
+    int32_t ProduceRenameOldLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                                const std::string &path,
+                                const std::string &name,
                                 struct LogGenerateCtx &ctx);
-    int32_t ProduceRenameNewLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile, const std::string &path,
-                                const std::string &name, struct LogGenerateCtx &ctx);
+    int32_t ProduceRenameNewLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
+                                const std::string &path,
+                                const std::string &name,
+                                struct LogGenerateCtx &ctx);
     int32_t ProduceCloseAndWriteLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
-                                    const std::string &path, const std::string &name, struct LogGenerateCtx &ctx);
+                                    const std::string &path,
+                                    const std::string &name,
+                                    struct LogGenerateCtx &ctx);
     int32_t ProduceCloseModifyLog(const std::shared_ptr<CloudDiskServiceMetaFile> parentMetaFile,
-                                  const std::string &path, const std::string &name, struct LogGenerateCtx &ctx);
+                                  const std::string &path,
+                                  const std::string &name,
+                                  struct LogGenerateCtx &ctx);
 
     int32_t WriteLogFile(const struct LogBlock &logBlock);
     int32_t ReadLogFile(const uint64_t line, struct LogBlock &logBlock);
-    int32_t GenerateLogBlock(const struct EventInfo &eventInfo, const uint64_t parentInode,
-                             const struct LogGenerateCtx &ctx, const std::string &parentRecordId, uint64_t &line);
-    int32_t GenerateChangeData(const struct EventInfo &eventInfo, uint64_t line,
-                               const std::string &childRecordId, const std::string &parentRecordId);
+    int32_t GenerateLogBlock(const struct EventInfo &eventInfo,
+                             const uint64_t parentInode,
+                             const struct LogGenerateCtx &ctx,
+                             const std::string &parentRecordId,
+                             uint64_t &line);
+    int32_t GenerateChangeData(const struct EventInfo &eventInfo,
+                               uint64_t line,
+                               const std::string &childRecordId,
+                               const std::string &parentRecordId);
     void GenerateChangeDataForInvalid(const struct EventInfo &eventInfo);
     bool CheckLineIsValid(const uint64_t line);
 
@@ -120,6 +139,7 @@ private:
     std::string syncFolderPath_;
     std::string logFilePath_;
     std::string renameRecordId_;
+    uint8_t renamePlaceholderState_{0};
     UniqueFd fd_;
 
     std::atomic<uint64_t> currentLine_;
@@ -134,13 +154,16 @@ typedef std::pair<uint32_t, uint32_t> LogFileKey;
 
 class LogFileMgr {
 public:
-    static LogFileMgr& GetInstance();
+    static LogFileMgr &GetInstance();
     std::shared_ptr<CloudDiskServiceLogFile> GetCloudDiskServiceLogFile(const int32_t userId,
                                                                         const uint32_t syncFolderIndex);
 
     int32_t ProduceRequest(const struct EventInfo &eventInfo);
-    int32_t PraseRequest(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t start,
-                         const uint64_t count, struct ChangesResult &changesResult);
+    int32_t PraseRequest(const int32_t userId,
+                         const uint32_t syncFolderIndex,
+                         const uint64_t start,
+                         const uint64_t count,
+                         struct ChangesResult &changesResult);
 
     int32_t RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path);
     int32_t UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex);

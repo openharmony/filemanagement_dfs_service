@@ -35,18 +35,36 @@ public:
     MOCK_METHOD2(RegisterSyncFolderChanges, int32_t(const std::string &,
         const std::shared_ptr<CloudDiskServiceCallback>));
     MOCK_METHOD1(UnregisterSyncFolderChanges, int32_t(const std::string &));
+    MOCK_METHOD2(RegisterCallbackTable,
+                 int32_t(const std::string &, const std::shared_ptr<CloudDiskServiceCallbackTable> &));
+    MOCK_METHOD1(UnregisterCallbackTable, int32_t(const std::string &));
     MOCK_METHOD4(GetSyncFolderChanges, int32_t(const std::string &, uint64_t, uint64_t, ChangesResult &));
     MOCK_METHOD3(SetFileSyncStates, int32_t(const std::string &,
         const std::vector<FileSyncState> &, std::vector<FailedList> &));
     MOCK_METHOD3(GetFileSyncStates, int32_t(const std::string &, const std::vector<std::string> &,
         std::vector<ResultList> &));
-    MOCK_METHOD3(CreatePlaceholderFile, int32_t(const std::string &, const std::string &, const PlaceholderInfo &));
+    MOCK_METHOD4(CreatePlaceholderFile,
+        int32_t(const std::string &, const std::string &, const PlaceholderInfo &, const PlaceholderCustomInfo &));
     MOCK_METHOD3(IsPlaceholderFile, int32_t(const std::string &, const std::string &, bool &));
     MOCK_METHOD3(RegisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
     MOCK_METHOD3(UnregisterSyncFolder, int32_t(int32_t, const std::string &, const std::string &));
     MOCK_METHOD2(ConvertPlaceholderToFile, int32_t(const std::string &, const std::string &));
-    MOCK_METHOD3(UpdatePlaceholder, int32_t(const std::string &, const std::string &, const PlaceholderInfo &));
+    MOCK_METHOD2(MarkFileAsPlaceholder, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD2(UnmarkPlaceholderFile, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD3(StartHydration, int32_t(const std::string &, const std::string &, CloudDiskHydratePriority));
+    MOCK_METHOD2(CancelHydration, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD1(Execute, int32_t(const CallbackExecuteRequest &));
+    MOCK_METHOD3(StartHydrationByPath, int32_t(const std::string &, int32_t, int32_t));
+    MOCK_METHOD1(DehydrateFileByPath, int32_t(const std::string &));
+    MOCK_METHOD1(RegisterProgressCallback, int32_t(const sptr<ICloudDiskProgressCallback> &));
+    MOCK_METHOD1(UnregisterProgressCallback, int32_t(const sptr<ICloudDiskProgressCallback> &));
+    MOCK_METHOD2(DehydrateFile, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD4(UpdatePlaceholder,
+        int32_t(const std::string &, const std::string &, const PlaceholderInfo &, const PlaceholderCustomInfo &));
+    MOCK_METHOD3(GetPlaceholderCustomInfo,
+        int32_t(const std::string &, const std::string &, PlaceholderCustomInfo &));
     MOCK_METHOD1(UnregisterForSa, int32_t(const std::string &));
+    MOCK_METHOD3(GetPlaceholderState, int32_t(const std::string &, const std::string &, int32_t &));
 };
 }
 

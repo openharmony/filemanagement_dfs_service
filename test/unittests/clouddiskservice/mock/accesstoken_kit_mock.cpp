@@ -14,6 +14,7 @@
  */
 
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -26,6 +27,7 @@ int32_t g_getNativeTokenInfo = 0;
 std::string g_hapBundleName = "";
 std::string g_nativeProcessName = "";
 int32_t g_hapInstIndex = 0;
+bool g_isSystemApp = false;
 }
 
 void MockGetTokenTypeFlag(int32_t mockRet)
@@ -63,6 +65,11 @@ void MockSetHapInstIndex(int32_t instIndex)
     g_hapInstIndex = instIndex;
 }
 
+void MockIsSystemApp(bool mockRet)
+{
+    g_isSystemApp = mockRet;
+}
+
 namespace OHOS::Security::AccessToken {
 
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID mockRet)
@@ -88,4 +95,9 @@ int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &n
     return g_getNativeTokenInfo;
 }
 
+bool TokenIdKit::IsSystemAppByFullTokenID(uint64_t tokenId)
+{
+    return g_isSystemApp;
 }
+
+} // namespace OHOS::Security::AccessToken

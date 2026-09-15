@@ -17,21 +17,36 @@ sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.ChangesResu
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FileSyncState;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.FailedList;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderInfo;
+sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderCustomInfo;
+sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.CallbackExecuteRequest;
 sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.ResultList;
-sequenceable cloud_disk_common..OHOS.FileManagement.CloudDiskService.PlaceholderInfo;
 
 interface OHOS.FileManagement.CloudDiskService.ICloudDiskService
 {
     void RegisterSyncFolderChangesInner([in] String syncFolder, [in] IRemoteObject remoteobject);
     void UnregisterSyncFolderChangesInner([in] String syncFolder);
+    void RegisterCallbackTableInner([in] String syncFolder, [in] IRemoteObject remoteobject);
+    void UnregisterCallbackTableInner([in] String syncFolder);
     ChangesResult GetSyncFolderChangesInner([in] String syncFolder, [in] unsigned long count, [in] unsigned long startUSN);
     List<FailedList> SetFileSyncStatesInner([in] String syncFolder, [in] List<FileSyncState> fileSyncStates);
     List<ResultList> GetFileSyncStatesInner([in] String syncFolder, [in] List<String> pathArray);
-    void CreatePlaceholderFileInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo info);
+    void CreatePlaceholderFileInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo info, [in] PlaceholderCustomInfo customInfo);
     boolean IsPlaceholderFileInner([in] String syncFolder, [in] String path);
     void RegisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterSyncFolderInner([in] int userId, [in] String bundleName, [in] String path);
     void UnregisterForSaInner([in] String path);
     void ConvertPlaceholderToFileInner([in] String syncFolder, [in] String relativePath);
-    void UpdatePlaceholderInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo metaData);
+    void MarkFileAsPlaceholderInner([in] String syncFolder, [in] String relativePath);
+    void UnmarkPlaceholderFileInner([in] String syncFolder, [in] String relativePath);
+    void StartHydrationInner([in] String syncFolder, [in] String relativePath, [in] int priority);
+    void CancelHydrationInner([in] String syncFolder, [in] String relativePath);
+    void ExecuteInner([in] CallbackExecuteRequest request);
+    void DehydrateInner([in] String syncFolder, [in] String relativePath);
+    void UpdatePlaceholderInner([in] String syncFolder, [in] String relativePath, [in] PlaceholderInfo metaData, [in] PlaceholderCustomInfo customInfo);
+    void GetPlaceholderCustomInfoInner([in] String syncFolder, [in] String relativePath, [out] PlaceholderCustomInfo customInfo);
+    void StartHydrationByPathInner([in] String path, [in] int callbackType, [in] int priority);
+    void DehydrateFileByPathInner([in] String path);
+    void RegisterProgressCallbackInner([in] IRemoteObject remoteObject);
+    void UnregisterProgressCallbackInner();
+    int GetPlaceholderStateInner([in] String syncFolder, [in] String relativePath);
 }

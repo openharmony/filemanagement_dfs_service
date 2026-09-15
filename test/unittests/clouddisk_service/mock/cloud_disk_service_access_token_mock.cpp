@@ -17,6 +17,11 @@
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
+bool CloudDiskServiceAccessToken::IsSystemApp()
+{
+    return CloudDiskServiceAccessTokenVirtual::dfsuAccessToken->IsSystemApp();
+}
+
 bool CloudDiskServiceAccessToken::CheckCallerPermission(const std::string &permissionName)
 {
     return FileManagement::CloudDiskService::CloudDiskServiceAccessTokenVirtual::

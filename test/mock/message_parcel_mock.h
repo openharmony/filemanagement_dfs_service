@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,9 @@ public:
     virtual bool ReadUint8(uint8_t &value) = 0;
     virtual bool WriteUint64(uint64_t value) = 0;
     virtual bool WriteUint16(uint16_t value) = 0;
+    virtual bool WriteUInt8Vector(const std::vector<uint8_t> &value) = 0;
     virtual bool ReadUint64(uint64_t &value) = 0;
+    virtual bool ReadUInt8Vector(std::vector<uint8_t> *value) = 0;
     virtual bool WriteStringVector(const std::vector<std::string> &val) = 0;
     virtual bool WriteUint32(uint32_t value) = 0;
     virtual bool WriteRawData(const void *data, size_t size) = 0;
@@ -89,7 +91,9 @@ public:
     MOCK_METHOD1(ReadUint8, bool(uint8_t &value));
     MOCK_METHOD1(WriteUint64, bool(uint64_t value));
     MOCK_METHOD1(WriteUint16, bool(uint16_t value));
+    MOCK_METHOD1(WriteUInt8Vector, bool(const std::vector<uint8_t> &value));
     MOCK_METHOD1(ReadUint64, bool(uint64_t &value));
+    MOCK_METHOD1(ReadUInt8Vector, bool(std::vector<uint8_t> *value));
     MOCK_METHOD1(WriteStringVector, bool(const std::vector<std::string> &val));
     MOCK_METHOD1(WriteUint32, bool(uint32_t value));
     MOCK_METHOD2(WriteRawData, bool(const void *data, size_t size));

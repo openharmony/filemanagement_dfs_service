@@ -16,6 +16,7 @@
     extern "C++" {
       # CloudDiskServiceManager API
       *OHOS::FileManagement::CloudDiskService::CloudDiskServiceManager*;
+      *OHOS::FileManagement::CloudDiskService::CloudDiskServiceCallbackTable*;
 
       # IPC Marshalling/Unmarshalling for public Parcelable types
       *OHOS::FileManagement::CloudDiskService::FileSyncState*;
@@ -23,8 +24,12 @@
       *OHOS::FileManagement::CloudDiskService::ChangesResult*;
       *OHOS::FileManagement::CloudDiskService::FailedList*;
       *OHOS::FileManagement::CloudDiskService::PlaceholderInfo*;
+      *OHOS::FileManagement::CloudDiskService::PlaceholderCustomInfo*;
+      *OHOS::FileManagement::CloudDiskService::CallbackExecuteRequest*;
+      *OHOS::FileManagement::CloudDiskService::HydrateProgress*;
+      *OHOS::FileManagement::CloudDiskService::ICloudDiskProgressCallback*;
+      *OHOS::FileManagement::CloudDiskService::CloudDiskProgressCallbackStub*;
       *OHOS::FileManagement::CloudDiskService::ResultList*;
-      *OHOS::FileManagement::CloudDiskService::PlaceholderInfo*;
 
       # Utility functions
       *OHOS::GetAnonyInt32*;

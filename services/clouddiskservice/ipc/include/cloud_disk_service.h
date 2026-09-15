@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "account_status_listener.h"
 #include "cloud_disk_service_stub.h"
@@ -46,6 +47,8 @@ public:
     ErrCode RegisterSyncFolderChangesInner(const std::string &syncFolder,
                                            const sptr<IRemoteObject> &remoteObject) override;
     ErrCode UnregisterSyncFolderChangesInner(const std::string &syncFolder) override;
+    ErrCode RegisterCallbackTableInner(const std::string &syncFolder, const sptr<IRemoteObject> &remoteObject) override;
+    ErrCode UnregisterCallbackTableInner(const std::string &syncFolder) override;
     ErrCode GetSyncFolderChangesInner(const std::string &syncFolder,
                                       uint64_t count,
                                       uint64_t startUsn,
@@ -58,7 +61,8 @@ public:
                                    std::vector<ResultList> &resultList) override;
     ErrCode CreatePlaceholderFileInner(const std::string &syncFolder,
                                        const std::string &relativePath,
-                                       const PlaceholderInfo &info) override;
+                                       const PlaceholderInfo &info,
+                                       const PlaceholderCustomInfo &customInfo = PlaceholderCustomInfo()) override;
     ErrCode IsPlaceholderFileInner(const std::string &syncFolder, const std::string &path,
                                    bool &isPlaceholder) override;
     ErrCode RegisterSyncFolderInner(int32_t userId, const std::string &bundleName, const std::string &path) override;
@@ -66,8 +70,26 @@ public:
 
     int32_t UnregisterForSaInner(const std::string &path) override;
     ErrCode ConvertPlaceholderToFileInner(const std::string &syncFolder, const std::string &relativePath) override;
+    ErrCode MarkFileAsPlaceholderInner(const std::string &syncFolder, const std::string &relativePath) override;
+    ErrCode UnmarkPlaceholderFileInner(const std::string &syncFolder, const std::string &relativePath) override;
+    ErrCode StartHydrationInner(const std::string &syncFolder,
+                                const std::string &relativePath,
+                                int32_t priority) override;
+    ErrCode CancelHydrationInner(const std::string &syncFolder, const std::string &relativePath) override;
+    ErrCode ExecuteInner(const CallbackExecuteRequest &request) override;
+    ErrCode StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority) override;
+    ErrCode DehydrateFileByPathInner(const std::string &path) override;
+    ErrCode RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback) override;
+    ErrCode UnregisterProgressCallbackInner() override;
+    ErrCode DehydrateInner(const std::string &syncFolder, const std::string &relativePath) override;
     ErrCode UpdatePlaceholderInner(const std::string &syncFolder, const std::string &relativePath,
-        const PlaceholderInfo &metaData) override;
+        const PlaceholderInfo &metaData,
+        const PlaceholderCustomInfo &customInfo = PlaceholderCustomInfo()) override;
+    ErrCode GetPlaceholderCustomInfoInner(const std::string &syncFolder, const std::string &relativePath,
+        PlaceholderCustomInfo &customInfo) override;
+    ErrCode GetPlaceholderStateInner(const std::string &syncFolder,
+                                     const std::string &relativePath,
+                                     int32_t &state) override;
     void UnloadSa();
 
 private:
@@ -77,6 +99,10 @@ private:
     static sptr<CloudDiskService> instance_;
     bool registerToService_{false};
     bool PublishSA();
+    int32_t ResolveOwnedSyncFolder(const std::string &syncFolder,
+                                   std::string &bundleName,
+                                   uint32_t &syncFolderIndex,
+                                   std::string &physicalPath);
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     std::shared_ptr<AccountStatusListener> accountStatusListener_ = nullptr;
 };

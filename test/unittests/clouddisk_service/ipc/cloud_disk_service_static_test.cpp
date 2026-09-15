@@ -26,6 +26,13 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+namespace {
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_LOCAL =
+    static_cast<uint8_t>(PLACEHOLDER_STATE_UNHYDRATED << FILE_SYNC_STATE_PLACEHOLDER_SHIFT);
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_NONE = 0;
+constexpr uint8_t PLACEHOLDER_TEST_VALUE_PARTIAL =
+    static_cast<uint8_t>(PLACEHOLDER_STATE_PARTIALLY_HYDRATED << FILE_SYNC_STATE_PLACEHOLDER_SHIFT);
+} // namespace
 class CloudDiskServiceStaticTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -62,6 +69,8 @@ void CloudDiskServiceStaticTest::SetUp()
 
 void CloudDiskServiceStaticTest::TearDown()
 {
+    Mock::VerifyAndClearExpectations(insMock_.get());
+    Mock::VerifyAndClearExpectations(dfsuAccessToken_.get());
 }
 
 /**
@@ -225,6 +234,8 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest001, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
         EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(0));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_TRUE(res);
@@ -300,7 +311,10 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest004, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(EACCES, -1)));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -326,7 +340,10 @@ HWTEST_F(CloudDiskServiceStaticTest, SetFileSyncStatesTest005, TestSize.Level1)
         fileSyncState.state = SyncState::SYNCING;
         int32_t testUserId = 1;
         FailedList failedList;
-        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENODATA, -1)));
+        EXPECT_CALL(*insMock_, setxattr(_, _, _, _, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(EACCES, -1)));
         auto res = SetFileSyncStates(fileSyncState, testUserId, failedList, syncFolderPath);
         EXPECT_FALSE(res);
     } catch (...) {
@@ -415,6 +432,8 @@ HWTEST_F(CloudDiskServiceStaticTest, GetFileSyncStateTest004, TestSize.Level1)
         string filePath = "/invalid/path/file";
         string syncFolderPath = "/invalid/path";
         int32_t testUserId = 1;
+        EXPECT_CALL(*insMock_, stat(_, _))
+            .WillOnce(DoAll(SetErrnoAndReturn(ENOENT, -1)));
         auto res = GetFileSyncState(filePath, testUserId, syncFolderPath);
         EXPECT_EQ(res.isSuccess, false);
         EXPECT_EQ(res.error, ErrorReason::NO_SUCH_FILE);
@@ -528,12 +547,12 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_PathConvertFail_001, TestSize.
     GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 start";
     try {
         std::string syncFolder = "/test/mockFailed";
-        std::string path = "/test/mockFailed/PathToMntPathBySandboxPath";
+        const std::string relativePath = "PathToMntPathBySandboxPath";
         int32_t userId = 100;
         std::string hmdfsPath;
 
-        int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
-        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        int32_t ret = GetHmdfsPath(syncFolder, relativePath, userId, hmdfsPath);
+        EXPECT_EQ(ret, CloudDiskServiceErrCode::E_FILE_NOT_EXIST);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetHmdfsPath_PathConvertFail_001 failed";
@@ -543,7 +562,7 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_PathConvertFail_001, TestSize.
 
 /**
  * @tc.name: GetHmdfsPath_AccessFailed_002
- * @tc.desc: Verify GetHmdfsPath with successful path conversion
+ * @tc.desc: Verify target ENOENT is converted to file not exist
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -556,10 +575,10 @@ HWTEST_F(CloudDiskServiceStaticTest, GetHmdfsPath_AccessFailed_002, TestSize.Lev
         int32_t userId = 100;
         std::string hmdfsPath;
 
-        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*insMock_, access(_, _)).WillOnce(DoAll(SetErrnoAndReturn(ENOENT, -1)));
 
         int32_t ret = GetHmdfsPath(syncFolder, path, userId, hmdfsPath);
-        EXPECT_EQ(ret, E_SYNC_FOLDER_PATH_NOT_EXIST);
+        EXPECT_EQ(ret, E_FILE_NOT_EXIST);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetHmdfsPath_AccessFailed_002 failed";
@@ -703,8 +722,8 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_Success_006, 
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
             return;
         }
-        char placeholderValue = '1';
-        if (fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue, sizeof(placeholderValue), 0) != 0) {
+        uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
+        if (fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue, sizeof(placeholderValue), 0) != 0) {
             close(fd);
             unlink(testFilePath.c_str());
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_Success_006 failed";
@@ -723,7 +742,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_Success_006, 
         char newValue = '0';
         fd = open(testFilePath.c_str(), O_RDONLY);
         if (fd >= 0) {
-            fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &newValue, sizeof(newValue));
+            fgetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &newValue, sizeof(newValue));
             close(fd);
         }
 
@@ -761,7 +780,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_GetXattrFail_
             GTEST_LOG_(INFO) << "ConvertPlaceholderToEmptyFile_GetXattrFail_002 failed";
             return;
         }
-        ssize_t xattrRet = fgetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, nullptr, 0);
+        ssize_t xattrRet = fgetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, nullptr, 0);
         close(fd);
         if (xattrRet < 0) {
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
@@ -788,9 +807,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_TruncateFail_
         string testFilePath = "/data/test_truncate_fail_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -821,9 +840,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_
         string testFilePath = "/data/test_setxattr_fail_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -855,9 +874,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueZer
         string testFilePath = "/data/test_xattr_zero_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char xattrValue = '0';
+            uint8_t xattrValue = PLACEHOLDER_TEST_VALUE_NONE;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &xattrValue,
                       sizeof(xattrValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -888,9 +907,9 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_SetXattrFail_
         string testFilePath = "/data/test_fsetxattr_fail" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char placeholderValue = '1';
+            uint8_t placeholderValue = PLACEHOLDER_TEST_VALUE_LOCAL;
             insMock_->DisableMock();
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &placeholderValue,
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &placeholderValue,
                       sizeof(placeholderValue), 0);
             Assistant::ins = insMock_;
             insMock_->EnableMock();
@@ -1278,12 +1297,12 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFile_XattrValueTwo
         string testFilePath = "/data/test_xattr_two_" + to_string(time(nullptr));
         int fd = open(testFilePath.c_str(), O_CREAT | O_RDWR, 0644);
         if (fd >= 0) {
-            char xattrValue = '2';
-            fsetxattr(fd, CLOUD_DISK_PLACEHOLDER_XATTR, &xattrValue, sizeof(xattrValue), 0);
+            uint8_t xattrValue = PLACEHOLDER_TEST_VALUE_PARTIAL;
+            fsetxattr(fd, CLOUD_DISK_FILE_SYNC_STATE_XATTR, &xattrValue, sizeof(xattrValue), 0);
             close(fd);
 
             int32_t ret = ConvertPlaceholderToEmptyFile(testFilePath);
-            EXPECT_EQ(ret, E_HYDRATE_IN_PROGRESS);
+            EXPECT_EQ(ret, E_OK);
 
             unlink(testFilePath.c_str());
         }

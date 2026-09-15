@@ -38,13 +38,17 @@ private:
 class AccountStatusSubscriber : public AccountSA::OsAccountSubscriber {
 public:
     explicit AccountStatusSubscriber(const AccountSA::OsAccountSubscribeInfo &info, int32_t currentUserId = -1)
-        : OsAccountSubscriber(info), currentUserId_(currentUserId) {};
+        : OsAccountSubscriber(info), currentUserId_(currentUserId)
+    {
+    }
     ~AccountStatusSubscriber() override {}
     void OnStateChanged(const AccountSA::OsAccountStateData &data) override;
     void SetCurrentUserId(int32_t userId);
     void UnloadSa();
 
 private:
+    void HandleUserSwitched(int32_t userId);
+
     int32_t currentUserId_ = -1;
 };
 } // namespace CloudDiskService

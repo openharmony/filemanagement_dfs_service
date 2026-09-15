@@ -35,6 +35,8 @@ namespace CloudDiskService {
 enum class ICloudDiskServiceIpcCode {
     COMMAND_REGISTER_SYNC_FOLDER_CHANGES_INNER = MIN_TRANSACTION_ID,
     COMMAND_UNREGISTER_SYNC_FOLDER_CHANGES_INNER,
+    COMMAND_REGISTER_CALLBACK_TABLE_INNER,
+    COMMAND_UNREGISTER_CALLBACK_TABLE_INNER,
     COMMAND_GET_SYNC_FOLDER_CHANGES_INNER,
     COMMAND_SET_FILE_SYNC_STATES_INNER,
     COMMAND_GET_FILE_SYNC_STATES_INNER,
@@ -44,7 +46,14 @@ enum class ICloudDiskServiceIpcCode {
     COMMAND_UNREGISTER_SYNC_FOLDER_INNER,
     COMMAND_UNREGISTER_FOR_SA_INNER,
     COMMAND_CONVERT_PLACEHOLDER_TO_FILE_INNER,
+    COMMAND_MARK_FILE_AS_PLACEHOLDER_INNER,
+    COMMAND_UNMARK_PLACEHOLDER_FILE_INNER,
+    COMMAND_START_HYDRATION_INNER,
+    COMMAND_CANCEL_HYDRATION_INNER,
+    COMMAND_EXECUTE_INNER,
+    COMMAND_DEHYDRATE_INNER,
     COMMAND_UPDATE_PLACEHOLDER_TO_FILE_INNER,
+    COMMAND_GET_PLACEHOLDER_CUSTOM_INFO_INNER,
 };
 
 class ICloudDiskService : public IRemoteBroker {
@@ -57,6 +66,11 @@ public:
 
     virtual ErrCode UnregisterSyncFolderChangesInner(
         const std::string& syncFolder) = 0;
+
+    virtual ErrCode RegisterCallbackTableInner(const std::string &syncFolder,
+                                               const sptr<IRemoteObject> &remoteobject) = 0;
+
+    virtual ErrCode UnregisterCallbackTableInner(const std::string &syncFolder) = 0;
 
     virtual ErrCode GetSyncFolderChangesInner(
         const std::string& syncFolder,
@@ -77,7 +91,8 @@ public:
     virtual ErrCode CreatePlaceholderFileInner(
         const std::string& syncFolder,
         const std::string& filePath,
-        const PlaceholderInfo& info) = 0;
+        const PlaceholderInfo& info,
+        const PlaceholderCustomInfo& customInfo) = 0;
     virtual ErrCode IsPlaceholderFileInner(
         const std::string& syncFolder,
         const std::string& path,
@@ -97,8 +112,25 @@ public:
         const std::string& path) = 0;
 
     virtual ErrCode ConvertPlaceholderToFileInner(const std::string& syncFolder, const std::string& path) = 0;
+    virtual ErrCode MarkFileAsPlaceholderInner(const std::string& syncFolder,
+        const std::string& relativePath) = 0;
+    virtual ErrCode UnmarkPlaceholderFileInner(const std::string& syncFolder,
+        const std::string& relativePath) = 0;
+    virtual ErrCode StartHydrationInner(const std::string& syncFolder, const std::string& relativePath,
+        int32_t priority) = 0;
+    virtual ErrCode CancelHydrationInner(const std::string& syncFolder, const std::string& relativePath) = 0;
+    virtual ErrCode ExecuteInner(const CallbackExecuteRequest& request) = 0;
+    virtual ErrCode StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority) = 0;
+    virtual ErrCode DehydrateFileByPathInner(const std::string &path) = 0;
+    virtual ErrCode RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback) = 0;
+    virtual ErrCode UnregisterProgressCallbackInner() = 0;
+    virtual ErrCode DehydrateInner(const std::string& syncFolder, const std::string& relativePath) = 0;
     virtual ErrCode UpdatePlaceholderInner(const std::string& syncFolder, const std::string& relativePath,
-        const PlaceholderInfo& metaData) = 0;
+        const PlaceholderInfo& metaData, const PlaceholderCustomInfo& customInfo) = 0;
+    virtual ErrCode GetPlaceholderCustomInfoInner(const std::string& syncFolder, const std::string& relativePath,
+        PlaceholderCustomInfo& customInfo) = 0;
+    virtual ErrCode
+        GetPlaceholderStateInner(const std::string &syncFolder, const std::string &relativePath, int32_t &state) = 0;
 
 protected:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0xD003900, "CloudDiskService"};
