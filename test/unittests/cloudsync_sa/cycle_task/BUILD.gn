@@ -288,6 +288,12 @@ ohos_unittest("periodic_check_task_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store/data_syncer_rdb_store.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/screen_status_mock.cpp",
+    "${distributedfile_path}/utils/system/src/utils_directory.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_const.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_column.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_queue.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_store.cpp",
+    "${services_path}/clouddisk_database/src/operation_log/operation_log_handler.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
@@ -297,6 +303,8 @@ ohos_unittest("periodic_check_task_test") {
   include_dirs = [
     "${clouddisk_database_path}/include",
     "${clouddisk_database_path}/include/operation_log",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
@@ -308,11 +316,15 @@ ohos_unittest("periodic_check_task_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/cycle_task/tasks",
+    "${utils_path}/dentry/include",
+    "${utils_path}/log/include",
+    "${utils_path}/system/include",
   ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
 

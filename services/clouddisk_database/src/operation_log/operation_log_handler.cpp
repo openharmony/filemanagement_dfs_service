@@ -92,9 +92,6 @@ void OperationLogHandler::Start()
     }
 
     queue_.Reset();
-    lastCleanTime_ = static_cast<int64_t>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now().time_since_epoch()).count());
     running_ = true;
     writeThread_ = thread([this]() {
         WriteThreadLoop();
@@ -118,7 +115,6 @@ void OperationLogHandler::Stop()
 
 void OperationLogHandler::WriteThreadLoop()
 {
-    constexpr int64_t CLEAN_INTERVAL_MS = 60 * 60 * 1000;
     while (running_.load()) {
         auto batch = queue_.PopBatch();
         if (batch.empty()) {
@@ -128,14 +124,6 @@ void OperationLogHandler::WriteThreadLoop()
         int32_t ret = WriteBatch(batch);
         if (ret != E_OK) {
             LOGE("write batch failed, ret=%{public}d, batchSize=%{public}zu", ret, batch.size());
-        }
-
-        int64_t now = static_cast<int64_t>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count());
-        if (now - lastCleanTime_ > CLEAN_INTERVAL_MS) {
-            CleanOldRecords();
-            lastCleanTime_ = now;
         }
     }
 
@@ -347,6 +335,26 @@ int32_t OperationLogHandler::CleanOldRecords()
     return E_OK;
 }
 
+int32_t OperationLogHandler::CleanAllRecords()
+{
+    LOGI("CleanAllRecords starts");
+    auto rdbStore = OperationLogStore::GetInstance().GetRaw();
+    if (rdbStore == nullptr) {
+        LOGE("operation log rdb store is null");
+        return E_RDB;
+    }
+
+    NativeRdb::AbsRdbPredicates deletePredicates(OperationLogColumn::TABLE_NAME);
+    int32_t deletedRows = 0;
+    int32_t ret = rdbStore->Delete(deletedRows, deletePredicates);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("clean all operation log records failed, ret = %{public}d", ret);
+        return ret;
+    }
+    LOGI("CleanAllRecords done, deletedRows = %{public}d", deletedRows);
+    return E_OK;
+}
+
 bool OperationLogHandler::IsRecoverableError(int32_t errCode)
 {
     return errCode == NativeRdb::E_SQLITE_BUSY ||
@@ -549,7 +557,6 @@ int32_t OperationLogHandler::ReportDirStats(
     }
 
     int32_t fileCount = 0;
-    int32_t opType = 0;
     while (resultSet->GoToNextRow() == E_OK) {
         std::string filePath;
         int32_t ret = resultSet->GetString(0, filePath);

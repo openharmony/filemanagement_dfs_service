@@ -846,6 +846,36 @@ HWTEST_F(OperationLogHandlerTest, CheckAndCleanRecordsGetLongFailTest, TestSize.
 }
 
 /**
+ * @tc.name: CleanAllRecordsDeleteFailTest
+ * @tc.desc: Verify CleanAllRecords returns error when Delete fails.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, CleanAllRecordsDeleteFailTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_, Delete(An<int32_t &>(), An<const NativeRdb::AbsRdbPredicates &>()))
+        .WillOnce(DoAll(SetArgReferee<0>(0), Return(NativeRdb::E_SQLITE_IOERR)));
+    int32_t result = handler.CleanAllRecords();
+    EXPECT_EQ(result, NativeRdb::E_SQLITE_IOERR);
+}
+
+/**
+ * @tc.name: CleanAllRecordsSuccessTest
+ * @tc.desc: Verify CleanAllRecords returns E_OK when successful.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OperationLogHandlerTest, CleanAllRecordsSuccessTest, TestSize.Level1)
+{
+    auto &handler = OperationLogHandler::GetInstance();
+    OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_, Delete(An<int32_t &>(), An<const NativeRdb::AbsRdbPredicates &>()))
+        .WillOnce(DoAll(SetArgReferee<0>(5), Return(NativeRdb::E_OK)));
+    int32_t result = handler.CleanAllRecords();
+    EXPECT_EQ(result, E_OK);
+}
+
+/**
  * @tc.name: QueryDirFileCountsSuccessTest
  * @tc.desc: Verify QueryDirFileCounts returns correct directory counts with GetParentDir filtering.
  * @tc.type: FUNC

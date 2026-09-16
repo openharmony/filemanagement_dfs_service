@@ -17,7 +17,9 @@
 #include <gtest/gtest.h>
 
 #include "battery_status.h"
+#include "clouddisk_rdbstore_mock.h"
 #include "dfs_error.h"
+#include "operation_log_store.h"
 #include "periodic_check_task.h"
 #include "screen_status_mock.h"
 #include "system_load.h"
@@ -26,6 +28,7 @@ namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using RdbStoreMock = CloudDisk::Test::RdbStoreMock;
 
 class PeriodicCheckTaskTest : public testing::Test {
 public:
@@ -36,6 +39,7 @@ public:
     static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManagerPtr_ = nullptr;
     static inline std::shared_ptr<PeriodicCheckTask> periodicCheckTask_ = nullptr;
     static inline std::shared_ptr<ScreenStatusMock> screenStatusMock_ = nullptr;
+    static inline std::shared_ptr<RdbStoreMock> rdbStoreMock_ = nullptr;
 };
 
 void PeriodicCheckTaskTest::SetUpTestCase(void)
@@ -45,6 +49,9 @@ void PeriodicCheckTaskTest::SetUpTestCase(void)
     periodicCheckTask_ = std::make_shared<PeriodicCheckTask>(dataSyncManagerPtr_);
     screenStatusMock_ = std::make_shared<ScreenStatusMock>();
     ScreenStatusMock::proxy_ = screenStatusMock_;
+    rdbStoreMock_ = std::make_shared<RdbStoreMock>();
+    CloudDisk::OperationLogStore::GetInstance().rdbStore_ = rdbStoreMock_;
+    EXPECT_CALL(*rdbStoreMock_, Delete(_, _)).WillRepeatedly(Return(NativeRdb::E_OK));
 }
 
 void PeriodicCheckTaskTest::TearDownTestCase(void)
@@ -54,6 +61,8 @@ void PeriodicCheckTaskTest::TearDownTestCase(void)
     periodicCheckTask_ = nullptr;
     screenStatusMock_ = nullptr;
     ScreenStatusMock::proxy_ = nullptr;
+    CloudDisk::OperationLogStore::GetInstance().rdbStore_ = nullptr;
+    rdbStoreMock_ = nullptr;
 }
 
 void PeriodicCheckTaskTest::SetUp(void)
@@ -331,7 +340,7 @@ HWTEST_F(PeriodicCheckTaskTest, RunTaskForBundleTest010, TestSize.Level1)
         SystemLoadStatus::Setload(PowerMgr::ThermalLevel::COOL);
 
         auto ret = periodicCheckTask_->RunTaskForBundle(userId, bundleName);
-        EXPECT_EQ(ret, 1);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(ERROR) << "RunTaskForBundleTest010 FAILED";

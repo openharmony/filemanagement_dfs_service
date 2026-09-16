@@ -19,6 +19,7 @@
 #include "screen_status.h"
 #include "system_load.h"
 #include "utils_log.h"
+#include "operation_log_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -48,6 +49,11 @@ int32_t PeriodicCheckTask::RunTaskForBundle(int32_t userId, std::string bundleNa
     ret = dataSyncManager_->UpdateCachedFileSize(bundleName, userId);
     if (ret != E_OK) {
         LOGE("UpdateCachedFileSize failed for %{public}s, ret: %{public}d", bundleName.c_str(), ret);
+    }
+
+    ret = CloudDisk::OperationLogHandler::GetInstance().CleanOldRecords();
+    if (ret != E_OK) {
+        LOGE("OperationLogHandler CleanOldRecords failed for %{public}s, ret: %{public}d", bundleName.c_str(), ret);
     }
     return ret;
 }
