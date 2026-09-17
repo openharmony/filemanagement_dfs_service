@@ -14,6 +14,8 @@
  */
 #include "file_dfs_listener_stub.h"
 
+#include <thread>
+
 #include "file_dfs_listener_interface_code.h"
 #include "utils_log.h"
 
@@ -80,7 +82,9 @@ int32_t FileDfsListenerStub::HandleOnStatus(MessageParcel &data, MessageParcel &
         LOGE("Invalid arguments");
         return E_INVAL_ARG;
     }
-    OnStatus(networkId, status, path, type);
+    std::thread([this, networkId, status, path, type]() {
+        OnStatus(networkId, status, path, type);
+    }).detach();
     return NO_ERROR;
 }
 

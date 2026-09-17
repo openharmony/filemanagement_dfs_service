@@ -120,9 +120,10 @@ HWTEST_F(FileDfsListenerStubTest, FileDfsListenerStub_HandleOnStatus_0100, TestS
                                                .WillOnce(DoAll(SetArgReferee<0>(path), Return(true)));
     EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(DoAll(SetArgReferee<0>(status), Return(true)))
                                                 .WillOnce(DoAll(SetArgReferee<0>(type), Return(true)));
+    EXPECT_CALL(*mockStub_, OnStatus(_, _, _, _)).Times(AtLeast(0));
     ret = mockStub_->HandleOnStatus(data, reply);
     EXPECT_EQ(ret, NO_ERROR);
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     GTEST_LOG_(INFO) << "FileDfsListenerStub_HandleOnStatus_0100 End";
 }
 
