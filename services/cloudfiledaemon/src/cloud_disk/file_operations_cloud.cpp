@@ -984,6 +984,10 @@ static int32_t GetChildInfos(fuse_req_t req, fuse_ino_t ino, vector<CloudDiskFil
     string parentCloudId = inoPtr->cloudId;
 
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    if (!databaseManager.IsBundleCloudSyncEnabled(data->userId, inoPtr->bundleName)) {
+        LOGI("bundle not cloud-enabled, skip readdir rdb: %{public}s", inoPtr->bundleName.c_str());
+        return 0;
+    }
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int32_t err = rdbStore->ReadDir(parentCloudId, childInfos);
     if (err != 0) {
