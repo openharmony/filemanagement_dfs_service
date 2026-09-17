@@ -15,7 +15,14 @@
 
 #ifndef OHOS_FILEMANAGEMENT_FILE_DFS_LISTENER_STUB_H
 #define OHOS_FILEMANAGEMENT_FILE_DFS_LISTENER_STUB_H
+
+#include <atomic>
+#include <condition_variable>
+#include <deque>
 #include <map>
+#include <mutex>
+#include <string>
+#include <thread>
 
 #include "i_file_dfs_listener.h"
 #include "iremote_stub.h"
@@ -23,19 +30,35 @@
 #include "message_parcel.h"
 #include "refbase.h"
 
-
 namespace OHOS {
 namespace FileManagement {
 namespace ModuleFileIO {
 class FileDfsListenerStub : public IRemoteStub<Storage::DistributedFile::IFileDfsListener> {
 public:
     FileDfsListenerStub();
-    virtual ~FileDfsListenerStub() = default;
+    ~FileDfsListenerStub() override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    struct StatusCallback {
+        std::string networkId;
+        int32_t status = 0;
+        std::string path;
+        int32_t type = 0;
+    };
+
     using FileDfsListenerInterface = int32_t (FileDfsListenerStub::*)(MessageParcel &data, MessageParcel &reply);
+
+    static constexpr uint32_t MAX_STATUS_CALLBACK_QUEUE_SIZE = 64;
+
+    void DispatchStatus();
+
     std::map<uint32_t, FileDfsListenerInterface> opToInterfaceMap_;
+    std::mutex queueMutex_;
+    std::condition_variable queueCond_;
+    std::deque<StatusCallback> statusQueue_;
+    std::thread workerThread_;
+    std::atomic<bool> stopFlag_ { false };
 
     int32_t HandleOnStatus(MessageParcel &data, MessageParcel &reply);
 };
