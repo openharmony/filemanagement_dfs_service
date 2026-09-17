@@ -861,12 +861,6 @@ static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t
 static int32_t ResolvePlaceholderQueryPath(
     const std::string &syncFolder, const std::string &relativePath, std::string &queryPath)
 {
-    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
-        relativePath.back() == '/') {
-        LOGE("ResolvePlaceholderQueryPath branch=invalid_relative_path path_size=%{public}zu", relativePath.size());
-        return E_INVALID_ARG;
-    }
-
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
         CloudDiskServiceAccessToken::GetAccountId(userId);
@@ -875,6 +869,12 @@ static int32_t ResolvePlaceholderQueryPath(
     int32_t ret = GetRegisteredMntSyncFolder(syncFolder, userId, mntSyncFolder);
     if (ret != E_OK) {
         return ret;
+    }
+
+    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
+        relativePath.back() == '/') {
+        LOGE("ResolvePlaceholderQueryPath branch=invalid_relative_path path_size=%{public}zu", relativePath.size());
+        return E_INVALID_ARG;
     }
 
     queryPath = JoinSyncFolderAndRelativePath(mntSyncFolder, relativePath);
@@ -1334,13 +1334,13 @@ static int32_t ResolvePlaceholderTaskContext(const std::string &syncFolder,
                                              const std::string &relativePath,
                                              PlaceholderStatePathContext &context)
 {
-    if (!IsValidPlaceholderRelativePath(relativePath)) {
-        LOGE("Resolve placeholder task context failed: invalid relative path");
-        return E_INVALID_ARG;
-    }
     int32_t ret = ResolvePlaceholderOwner(syncFolder, context);
     if (ret != E_OK) {
         return ret;
+    }
+    if (!IsValidPlaceholderRelativePath(relativePath)) {
+        LOGE("Resolve placeholder task context failed: invalid relative path");
+        return E_INVALID_ARG;
     }
     context.syncFolder = syncFolder;
     return E_OK;

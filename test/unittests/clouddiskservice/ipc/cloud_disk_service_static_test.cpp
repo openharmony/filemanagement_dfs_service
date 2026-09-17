@@ -1003,12 +1003,15 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest003, TestSize.Lev
         string path = "";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder();
+        ExpectPlaceholderCaller(dfsuAccessToken_);
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
 #else
@@ -1036,12 +1039,15 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest004, TestSize.Lev
         string path = "/dir/a.txt";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder();
+        ExpectPlaceholderCaller(dfsuAccessToken_);
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
 #else
@@ -1069,12 +1075,15 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest005, TestSize.Lev
         string path = "dir/../a.txt";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder();
+        ExpectPlaceholderCaller(dfsuAccessToken_);
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
 #else
@@ -1102,12 +1111,15 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest006, TestSize.Lev
         string path = "dir/";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        AddPlaceholderSyncFolder();
+        ExpectPlaceholderCaller(dfsuAccessToken_);
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
 #else
@@ -1484,6 +1496,41 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest016, TestSize.Lev
 }
 
 /**
+ * @tc.name: IsPlaceholderFileInnerTest017
+ * @tc.desc: Verify IsPlaceholderFileInner checks sync-root registration before the relative path format
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest017, TestSize.Level2)
+{
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest017 start";
+    try {
+        CloudDiskService cloudDiskService(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+        string path = "/placeholder_003.txt";
+        bool isPlaceholder = true;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        CloudDiskSyncFolder::GetInstance().ClearMap();
+        ExpectPlaceholderCaller(dfsuAccessToken_);
+        EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
+#endif
+
+        auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        EXPECT_EQ(res, E_SYNC_FOLDER_NOT_REGISTERED);
+        EXPECT_FALSE(isPlaceholder);
+#else
+        EXPECT_EQ(res, E_NOT_SUPPORTED);
+#endif
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest017 failed";
+    }
+    ClearPlaceholderXattrExpectations(insMock_);
+    GTEST_LOG_(INFO) << "IsPlaceholderFileInnerTest017 end";
+}
+
+/**
  * @tc.name: GetPlaceholderStateInnerTest001
  * @tc.desc: Verify all public states and every reserved xattr state have deterministic results.
  * @tc.type: FUNC
@@ -1567,6 +1614,11 @@ HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest003, TestSize.L
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
     int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    AddPlaceholderSyncFolder();
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
+    EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+        .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
+    EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
     EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "", state), E_INVALID_ARG);
     EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
 
@@ -1575,6 +1627,26 @@ HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest003, TestSize.L
     EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
     state = PLACEHOLDER_STATE_FULLY_HYDRATED;
     EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath, state), E_INVALID_ARG);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+#endif
+}
+
+/**
+ * @tc.name: GetPlaceholderStateInnerTest004
+ * @tc.desc: Verify sync-root registration is checked before the relative path format.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest004, TestSize.Level2)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    CloudDiskSyncFolder::GetInstance().ClearMap();
+    ExpectPlaceholderCaller(dfsuAccessToken_);
+    EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt", state),
+              E_SYNC_FOLDER_NOT_REGISTERED);
     EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
 #endif
 }
@@ -2997,6 +3069,25 @@ HWTEST_F(CloudDiskServiceStaticTest, CancelHydrationInner_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name: CancelHydrationInner_003
+ * @tc.desc: Sync-root registration is checked before the relative path format.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CancelHydrationInner_003, TestSize.Level2)
+{
+    CloudDiskService service;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    CloudDiskSyncFolder::GetInstance().ClearMap();
+    ExpectPlaceholderCaller(dfsuAccessToken_);
+    EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt"),
+              E_SYNC_FOLDER_NOT_REGISTERED);
+#else
+    EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt"), E_NOT_SUPPORTED);
+#endif
+}
+
+/**
  * @tc.name: ExecuteInner_001
  * @tc.desc: Reject empty request keys and foreign folders without requiring cloud-disk permission.
  * @tc.type: FUNC
@@ -3595,12 +3686,15 @@ HWTEST_F(CloudDiskServiceStaticTest, PlaceholderPathContextBranches_001, TestSiz
     EXPECT_EQ(syncFolderIndex, CloudDisk::CloudFileUtils::DentryHash(PLACEHOLDER_TEST_PHYSICAL_SYNC_FOLDER));
 
     PlaceholderStatePathContext context;
+    AddPlaceholderSyncFolder();
+    ExpectPlaceholderCaller(dfsuAccessToken_);
     EXPECT_EQ(ResolvePlaceholderTaskContext(PLACEHOLDER_TEST_SYNC_FOLDER, "../file.txt", context), E_INVALID_ARG);
+
+    Mock::VerifyAndClearExpectations(dfsuAccessToken_.get());
     EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
     EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).WillOnce(Return(E_IPC_FAILED));
     EXPECT_EQ(ResolvePlaceholderOwner(PLACEHOLDER_TEST_SYNC_FOLDER, context), E_TRY_AGAIN);
 
-    AddPlaceholderSyncFolder();
     Mock::VerifyAndClearExpectations(dfsuAccessToken_.get());
     ExpectPlaceholderCaller(dfsuAccessToken_);
     EXPECT_EQ(ResolvePlaceholderTaskContext(PLACEHOLDER_TEST_SYNC_FOLDER, TEST_RELATIVE_PATH, context), E_OK);
