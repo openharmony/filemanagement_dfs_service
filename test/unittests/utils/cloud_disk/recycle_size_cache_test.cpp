@@ -598,10 +598,12 @@ HWTEST_F(RecycleSizeCacheTest, WriteCachedSize_NegativeSize_ClampedToZero_024, T
  */
 HWTEST_F(RecycleSizeCacheTest, OpenAndCheck_Hardlink_AsyncWriteFails_025, TestSize.Level1)
 {
-    EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
-    EXPECT_TRUE(WaitCacheFileExists(TEST_USER_ID, TEST_BUNDLE));
     string cachePath = GetCachePath(TEST_USER_ID, TEST_BUNDLE);
-    EXPECT_EQ(RecycleSizeCache::WriteCachedSize(cachePath, 999), E_OK);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(cachePath);
+    EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
+    EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
+    WriteRawFile(cachePath, "999");
     string linkPath = GetBaseDir(TEST_USER_ID, TEST_BUNDLE) + "/RecycleSizeCache.hlnk";
     ASSERT_EQ(link(cachePath.c_str(), linkPath.c_str()), 0);
     std::vector<MetaBase> list = {MakeMetaBase(100)};
