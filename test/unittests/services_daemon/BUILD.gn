@@ -288,6 +288,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
     "cloud_daemon_test.cpp",
+    "mock/system_ability_mock.cpp",
     "mock/system_function_mock.cpp",
     "mock/fuse_assistant.cpp",
   ]
@@ -325,6 +326,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
     "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
     "${distributedfile_path}/services/cloudfiledaemon/include",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
     "${distributedfile_path}/utils/ioctl/include",
     "${utils_path}/cloud_disk/include",
     "${utils_path}/dentry/include",
@@ -367,7 +369,6 @@ ohos_unittest("cloud_daemon_test") {
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
     "relational_store:native_rdb",
-    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
