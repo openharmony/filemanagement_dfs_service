@@ -93,6 +93,7 @@ namespace {
 // 写操作是异步的，轮询等待 Get 收敛到期望值（带回溯超时）。
 static constexpr int64_t POLL_INTERVAL_MS = 10;
 static constexpr int64_t POLL_TIMEOUT_MS = 3000;
+static constexpr int STABLE_POLL_COUNT = 3;
 static int64_t WaitSizeFor(int32_t userId, const string &bundle, int64_t expect,
     int timeoutMs = POLL_TIMEOUT_MS)
 {
@@ -147,7 +148,7 @@ static void WaitAsyncSettled(int32_t userId, const string &bundle,
         int64_t cur = 0;
         if (RecycleSizeCache::GetRecycleBinSize(userId, bundle, cur) == E_OK && cur == prev) {
             ++stableCount;
-            if (stableCount >= 3) {
+            if (stableCount >= STABLE_POLL_COUNT) {
                 return;
             }
         } else {
@@ -310,6 +311,8 @@ HWTEST_F(RecycleSizeCacheTest, EndToEnd_RecycleAndReset_007, TestSize.Level1)
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(1000)), E_OK);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(2000)), E_OK);
+    EXPECT_EQ(WaitSize(3000), 3000);
+
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(500)), E_OK);
     EXPECT_EQ(WaitSize(2500), 2500);
 
