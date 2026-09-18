@@ -139,16 +139,22 @@ static void WaitVersionBumped(int32_t userId, const string &bundle, int64_t verB
 static void WaitAsyncSettled(int32_t userId, const string &bundle,
     int timeoutMs = POLL_TIMEOUT_MS)
 {
-    string path = GetCachePath(userId, bundle);
-    int64_t ver = RecycleSizeCache::GetCacheVersion(path);
+    this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
+    int64_t prev = -1;
+    int stableCount = 0;
     auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeoutMs);
     while (chrono::steady_clock::now() < deadline) {
-        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
-        int64_t cur = RecycleSizeCache::GetCacheVersion(path);
-        if (cur == ver) {
-            return;
+        int64_t cur = 0;
+        if (RecycleSizeCache::GetRecycleBinSize(userId, bundle, cur) == E_OK && cur == prev) {
+            ++stableCount;
+            if (stableCount >= 3) {
+                return;
+            }
+        } else {
+            stableCount = 0;
         }
-        ver = cur;
+        prev = cur;
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
     }
 }
 
