@@ -125,15 +125,30 @@ static int64_t WaitSize(int64_t expect, int timeoutMs = POLL_TIMEOUT_MS)
     return WaitSizeFor(TEST_USER_ID, TEST_BUNDLE, expect, timeoutMs);
 }
 
-static void WaitVersionBumped(int32_t userId, const string &bundle,
+static void WaitVersionBumped(int32_t userId, const string &bundle, int64_t verBefore,
     int timeoutMs = POLL_TIMEOUT_MS)
 {
     string path = GetCachePath(userId, bundle);
-    int64_t verBefore = RecycleSizeCache::GetCacheVersion(path);
     auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeoutMs);
     while (RecycleSizeCache::GetCacheVersion(path) == verBefore &&
         chrono::steady_clock::now() < deadline) {
         this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
+    }
+}
+
+static void WaitAsyncSettled(int32_t userId, const string &bundle,
+    int timeoutMs = POLL_TIMEOUT_MS)
+{
+    string path = GetCachePath(userId, bundle);
+    int64_t ver = RecycleSizeCache::GetCacheVersion(path);
+    auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeoutMs);
+    while (chrono::steady_clock::now() < deadline) {
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
+        int64_t cur = RecycleSizeCache::GetCacheVersion(path);
+        if (cur == ver) {
+            return;
+        }
+        ver = cur;
     }
 }
 
@@ -268,10 +283,10 @@ HWTEST_F(RecycleSizeCacheTest, MissingBaseDir_ReturnsError_006, TestSize.Level1)
     EXPECT_EQ(size, 0);
 
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
 
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
 
     int64_t after = -1;
     EXPECT_EQ(RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, after), E_OK);
@@ -571,7 +586,7 @@ HWTEST_F(RecycleSizeCacheTest, WriteCachedSize_NegativeSize_ClampedToZero_024, T
 
 /**
  * @tc.name: OpenAndCheck_Hardlink_AsyncWriteFails_025
- * @tc.desc: 缓存文件存在硬链接(nlink>1)时异步 Reset 写失败，文件不被破坏。
+ * @tc.desc: 缓存文件存在硬链接(nlink>1)时异步写失败，文件内容保持写之前的值不被破坏。
  * @tc.type: FUNC
  * @tc.require: issueNumber
  */
@@ -580,13 +595,15 @@ HWTEST_F(RecycleSizeCacheTest, OpenAndCheck_Hardlink_AsyncWriteFails_025, TestSi
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_TRUE(WaitCacheFileExists(TEST_USER_ID, TEST_BUNDLE));
     string cachePath = GetCachePath(TEST_USER_ID, TEST_BUNDLE);
+    EXPECT_EQ(RecycleSizeCache::WriteCachedSize(cachePath, 999), E_OK);
     string linkPath = GetBaseDir(TEST_USER_ID, TEST_BUNDLE) + "/RecycleSizeCache.hlnk";
     ASSERT_EQ(link(cachePath.c_str(), linkPath.c_str()), 0);
-    EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    std::vector<MetaBase> list = {MakeMetaBase(100)};
+    EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, list), E_OK);
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
     int64_t size = -1;
     EXPECT_EQ(RecycleSizeCache::ReadCachedSize(cachePath, size), E_OK);
-    EXPECT_EQ(size, 0);
+    EXPECT_EQ(size, 999);
     unlink(linkPath.c_str());
 }
 
@@ -600,7 +617,7 @@ HWTEST_F(RecycleSizeCacheTest, OpenAndCheck_CachePathIsDirectory_AsyncWriteFails
 {
     std::system(("mkdir -p " + GetCachePath(TEST_USER_ID, TEST_BUNDLE)).c_str());
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
     struct stat st;
     ASSERT_EQ(stat(GetCachePath(TEST_USER_ID, TEST_BUNDLE).c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
@@ -617,9 +634,10 @@ HWTEST_F(RecycleSizeCacheTest, ResetInvalidates_InFlightIncrease_027, TestSize.L
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 }
@@ -634,9 +652,10 @@ HWTEST_F(RecycleSizeCacheTest, ResetInvalidates_InFlightDecrease_028, TestSize.L
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(200)), E_OK);
     EXPECT_EQ(WaitSize(200), 200);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(80)), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
 }
@@ -651,9 +670,10 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseAfterReset_SucceedsWithNewVersion_029, Te
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 }
@@ -668,14 +688,16 @@ HWTEST_F(RecycleSizeCacheTest, MultipleResets_VersionIncrements_030, TestSize.Le
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
+    int64_t ver1 = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, ver1);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
+    int64_t ver2 = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, ver2);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(30)), E_OK);
     EXPECT_EQ(WaitSize(30), 30);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
@@ -795,7 +817,7 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseAsync_ReadFails_Discarded_035, TestSize.L
     string dirPath = GetCachePath(TEST_USER_ID, TEST_BUNDLE);
     std::system(("mkdir -p " + dirPath).c_str());
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
     struct stat st;
     ASSERT_EQ(stat(dirPath.c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
@@ -813,7 +835,7 @@ HWTEST_F(RecycleSizeCacheTest, DecreaseAsync_ReadFails_Discarded_036, TestSize.L
     string dirPath = GetCachePath(TEST_USER_ID, TEST_BUNDLE);
     std::system(("mkdir -p " + dirPath).c_str());
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
     struct stat st;
     ASSERT_EQ(stat(dirPath.c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
@@ -973,9 +995,10 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseThenResetThenIncrease_Sequence_044, TestS
 {
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(300)), E_OK);
     EXPECT_EQ(WaitSize(300), 300);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(150)), E_OK);
     EXPECT_EQ(WaitSize(150), 150);
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
@@ -1039,7 +1062,7 @@ HWTEST_F(RecycleSizeCacheTest, MissingBaseDir_DecreaseDiscarded_047, TestSize.Le
 {
     RemoveBaseDir(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
-    this_thread::sleep_for(chrono::milliseconds(200));
+    WaitAsyncSettled(TEST_USER_ID, TEST_BUNDLE);
     int64_t size = -1;
     EXPECT_EQ(RecycleSizeCache::GetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, size), E_OK);
     EXPECT_EQ(size, 0);
@@ -1077,9 +1100,10 @@ HWTEST_F(RecycleSizeCacheTest, CorruptedFile_BinaryGarbage_ResetToZero_049, Test
     int64_t size = -1;
     EXPECT_EQ(RecycleSizeCache::ReadCachedSize(path, size), E_OK);
     EXPECT_EQ(size, 0);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(path);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
 }
@@ -1130,9 +1154,10 @@ HWTEST_F(RecycleSizeCacheTest, GroupCrossOps_IsolationMaintained_051, TestSize.L
 
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(400), 400);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, verBefore);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 
@@ -1152,16 +1177,18 @@ HWTEST_F(RecycleSizeCacheTest, VersionConflict_ConvergesToLatestVersion_052, Tes
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
 
+    int64_t ver1 = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, ver1);
 
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 
+    int64_t ver2 = RecycleSizeCache::GetCacheVersion(GetCachePath(TEST_USER_ID, TEST_BUNDLE));
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
-    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE, ver2);
 
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(200)), E_OK);
     EXPECT_EQ(WaitSize(200), 200);
