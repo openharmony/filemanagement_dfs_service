@@ -125,13 +125,24 @@ static int64_t WaitSize(int64_t expect, int timeoutMs = POLL_TIMEOUT_MS)
     return WaitSizeFor(TEST_USER_ID, TEST_BUNDLE, expect, timeoutMs);
 }
 
+static void WaitVersionBumped(int32_t userId, const string &bundle,
+    int timeoutMs = POLL_TIMEOUT_MS)
+{
+    string path = GetCachePath(userId, bundle);
+    int64_t verBefore = RecycleSizeCache::GetCacheVersion(path);
+    auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeoutMs);
+    while (RecycleSizeCache::GetCacheVersion(path) == verBefore &&
+        chrono::steady_clock::now() < deadline) {
+        this_thread::sleep_for(chrono::milliseconds(POLL_INTERVAL_MS));
+    }
+}
+
 class RecycleSizeCacheTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
     void SetUp()
     {
-        // 依次创建各用户/应用的缓存目录，并清理残留缓存文件。
         PrepareDir(TEST_USER_ID, TEST_BUNDLE);
         PrepareDir(TEST_USER_ID, TEST_BUNDLE_2);
         PrepareDir(TEST_USER_ID_2, TEST_BUNDLE);
@@ -143,7 +154,6 @@ public:
     }
     void TearDown()
     {
-        // 删除各缓存文件与缓存目录。
         CleanRecycleFile(TEST_USER_ID, TEST_BUNDLE);
         CleanRecycleFile(TEST_USER_ID, TEST_BUNDLE_2);
         CleanRecycleFile(TEST_USER_ID_2, TEST_BUNDLE);
@@ -152,6 +162,9 @@ public:
         RemoveBaseDir(TEST_USER_ID, TEST_BUNDLE_2);
         RemoveBaseDir(TEST_USER_ID_2, TEST_BUNDLE);
         RemoveBaseDir(TEST_USER_ID_2, TEST_BUNDLE_2);
+        for (size_t i = 0; i < RecycleSizeCache::kVersionSlotCount; ++i) {
+            RecycleSizeCache::gVersionSlots_[i].store(0);
+        }
     }
 };
 
@@ -538,7 +551,7 @@ HWTEST_F(RecycleSizeCacheTest, ReadCachedSize_DirectoryPath_ReturnsPathError_023
     std::system(("mkdir -p " + dirPath).c_str());
     int64_t size = -1;
     EXPECT_EQ(RecycleSizeCache::ReadCachedSize(dirPath, size), E_PATH);
-    std::system(("rmdir " + dirPath + " 2>/dev/null").c_str());
+    std::system(("rm -rf " + dirPath + " 2>/dev/null").c_str());
 }
 
 /**
@@ -591,7 +604,7 @@ HWTEST_F(RecycleSizeCacheTest, OpenAndCheck_CachePathIsDirectory_AsyncWriteFails
     struct stat st;
     ASSERT_EQ(stat(GetCachePath(TEST_USER_ID, TEST_BUNDLE).c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
-    std::system(("rmdir " + GetCachePath(TEST_USER_ID, TEST_BUNDLE) + " 2>/dev/null").c_str());
+    std::system(("rm -rf " + GetCachePath(TEST_USER_ID, TEST_BUNDLE) + " 2>/dev/null").c_str());
 }
 
 /**
@@ -606,6 +619,7 @@ HWTEST_F(RecycleSizeCacheTest, ResetInvalidates_InFlightIncrease_027, TestSize.L
     EXPECT_EQ(WaitSize(100), 100);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 }
@@ -622,6 +636,7 @@ HWTEST_F(RecycleSizeCacheTest, ResetInvalidates_InFlightDecrease_028, TestSize.L
     EXPECT_EQ(WaitSize(200), 200);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(80)), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
 }
@@ -638,6 +653,7 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseAfterReset_SucceedsWithNewVersion_029, Te
     EXPECT_EQ(WaitSize(100), 100);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 }
@@ -654,10 +670,12 @@ HWTEST_F(RecycleSizeCacheTest, MultipleResets_VersionIncrements_030, TestSize.Le
     EXPECT_EQ(WaitSize(100), 100);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(30)), E_OK);
     EXPECT_EQ(WaitSize(30), 30);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
@@ -781,7 +799,7 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseAsync_ReadFails_Discarded_035, TestSize.L
     struct stat st;
     ASSERT_EQ(stat(dirPath.c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
-    std::system(("rmdir " + dirPath + " 2>/dev/null").c_str());
+    std::system(("rm -rf " + dirPath + " 2>/dev/null").c_str());
 }
 
 /**
@@ -799,7 +817,7 @@ HWTEST_F(RecycleSizeCacheTest, DecreaseAsync_ReadFails_Discarded_036, TestSize.L
     struct stat st;
     ASSERT_EQ(stat(dirPath.c_str(), &st), 0);
     EXPECT_TRUE(S_ISDIR(st.st_mode));
-    std::system(("rmdir " + dirPath + " 2>/dev/null").c_str());
+    std::system(("rm -rf " + dirPath + " 2>/dev/null").c_str());
 }
 
 /**
@@ -957,6 +975,7 @@ HWTEST_F(RecycleSizeCacheTest, IncreaseThenResetThenIncrease_Sequence_044, TestS
     EXPECT_EQ(WaitSize(300), 300);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(150)), E_OK);
     EXPECT_EQ(WaitSize(150), 150);
     EXPECT_EQ(RecycleSizeCache::DecreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
@@ -1053,14 +1072,14 @@ HWTEST_F(RecycleSizeCacheTest, CorruptedFile_TruncatedContent_ParsesPrefix_048, 
 HWTEST_F(RecycleSizeCacheTest, CorruptedFile_BinaryGarbage_ResetToZero_049, TestSize.Level1)
 {
     string path = GetCachePath(TEST_USER_ID, TEST_BUNDLE);
-    string garbage(20, '\0');
-    garbage[0] = 'x';
+    string garbage = "\xff\xfe\x01\x02garbage\xff";
     WriteRawFile(path, garbage);
     int64_t size = -1;
     EXPECT_EQ(RecycleSizeCache::ReadCachedSize(path, size), E_OK);
     EXPECT_EQ(size, 0);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(100)), E_OK);
     EXPECT_EQ(WaitSize(100), 100);
 }
@@ -1113,6 +1132,7 @@ HWTEST_F(RecycleSizeCacheTest, GroupCrossOps_IsolationMaintained_051, TestSize.L
     EXPECT_EQ(WaitSize(400), 400);
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 
@@ -1134,12 +1154,14 @@ HWTEST_F(RecycleSizeCacheTest, VersionConflict_ConvergesToLatestVersion_052, Tes
 
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
 
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(50)), E_OK);
     EXPECT_EQ(WaitSize(50), 50);
 
     EXPECT_EQ(RecycleSizeCache::ResetRecycleBinSize(TEST_USER_ID, TEST_BUNDLE), E_OK);
     EXPECT_EQ(WaitSize(0), 0);
+    WaitVersionBumped(TEST_USER_ID, TEST_BUNDLE);
 
     EXPECT_EQ(RecycleSizeCache::IncreaseRecycleBinSize(TEST_USER_ID, TEST_BUNDLE, MakeMetaBase(200)), E_OK);
     EXPECT_EQ(WaitSize(200), 200);
