@@ -21,6 +21,7 @@ ohos_unittest("cloud_disk_manager_test") {
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_manager.cpp",
     "${distributedfile_path}/interfaces/kits/ndk/clouddiskmanager/src/oh_cloud_disk_utils.cpp",
     "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_service_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddiskservice/mock/cloud_disk_sync_folder_manager_mock.cpp",
     "cloud_disk_manager_test.cpp",
   ]
 
@@ -47,6 +48,7 @@ ohos_unittest("cloud_disk_manager_test") {
     "private=public",
     "LOG_DOMAIN=0xD003900",
     "LOG_TAG=\"CloudDiskManagerTest\"",
+    "SUPPORT_CLOUD_DISK_SERVICE",
   ]
 
   use_exceptions = true
