@@ -241,6 +241,7 @@ HWTEST_F(OhCloudDiskPlaceholderBranchTest, CreatePlaceholder_001, TestSize.Level
               OH_CLOUD_DISK_FILE_ALREADY_EXISTS);
 #else
     EXPECT_CALL(mock, CreatePlaceholderFile(_, _, _, _)).Times(0);
+    EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, info, nullptr), CLOUD_DISK_NOT_SUPPORTED);
     EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(invalidSync, pathInfo, info, nullptr), CLOUD_DISK_NOT_SUPPORTED);
     EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, invalidPath, info, nullptr), CLOUD_DISK_NOT_SUPPORTED);
 #endif
@@ -284,6 +285,9 @@ HWTEST_F(OhCloudDiskPlaceholderBranchTest, IsPlaceholderFile_001, TestSize.Level
     EXPECT_CALL(mock, IsPlaceholderFile(_, _, _)).Times(0);
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(syncFolderPath, pathInfo, nullptr), CLOUD_DISK_NOT_SUPPORTED);
     bool result = true;
+    EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(syncFolderPath, pathInfo, &result), CLOUD_DISK_NOT_SUPPORTED);
+    EXPECT_FALSE(result);
+    result = true;
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(invalidSync, pathInfo, &result), CLOUD_DISK_NOT_SUPPORTED);
     EXPECT_FALSE(result);
     result = true;

@@ -636,6 +636,7 @@ HWTEST_F(OhCloudDiskManagerTest, UpdatePlaceholder_Test_003, TestSize.Level1)
  */
 HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_001, TestSize.Level1)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     std::string syncFolder = "/storage/Users/currentUser/testdir";
     std::string relativePath = "file.txt";
     CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.size()};
@@ -644,7 +645,6 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_001, TestSize.Leve
     std::vector<uint8_t> data = {0x00, 0x7F, 0xFF};
     OH_CloudDisk_PlaceholderCustomInfo customInfo = {data.size(), data.data()};
 
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), CreatePlaceholderFile(_, _, _, _))
         .WillOnce(Invoke([&data](const std::string &, const std::string &, const PlaceholderInfo &,
                                  const PlaceholderCustomInfo &innerCustomInfo) {
@@ -653,10 +653,6 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_001, TestSize.Leve
         }));
     EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
               CloudDisk_ErrorCode::CLOUD_DISK_OK);
-#else
-    EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), CreatePlaceholderFile(_, _, _, _)).Times(0);
-    EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
-              CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
 }
 
@@ -668,6 +664,7 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_001, TestSize.Leve
  */
 HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_002, TestSize.Level1)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     std::string syncFolder = "/storage/Users/currentUser/testdir";
     std::string relativePath = "file.txt";
     CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.size()};
@@ -677,12 +674,8 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_002, TestSize.Leve
     OH_CloudDisk_PlaceholderCustomInfo customInfo = {data.size(), data.data()};
 
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), CreatePlaceholderFile(_, _, _, _)).Times(0);
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
     EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
               CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
-#else
-    EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
-              CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
 }
 
@@ -694,6 +687,7 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_002, TestSize.Leve
  */
 HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_003, TestSize.Level1)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     std::string syncFolder = "/storage/Users/currentUser/testdir";
     std::string relativePath = "file.txt";
     CloudDisk_SyncFolderPath syncFolderPath = {const_cast<char *>(syncFolder.c_str()), syncFolder.size()};
@@ -702,12 +696,8 @@ HWTEST_F(OhCloudDiskManagerTest, PlaceholderCustomInfo_Create_003, TestSize.Leve
     OH_CloudDisk_PlaceholderCustomInfo customInfo = {1, nullptr};
 
     EXPECT_CALL(CloudDiskServiceManagerMock::GetInstance(), CreatePlaceholderFile(_, _, _, _)).Times(0);
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
     EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
               CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG);
-#else
-    EXPECT_EQ(OH_CloudDisk_CreatePlaceholder(syncFolderPath, pathInfo, metaData, &customInfo),
-              CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED);
 #endif
 }
 
