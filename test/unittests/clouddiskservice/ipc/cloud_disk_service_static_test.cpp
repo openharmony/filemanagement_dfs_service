@@ -2399,6 +2399,26 @@ HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest007, Te
 }
 
 /**
+ * @tc.name: CreatePlaceholderFileInnerBranchTest009
+ * @tc.desc: Verify CreatePlaceholderFileInner rejects empty parameters before sync-root registration
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, CreatePlaceholderFileInnerBranchTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest009 start";
+    GTEST_LOG_(INFO) << "[BRANCH] CreatePlaceholderFileInner empty parameter before registration";
+    CloudDiskService service;
+    PlaceholderInfo info;
+
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).Times(0);
+    EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_)).Times(0);
+    EXPECT_EQ(service.CreatePlaceholderFileInner(TEST_SYNC_FOLDER, "", info), E_INVALID_ARG);
+    EXPECT_EQ(service.CreatePlaceholderFileInner("", TEST_RELATIVE_PATH, info), E_INVALID_ARG);
+    GTEST_LOG_(INFO) << "CreatePlaceholderFileInnerBranchTest009 end";
+}
+
+/**
  * @tc.name: PlaceholderCustomInfoAttributesTest001
  * @tc.desc: Verify non-empty custom information is persisted as raw xattr bytes
  * @tc.type: FUNC

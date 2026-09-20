@@ -945,6 +945,10 @@ int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFold
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("CreatePlaceholderFileInner route=service_entry");
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("CreatePlaceholderFileInner branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
     if (customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
         LOGE("CreatePlaceholderFileInner branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
         return E_INVALID_ARG;
