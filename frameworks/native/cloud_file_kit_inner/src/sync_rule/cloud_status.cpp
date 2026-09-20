@@ -53,6 +53,17 @@ std::pair<uint64_t, uint64_t> CloudStatus::GetCurrentSpaceInfo(const int32_t use
     return instance->GetSpaceInfo(userId, bundleName);
 }
 
+bool CloudStatus::IsSwitchOn(const std::string &bundleName, const int32_t userId) {
+    if (bundleName == GALLERY_BUNDLE_NAME || bundleName == SHARED_ALBUM_BUNDLE_NAME) {
+        return SettingsDataManager::GetSwitchStatus() == SwitchStatus::CLOUD_SPACE ||
+            SettingsDataManager::GetShareAlbumSwitchStatus(userId) == SwitchStatus::SHARE_ALBUM;
+    } else if (bundleName == HDC_BUNDLE_NAME) {
+        return SettingsDataManager::GetSwitchStatus() == SwitchStatus::AI_FAMILY;
+    } else {
+        return IsCloudStatusOkay(bundleName, userId);
+    }
+}
+ 
 bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t userId)
 {
     std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
