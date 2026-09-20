@@ -28,6 +28,7 @@ enum SwitchStatus {
     NONE = 0,
     CLOUD_SPACE,
     AI_FAMILY,
+    SHARE_ALBUM,
 };
 
 class SettingsDataObserver : public AAFwk::DataAbilityObserverStub {
@@ -68,6 +69,7 @@ public:
     static bool GetMobileDataStatus();
     static int32_t GetLocalSpaceFreeStatus();
     static int32_t GetLocalSpaceFreeDays();
+    static SwitchStatus GetShareAlbumSwitchStatus(int32_t userId);
 
     static void RegisterObserver(const std::string &key);
     static void RegisterObserver(const std::string &key, sptr<AAFwk::DataAbilityObserverStub> dataObserver);
