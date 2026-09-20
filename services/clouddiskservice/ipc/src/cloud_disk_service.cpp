@@ -1005,6 +1005,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder,
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("IsPlaceholderFileInner route=service_entry");
     isPlaceholder = false;
+    if (syncFolder.empty() || path.empty()) {
+        LOGE("IsPlaceholderFileInner branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
     std::string queryPath;
     int32_t ret = ResolvePlaceholderQueryPath(syncFolder, path, queryPath);
     if (ret != E_OK) {
@@ -1028,6 +1032,10 @@ int32_t CloudDiskService::GetPlaceholderStateInner(const std::string &syncFolder
 {
     state = PLACEHOLDER_STATE_NONE;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("GetPlaceholderStateInner branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
     std::string queryPath;
     int32_t ret = ResolvePlaceholderQueryPath(syncFolder, relativePath, queryPath);
     if (ret != E_OK) {

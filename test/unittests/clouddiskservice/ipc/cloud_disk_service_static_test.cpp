@@ -991,7 +991,7 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest002, TestSize.Lev
 
 /**
  * @tc.name: IsPlaceholderFileInnerTest003
- * @tc.desc: Verify IsPlaceholderFileInner rejects an empty relative path
+ * @tc.desc: Verify IsPlaceholderFileInner rejects an empty relative path before sync-root registration
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -1003,15 +1003,13 @@ HWTEST_F(CloudDiskServiceStaticTest, IsPlaceholderFileInnerTest003, TestSize.Lev
         string path = "";
         bool isPlaceholder = true;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        AddPlaceholderSyncFolder();
-        ExpectPlaceholderCaller(dfsuAccessToken_);
+        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
 #endif
 
         auto res = cloudDiskService.IsPlaceholderFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, path, isPlaceholder);
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-        CloudDiskSyncFolder::GetInstance().ClearMap();
         EXPECT_EQ(res, E_INVALID_ARG);
         EXPECT_FALSE(isPlaceholder);
 #else
@@ -1614,10 +1612,7 @@ HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest003, TestSize.L
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
     int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
-    AddPlaceholderSyncFolder();
-    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
-    EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
-        .WillOnce(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
+    CloudDiskSyncFolder::GetInstance().ClearMap();
     EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
     EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "", state), E_INVALID_ARG);
     EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
@@ -1647,6 +1642,12 @@ HWTEST_F(CloudDiskServiceStaticTest, GetPlaceholderStateInnerTest004, TestSize.L
     EXPECT_CALL(*insMock_, getxattr(_, _, _, _)).Times(0);
     EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt", state),
               E_SYNC_FOLDER_NOT_REGISTERED);
+    EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
+#else
+    CloudDiskService service(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+    int32_t state = PLACEHOLDER_STATE_FULLY_HYDRATED;
+    EXPECT_EQ(service.GetPlaceholderStateInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt", state),
+              E_NOT_SUPPORTED);
     EXPECT_EQ(state, PLACEHOLDER_STATE_NONE);
 #endif
 }
@@ -3070,7 +3071,7 @@ HWTEST_F(CloudDiskServiceStaticTest, CancelHydrationInner_002, TestSize.Level2)
 
 /**
  * @tc.name: CancelHydrationInner_003
- * @tc.desc: Sync-root registration is checked before the relative path format.
+ * @tc.desc: Empty paths are rejected before registration; non-empty malformed paths are checked after it.
  * @tc.type: SECU
  * @tc.require: NA
  */
@@ -3079,10 +3080,12 @@ HWTEST_F(CloudDiskServiceStaticTest, CancelHydrationInner_003, TestSize.Level2)
     CloudDiskService service;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     CloudDiskSyncFolder::GetInstance().ClearMap();
+    EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, ""), E_INVALID_ARG);
     ExpectPlaceholderCaller(dfsuAccessToken_);
     EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt"),
               E_SYNC_FOLDER_NOT_REGISTERED);
 #else
+    EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, ""), E_NOT_SUPPORTED);
     EXPECT_EQ(service.CancelHydrationInner(PLACEHOLDER_TEST_SYNC_FOLDER, "/placeholder_003.txt"), E_NOT_SUPPORTED);
 #endif
 }
