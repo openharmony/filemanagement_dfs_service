@@ -63,6 +63,8 @@ public:
     static std::string GetFileName(const std::string &path);
     static std::string GetDentryfileName(const std::string &path, bool caseSense);
     static std::string GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense = false);
+    static int32_t RemoveSharedFIleDentryFiles(uint32_t userId, const std::string &bucketRootPath);
+    static int32_t RemovePrivateFIleDentryFiles(uint32_t userId, const std::string &bucketRootPath);
 
 private:
     std::mutex mtx_{};
@@ -145,6 +147,7 @@ public:
     void ClearAll();
     void CloudDiskClearAll();
     void Clear(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
+    int32_t RemoveByPath(uint32_t userId, const std::string &path);
     int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const struct RestoreInfo &restoreInfo);
