@@ -23,4 +23,13 @@ bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t
     LOGI("do mock IsCloudStatusOkay");
     return CloudStatusMethod::proxy_->IsCloudStatusOkay(bundleName, userId);
 }
+
+bool CloudStatus::IsSwitchOn(const std::string &bundleName, const int32_t userId)
+{
+    if (CloudStatusMethod::proxy_ == nullptr) {
+        return false;
+    }
+    LOGI("do mock IsSwitchOn");
+    return CloudStatusMethod::proxy_->IsSwitchOn(bundleName, userId);
+}
 }
