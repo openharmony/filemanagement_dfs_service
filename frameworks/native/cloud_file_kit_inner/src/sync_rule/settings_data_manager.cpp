@@ -45,6 +45,8 @@ static const std::string OPEN_STATUS = "on";
 static const std::string ALLOW_STATUS = "1";
 static const std::string LSF_ALLOW_STATUS = "0";
 static const int32_t LOCAL_SPACE_DAYS_DEFAULT = 30;
+static const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
+static const std::string SHARE_ALBUM_BUNDLE_NAME = "com.ohos.photos.shared";
 static constexpr int32_t WAIT_PRE_INIT_TIMEOUT_S = 4;
 
 std::string SettingsDataManager::GetQueryKey(const std::string &key)
@@ -262,6 +264,51 @@ SwitchStatus SettingsDataManager::GetSwitchStatus()
     } else {
         return SwitchStatus::NONE;
     }
+}
+
+SwitchStatus SettingsDataManager::GetShareAlbumSwitchStatus(int32_t userId)
+{
+    LOGI("GetShareAlbumSwitchStatus userId: %{public}d", userId);
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo("bundleName", SHARE_ALBUM_BUNDLE_NAME);
+    std::vector<std::string> columns = {"isSwitchOn"};
+    DataShare::CreateOptions options;
+    options.enabled_ = true;
+    auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
+    auto queryUri = SETTING_DATA_QUERY_URI + clouddriveBundleName +
+                    "/sync_switch?user=" + std::to_string(userId);
+    Uri uri(queryUri);
+    auto dataShareHelper = DataShare::DataShareHelper::Creator(SETTING_DATA_QUERY_URI, options);
+    if (dataShareHelper == nullptr) {
+        LOGE("dataShareHelper is nullptr");
+        return SwitchStatus::NONE;
+    }
+    auto resultSet = dataShareHelper->Query(uri, predicates, columns);
+    dataShareHelper->Release();
+    if (resultSet == nullptr) {
+        LOGE("resultSet is nullptr");
+        return SwitchStatus::NONE;
+    }
+    if (resultSet->GoToFirstRow() != E_OK) {
+        LOGW("no row found for shared album switch");
+        resultSet->Close();
+        return SwitchStatus::NONE;
+    }
+    int32_t columnIndex = 0;
+    if (resultSet->GetColumnIndex("isSwitchOn", columnIndex) != E_OK) {
+        LOGE("GetColumnIndex isSwitchOn failed");
+        resultSet->Close();
+        return SwitchStatus::NONE;
+    }
+    int64_t isSwitchOn = 0;
+    if (resultSet->GetLong(columnIndex, isSwitchOn) != E_OK) {
+        LOGE("GetLong isSwitchOn failed");
+        resultSet->Close();
+        return SwitchStatus::NONE;
+    }
+    resultSet->Close();
+    LOGI("GetShareAlbumSwitchStatus result: %{public}d", static_cast<int32_t>(isSwitchOn));
+    return isSwitchOn == 1 ? SwitchStatus::SHARE_ALBUM : SwitchStatus::NONE;
 }
 
 SwitchStatus SettingsDataManager::GetSwitchStatusByCache()
