@@ -112,6 +112,11 @@ SwitchStatus SettingsDataManager::GetSwitchStatus()
     return SwitchStatus::NONE;
 }
 
+SwitchStatus SettingsDataManager::GetShareAlbumSwitchStatus(int32_t userId)
+{
+    return SwitchStatus::NONE;
+}
+
 SwitchStatus SettingsDataManager::GetSwitchStatusByCache()
 {
     if (SettingsDataManagerMock::proxy_ != nullptr) {
