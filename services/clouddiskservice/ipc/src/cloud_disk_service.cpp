@@ -938,13 +938,9 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
 #endif
 }
 
-int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFolder,
-                                                     const std::string &relativePath,
-                                                     const PlaceholderInfo &info,
-                                                     const PlaceholderCustomInfo &customInfo)
+static int32_t ValidateCreatePlaceholderParams(const std::string &syncFolder, const std::string &relativePath,
+                                               const PlaceholderInfo &info, const PlaceholderCustomInfo &customInfo)
 {
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
-    LOGI("CreatePlaceholderFileInner route=service_entry");
     if (syncFolder.empty() || relativePath.empty()) {
         LOGE("CreatePlaceholderFileInner branch=invalid_arg_empty_param");
         return E_INVALID_ARG;
@@ -957,11 +953,25 @@ int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFold
         LOGE("CreatePlaceholderFileInner branch=logical_size_too_large size=%{public}" PRIu64, info.logicalSize);
         return E_FILE_TOO_LARGE;
     }
+    return E_OK;
+}
+
+int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFolder,
+                                                     const std::string &relativePath,
+                                                     const PlaceholderInfo &info,
+                                                     const PlaceholderCustomInfo &customInfo)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    LOGI("CreatePlaceholderFileInner route=service_entry");
+    int32_t ret = ValidateCreatePlaceholderParams(syncFolder, relativePath, info, customInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string syncFolderPhysicalPath;
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
-                                                                        syncFolderPhysicalPath);
+    ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
+                                                                syncFolderPhysicalPath);
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
         return NormalizeCreatePlaceholderError(ret);
