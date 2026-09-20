@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <fcntl.h>
+#include <functional>
 #include <map>
 #include <queue>
 #include <sys/stat.h>
@@ -30,6 +31,8 @@
 #include "unique_fd.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+
+using WarmupCancelCallback = std::function<bool()>;
 
 constexpr uint32_t LOGBLOCK_RESERVED_LENGTH = 6;
 constexpr uint32_t LOGGROUP_RESERVED_LENGTH = 62;
@@ -81,6 +84,9 @@ public:
     int32_t ProduceLog(const struct EventInfo &eventInfo);
     int32_t PraseLog(const uint64_t line, ChangeData &data, bool &isEof);
     int32_t FillChildForDir(const std::string &path, const uint64_t timestamp);
+    int32_t WarmupChildForDir(const std::string &path,
+                              const uint64_t timestamp,
+                              const WarmupCancelCallback &shouldCancel);
     void StartCallback();
     void StopCallback();
 
@@ -117,6 +123,16 @@ private:
                                   const std::string &path,
                                   const std::string &name,
                                   struct LogGenerateCtx &ctx);
+    int32_t WarmupChild(const std::string &path,
+                        const std::string &name,
+                        const std::shared_ptr<CloudDiskServiceMetaFile> &parentMetaFile,
+                        const uint64_t timestamp,
+                        const WarmupCancelCallback &shouldCancel);
+    int32_t EnsureWarmupChildMeta(const std::string &childPath,
+                                  const std::shared_ptr<CloudDiskServiceMetaFile> &parentMetaFile,
+                                  MetaBase &childMeta,
+                                  struct stat &childStat,
+                                  const WarmupCancelCallback &shouldCancel);
 
     int32_t WriteLogFile(const struct LogBlock &logBlock);
     int32_t ReadLogFile(const uint64_t line, struct LogBlock &logBlock);
@@ -166,6 +182,11 @@ public:
                          struct ChangesResult &changesResult);
 
     int32_t RegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path);
+    void ScheduleFillChildForDir(const int32_t userId, const uint32_t syncFolderIndex, const std::string &path);
+    int32_t WarmupSyncFolder(const int32_t userId,
+                             const uint32_t syncFolderIndex,
+                             const std::string &path,
+                             const WarmupCancelCallback &shouldCancel);
     int32_t UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex);
     void RegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);
     void UnRegisterSyncFolderChanges(const int32_t userId, const uint32_t syncFolderIndex);

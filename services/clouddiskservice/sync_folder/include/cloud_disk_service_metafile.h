@@ -17,9 +17,13 @@
 #define CLOUD_DISK_SERVICE_METAFILE_H
 
 #include <fcntl.h>
+#include <functional>
 #include <list>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <sstream>
+#include <string>
 #include <sys/stat.h>
 
 #include "unique_fd.h"
@@ -98,6 +102,12 @@ public:
     ~CloudDiskServiceMetaFile() = default;
     using CloudDiskServiceMetaFileCallBack = std::function<void(MetaBase &)>;
     explicit CloudDiskServiceMetaFile(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode);
+    CloudDiskServiceMetaFile(const int32_t userId,
+                             const uint32_t syncFolderIndex,
+                             const uint64_t inode,
+                             bool createIfMissing);
+
+    bool IsValid() const;
 
     int32_t DoCreate(const MetaBase &base, unsigned long &bidx, uint32_t &bitPos);
     int32_t DoRemove(const MetaBase &base, std::string &recordId, unsigned long &bidx, uint32_t &bitPos);
@@ -144,8 +154,11 @@ public:
     static MetaFileMgr &GetInstance();
     std::shared_ptr<CloudDiskServiceMetaFile>
         GetCloudDiskServiceMetaFile(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode);
+    std::shared_ptr<CloudDiskServiceMetaFile>
+        GetCloudDiskServiceMetaFileIfExists(const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode);
 
     int32_t GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaFile> metaFile, std::string &path);
+    int32_t GetRelativePathIfExists(const std::shared_ptr<CloudDiskServiceMetaFile> metaFile, std::string &path);
     void CloudDiskServiceClearAll();
 
 private:

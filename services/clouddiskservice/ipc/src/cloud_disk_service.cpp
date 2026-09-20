@@ -28,6 +28,7 @@
 #include <sys/utsname.h>
 #include <sys/xattr.h>
 #include <unistd.h>
+#include <unordered_map>
 
 #include "cloud_disk_service_access_token.h"
 #include "cloud_disk_service_callback_manager.h"
@@ -36,6 +37,7 @@
 #include "cloud_disk_service_syncfolder.h"
 #include "cloud_disk_service_utils.h"
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_fuse_controller.h"
 #include "cloud_disk_sync_folder_manager.h"
 #endif
 #include "cloud_disk_progress_callback_proxy.h"
@@ -321,6 +323,24 @@ bool CloudDiskService::PublishSA()
     return true;
 }
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+void CloudDiskService::StartFuseForUser(int32_t userId)
+{
+    std::unordered_map<uint32_t, std::string> fuseRoots;
+    for (const auto &[syncFolderIndex, syncFolderValue] : CloudDiskSyncFolder::GetInstance().GetSyncFolderMap()) {
+        fuseRoots.emplace(syncFolderIndex, syncFolderValue.path);
+    }
+    CloudDiskFuseController::GetInstance().SetIdleCallback([this] { UnloadSa(); });
+    CloudDiskFuseController::GetInstance().StartUser(userId, fuseRoots);
+}
+
+void CloudDiskService::StopFuseForServiceExit()
+{
+    CloudDiskFuseController::GetInstance().SetIdleCallback(nullptr);
+    CloudDiskFuseController::GetInstance().StopForServiceExit();
+}
+#endif
+
 void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
@@ -356,7 +376,9 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
     }
 
+    StartFuseForUser(userId);
     if (!PublishSA()) {
+        StopFuseForServiceExit();
         return;
     }
     PlaceholderTaskManager::GetInstance().StartScheduler();
@@ -376,6 +398,10 @@ void CloudDiskService::OnStop()
 {
     LOGI("Begin to stop");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (accountStatusListener_ != nullptr) {
+        accountStatusListener_->Stop();
+    }
+    StopFuseForServiceExit();
     PlaceholderCallbackManager::GetInstance().ClearAll();
     PlaceholderTaskManager::GetInstance().StopScheduler();
     PlaceholderProgressManager::GetInstance().Drain();
@@ -1056,6 +1082,7 @@ int32_t CloudDiskService::RegisterSyncFolderInner(
     int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
     LOGI("Begin RegisterSyncFolderInner");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
@@ -1083,6 +1110,7 @@ int32_t CloudDiskService::RegisterSyncFolderInner(
     syncFolderValue.path = registerSyncFolder;
 
     CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
+    CloudDiskFuseController::GetInstance().AddRoot(userId, syncFolderIndex, registerSyncFolder);
     LOGI("End RegisterSyncFolderInner");
     return E_OK;
 #else
@@ -1094,6 +1122,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(
     int32_t userId, const std::string &bundleName, const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    std::unique_lock<std::mutex> lifecycleLock(lifecycleMutex_);
     LOGI("Begin UnregisterSyncFolderInner");
     RETURN_ON_ERR(CheckPermissions(PERM_CLOUD_DISK_SERVICE, true));
 
@@ -1114,9 +1143,11 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(
         return ret;
     }
 
+    CloudDiskFuseController::GetInstance().RemoveRoot(userId, syncFolderIndex);
     ret = CloudDiskServiceSyncFolder::UnRegisterSyncFolder(userId, syncFolderIndex);
     if (ret != E_OK) {
         LOGE("UnRegisterSyncFolder failed");
+        CloudDiskFuseController::GetInstance().AddRoot(userId, syncFolderIndex, unregisterSyncFolder);
         return ret;
     }
 
@@ -1127,6 +1158,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(
     CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(unregisterSyncFolderMnt);
     CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, CLOUD_DISK_FILE_SYNC_STATE_XATTR);
     CloudDiskSyncFolder::GetInstance().RemoveXattr(unregisterSyncFolderMnt, CLOUD_DISK_PLACEHOLDER_COUNT_XATTR);
+    lifecycleLock.unlock();
     UnloadSa();
     LOGI("End UnregisterSyncFolderInner");
     return E_OK;
@@ -1138,6 +1170,7 @@ int32_t CloudDiskService::UnregisterSyncFolderInner(
 int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    std::unique_lock<std::mutex> lifecycleLock(lifecycleMutex_);
     std::string pathRemove;
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
@@ -1159,10 +1192,6 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         LOGE("Get path failed");
         return E_INVALID_ARG;
     }
-    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(pathRemove);
-    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_FILE_SYNC_STATE_XATTR);
-    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_PLACEHOLDER_COUNT_XATTR);
-
     auto syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
     SyncFolderValue syncFolderValue;
     if (!CloudDiskSyncFolder::GetInstance().GetSyncFolderValueByIndex(syncFolderIndex, syncFolderValue)) {
@@ -1170,9 +1199,14 @@ int32_t CloudDiskService::UnregisterForSaInner(const std::string &path)
         return E_SYNC_FOLDER_NOT_REGISTERED;
     }
 
+    CloudDiskFuseController::GetInstance().RemoveRoot(userId, syncFolderIndex);
+    CloudDiskSyncFolder::GetInstance().RemovePlaceholderFilesBatch(pathRemove);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_FILE_SYNC_STATE_XATTR);
+    CloudDiskSyncFolder::GetInstance().RemoveXattr(pathRemove, CLOUD_DISK_PLACEHOLDER_COUNT_XATTR);
     CloudDiskSyncFolder::GetInstance().DeleteSyncFolder(syncFolderIndex);
     CloudDiskServiceCallbackManager::GetInstance().UnregisterSyncFolderMap(syncFolderValue.bundleName, syncFolderIndex);
     PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(syncFolderValue.bundleName, syncFolderIndex);
+    lifecycleLock.unlock();
     UnloadSa();
     return ret;
 #else
@@ -1188,7 +1222,14 @@ void CloudDiskService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 
 void CloudDiskService::UnloadSa()
 {
+    std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
     if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() == 0) {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        if (!CloudDiskFuseController::GetInstance().CanUnload()) {
+            LOGI("Delay SA unload until the FUSE lifecycle is idle");
+            return;
+        }
+#endif
         DiskMonitor::GetInstance().StopMonitor();
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {

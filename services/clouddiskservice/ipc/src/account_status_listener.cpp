@@ -16,9 +16,11 @@
 #include "account_status_listener.h"
 
 #include <fcntl.h>
+#include <unordered_map>
 
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
 #include "cloud_disk_comm.h"
+#include "cloud_disk_fuse_controller.h"
 #include "cloud_disk_service_error.h"
 #include "cloud_disk_sync_folder_manager.h"
 #endif
@@ -40,6 +42,17 @@ namespace FileManagement {
 namespace CloudDiskService {
 
 using namespace AccountSA;
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+static void StartFuseForUser(int32_t userId)
+{
+    std::unordered_map<uint32_t, std::string> fuseRoots;
+    for (const auto &[syncFolderIndex, syncFolderValue] : CloudDiskSyncFolder::GetInstance().GetSyncFolderMap()) {
+        fuseRoots.emplace(syncFolderIndex, syncFolderValue.path);
+    }
+    CloudDiskFuseController::GetInstance().StartUser(userId, fuseRoots);
+}
+#endif
 
 void AccountStatusSubscriber::SetCurrentUserId(int32_t userId)
 {
@@ -63,6 +76,7 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
             return;
         }
         LOGI("Stopped user");
+        CloudDiskFuseController::GetInstance().StopForServiceExit();
         UnloadSa();
     }
 #endif
@@ -72,6 +86,7 @@ void AccountStatusSubscriber::OnStateChanged(const OsAccountStateData &data)
 void AccountStatusSubscriber::HandleUserSwitched(int32_t userId)
 {
     LOGI("Switched user");
+    CloudDiskFuseController::GetInstance().Stop();
     SetCurrentUserId(userId);
     DiskMonitor::GetInstance().StopMonitor();
     PlaceholderCallbackManager::GetInstance().ClearAll();
@@ -88,6 +103,7 @@ void AccountStatusSubscriber::HandleUserSwitched(int32_t userId)
     if (ret != E_OK) {
         LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
              syncFolders.size());
+        CloudDiskFuseController::GetInstance().StartUser(userId, {});
         UnloadSa();
         return;
     }
@@ -101,6 +117,7 @@ void AccountStatusSubscriber::HandleUserSwitched(int32_t userId)
         uint32_t syncFolderIndex = CloudDisk::CloudFileUtils::DentryHash(path);
         CloudDiskSyncFolder::GetInstance().AddSyncFolder(syncFolderIndex, syncFolderValue);
     }
+    StartFuseForUser(userId);
     int32_t syncFolderSize = CloudDiskSyncFolder::GetInstance().GetSyncFolderSize();
     if (syncFolderSize == 0) {
         LOGI("No sync folder, unload sa");
@@ -115,6 +132,12 @@ void AccountStatusSubscriber::HandleUserSwitched(int32_t userId)
 
 void AccountStatusSubscriber::UnloadSa()
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (!CloudDiskFuseController::GetInstance().CanUnload()) {
+        LOGI("Delay SA unload until the FUSE lifecycle is idle");
+        return;
+    }
+#endif
     DiskMonitor::GetInstance().StopMonitor();
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
@@ -135,6 +158,7 @@ AccountStatusListener::~AccountStatusListener()
 
 void AccountStatusListener::Start(int32_t currentUserId)
 {
+    Stop();
     std::set<OsAccountState> states = {OsAccountState::STOPPED, OsAccountState::SWITCHED};
     OsAccountSubscribeInfo subscribeInfo(states);
     osAccountSubscriber_ = std::make_shared<AccountStatusSubscriber>(subscribeInfo, currentUserId);

@@ -98,7 +98,12 @@ private:
     int32_t currentUserId_ = -1;
     static sptr<CloudDiskService> instance_;
     bool registerToService_{false};
+    std::mutex lifecycleMutex_;
     bool PublishSA();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    void StartFuseForUser(int32_t userId);
+    void StopFuseForServiceExit();
+#endif
     int32_t ResolveOwnedSyncFolder(const std::string &syncFolder,
                                    std::string &bundleName,
                                    uint32_t &syncFolderIndex,
