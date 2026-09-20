@@ -141,8 +141,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${innerkits_native_path}/decompress_kit_inner:decompress_kit",
     "${services_path}/cloudsyncservice:cloud_sync_service_stub",
-    "${utils_path}:libdistributedfiledentry_static",
-    "${utils_path}:libdistributedfileutils_static",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = [
