@@ -483,9 +483,6 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
     LOGI("IsPlaceholderFile branch=success isPlaceholder=%{public}d", *isPlaceholder);
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 #else
-    if (isPlaceholder != nullptr) {
-        *isPlaceholder = false;
-    }
     return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
 #endif
 }
@@ -517,9 +514,6 @@ CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderState(const CloudDisk_SyncFolderP
     *state = static_cast<OH_CloudDisk_PlaceholderState>(innerState);
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
 #else
-    if (state != nullptr) {
-        *state = OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE;
-    }
     return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
 #endif
 }

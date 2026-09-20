@@ -899,7 +899,6 @@ HWTEST_F(OhCloudDiskManagerTest, GetPlaceholderState_Validation_001, TestSize.Le
     EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(invalidSyncFolder, pathInfo, &state), CLOUD_DISK_NOT_SUPPORTED);
     CloudDisk_PathInfo invalidPath{relativePath.data(), 0};
     EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, invalidPath, &state), CLOUD_DISK_NOT_SUPPORTED);
-    EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
 #endif
 }
 
@@ -935,7 +934,6 @@ HWTEST_F(OhCloudDiskManagerTest, GetPlaceholderState_States_001, TestSize.Level1
     EXPECT_CALL(mock, GetPlaceholderState(syncFolder, relativePath, _)).Times(0);
     OH_CloudDisk_PlaceholderState state = OH_CLOUD_DISK_PLACEHOLDER_STATE_FULLY_HYDRATED;
     EXPECT_EQ(OH_CloudDisk_GetPlaceholderState(syncFolderPath, pathInfo, &state), CLOUD_DISK_NOT_SUPPORTED);
-    EXPECT_EQ(state, OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE);
 #endif
 }
 

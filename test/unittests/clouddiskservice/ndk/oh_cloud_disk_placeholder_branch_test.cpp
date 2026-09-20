@@ -286,13 +286,8 @@ HWTEST_F(OhCloudDiskPlaceholderBranchTest, IsPlaceholderFile_001, TestSize.Level
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(syncFolderPath, pathInfo, nullptr), CLOUD_DISK_NOT_SUPPORTED);
     bool result = true;
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(syncFolderPath, pathInfo, &result), CLOUD_DISK_NOT_SUPPORTED);
-    EXPECT_FALSE(result);
-    result = true;
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(invalidSync, pathInfo, &result), CLOUD_DISK_NOT_SUPPORTED);
-    EXPECT_FALSE(result);
-    result = true;
     EXPECT_EQ(OH_CloudDisk_IsPlaceholderFile(syncFolderPath, invalidPath, &result), CLOUD_DISK_NOT_SUPPORTED);
-    EXPECT_FALSE(result);
 #endif
 }
 
