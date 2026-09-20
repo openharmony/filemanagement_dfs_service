@@ -15,6 +15,7 @@
  
 #include <filesystem>
 #include <gmock/gmock.h>
+#include <exception>
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
@@ -52,8 +53,10 @@ void CloudDaemonTest::SetUpTestCase(void)
     FuseAssistantMock::EnableMock();
     try {
         CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
+    } catch (const std::exception &e) {
+        ADD_FAILURE() << "Preload CloudKitPlugin failed: " << e.what();
     } catch (...) {
-        GTEST_LOG_(INFO) << "Preload cloud kit plugin failed";
+        ADD_FAILURE() << "Preload CloudKitPlugin failed: unknown exception";
     }
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
