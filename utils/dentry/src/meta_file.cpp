@@ -15,11 +15,17 @@
 
 #include "meta_file.h"
 
+#include <cerrno>
+#include <cstdint>
+#include <cstdlib>
 #include <ctime>
+#include <dirent.h>
 #include <fcntl.h>
 #include <iomanip>
 #include <sstream>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
 #include "cloud_file_utils.h"
 #include "dfs_error.h"
@@ -50,6 +56,8 @@ const char HDC_ID_START = '0';
 const std::string HDC_ID_END = "ff";
 const uid_t STAT_MODE_REG = 0660;
 const uid_t MEDIA_UID = 1008;
+const int DECIMAL_BASE = 10;
+constexpr int64_t SHARED_FILE_BUCKET_THRESHOLD = 20000;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -124,6 +132,166 @@ std::string MetaFile::GetDentryfileByPath(uint32_t userId, const std::string &pa
     std::string dentryFileName = GetDentryfileName(path, caseSense);
 
     return cacheDir + dentryFileName;
+}
+
+static bool IsAllDigits(const std::string &s)
+{
+    if (s.empty()) {
+        return false;
+    }
+    for (char c : s) {
+        if (c < '0' || c > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+ 
+static void CollectPathsRecursive(const std::string &dir, std::vector<std::string> &paths)
+{
+    DIR *d = opendir(dir.c_str());
+    if (d == nullptr) {
+        LOGE("CollectPathsRecursive opendir failed, dir=%{public}s, errno=%{public}d",
+             GetAnonyString(dir).c_str(), errno);
+        return;
+    }
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(d)) != nullptr) {
+        std::string name = entry->d_name;
+        if ((name == ".") || (name == "..")) {
+            continue;
+        }
+        std::string fullPath = dir + "/" + name;
+        paths.push_back(fullPath);
+        if (entry->d_type == DT_DIR) {
+            CollectPathsRecursive(fullPath, paths);
+        }
+    }
+    closedir(d);
+}
+ 
+int32_t MetaFile::RemoveSharedFIleDentryFiles(uint32_t userId, const std::string &bucketRootPath)
+{
+    if (bucketRootPath.empty()) {
+        LOGE("RemoveSharedFIleDentryFiles invalid args, root=%{public}s",
+             GetAnonyString(bucketRootPath).c_str());
+        return -EINVAL;
+    }
+
+    DIR *d = opendir(bucketRootPath.c_str());
+    if (d == nullptr) {
+        LOGE("RemoveSharedFIleDentryFiles opendir failed, root=%{public}s, errno=%{public}d",
+             GetAnonyString(bucketRootPath).c_str(), errno);
+        return -errno;
+    }
+
+    int32_t totalDeleted = 0;
+    int32_t totalFailed = 0;
+    int32_t bucketsProcessed = 0;
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(d)) != nullptr) {
+        std::string bucketName = entry->d_name;
+        if ((bucketName == ".") || (bucketName == "..")) {
+            continue;
+        }
+        if (entry->d_type != DT_DIR) {
+            continue;
+        }
+        if (!IsAllDigits(bucketName)) {
+            continue;
+        }
+
+        int64_t bucketId = std::strtoll(bucketName.c_str(), nullptr, DECIMAL_BASE);
+        if (bucketId <= SHARED_FILE_BUCKET_THRESHOLD) {
+            continue;
+        }
+
+        bucketsProcessed++;
+        std::string bucketPath = bucketRootPath + "/" + bucketName;
+ 
+        std::vector<std::string> paths;
+        paths.push_back(bucketPath);
+        CollectPathsRecursive(bucketPath, paths);
+ 
+        for (const auto &path : paths) {
+            int32_t ret = MetaFileMgr::GetInstance().RemoveByPath(userId, path);
+            if (ret == E_OK) {
+                totalDeleted++;
+            } else {
+                totalFailed++;
+            }
+        }
+    }
+    closedir(d);
+
+    LOGI("RemoveSharedFIleDentryFiles done, userId=%{public}u, root=%{public}s, "
+         "threshold=%{public}lld, buckets=%{public}d, deleted=%{public}d, failed=%{public}d",
+         userId, GetAnonyString(bucketRootPath).c_str(),
+         static_cast<long long>(SHARED_FILE_BUCKET_THRESHOLD),
+         bucketsProcessed, totalDeleted, totalFailed);
+    return totalDeleted;
+}
+ 
+int32_t MetaFile::RemovePrivateFIleDentryFiles(uint32_t userId, const std::string &bucketRootPath)
+{
+    if (bucketRootPath.empty()) {
+        LOGE("RemovePrivateFIleDentryFiles invalid args, root=%{public}s",
+             GetAnonyString(bucketRootPath).c_str());
+        return -EINVAL;
+    }
+
+    DIR *d = opendir(bucketRootPath.c_str());
+    if (d == nullptr) {
+        LOGE("RemovePrivateFIleDentryFiles opendir failed, root=%{public}s, errno=%{public}d",
+             GetAnonyString(bucketRootPath).c_str(), errno);
+        return -errno;
+    }
+
+    int32_t totalDeleted = 0;
+    int32_t totalFailed = 0;
+    int32_t bucketsProcessed = 0;
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(d)) != nullptr) {
+        std::string bucketName = entry->d_name;
+        if ((bucketName == ".") || (bucketName == "..")) {
+            continue;
+        }
+        if (entry->d_type != DT_DIR) {
+            continue;
+        }
+        if (!IsAllDigits(bucketName)) {
+            continue;
+        }
+
+        int64_t bucketId = std::strtoll(bucketName.c_str(), nullptr, DECIMAL_BASE);
+        if (bucketId > SHARED_FILE_BUCKET_THRESHOLD) {
+            continue;
+        }
+
+        bucketsProcessed++;
+        std::string bucketPath = bucketRootPath + "/" + bucketName;
+
+        std::vector<std::string> paths;
+        paths.push_back(bucketPath);
+        CollectPathsRecursive(bucketPath, paths);
+
+        for (const auto &path : paths) {
+            int32_t ret = MetaFileMgr::GetInstance().RemoveByPath(userId, path);
+            if (ret == E_OK) {
+                totalDeleted++;
+            } else {
+                totalFailed++;
+            }
+        }
+    }
+    closedir(d);
+
+    LOGI("RemovePrivateFIleDentryFiles done, userId=%{public}u, root=%{public}s, "
+         "threshold=%{public}lld, buckets=%{public}d, deleted=%{public}d, failed=%{public}d",
+         userId, GetAnonyString(bucketRootPath).c_str(),
+         static_cast<long long>(SHARED_FILE_BUCKET_THRESHOLD),
+         bucketsProcessed, totalDeleted, totalFailed);
+    return totalDeleted;
 }
 
 std::string MetaFile::GetParentDir(const std::string &path)
@@ -716,6 +884,28 @@ void MetaFileMgr::ClearAll()
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     metaFiles_.clear();
     metaFileList_.clear();
+}
+
+int32_t MetaFileMgr::RemoveByPath(uint32_t userId, const std::string &path)
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx_);
+    MetaFileKey key(userId, path);
+    auto it = metaFiles_.find(key);
+    if (it != metaFiles_.end()) {
+        metaFileList_.erase(it->second);
+        metaFiles_.erase(it);
+    }
+    std::string cacheFile = MetaFile::GetDentryfileByPath(userId, path);
+    if (unlink(cacheFile.c_str()) == 0) {
+        return E_OK;
+    }
+    int32_t err = errno;
+    if (err == ENOENT) {
+        return E_OK;
+    }
+    LOGE("MetaFileMgr::RemoveByPath unlink failed, file=%{public}s, errno=%{public}d",
+         GetAnonyString(cacheFile).c_str(), err);
+    return -err;
 }
 
 std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr, bool isHdc)

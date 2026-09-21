@@ -91,6 +91,7 @@ const int32_t IS_BURST_COVER = 1;
 
 const std::string HDC_BUNDLE_NAME = "com.ohos.ailife";
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
+const std::string SHARED_ALBUM_BUNDLE_NAME = "com.ohos.photos.shared";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 
 static const std::string CLOUDSYNC_STATUS_KEY = "persist.kernel.cloudsync.status";

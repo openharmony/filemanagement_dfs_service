@@ -139,6 +139,9 @@ HWTEST_F(CloudDaemonTest, OnStartTest2, TestSize.Level1)
     try {
         cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
         cloudDaemon_->registerToService_ = true;
+        if (filesystem::exists(IO_MESSAGE_DIR)) {
+            filesystem::remove(IO_MESSAGE_DIR);
+        }
         cloudDaemon_->OnStart();
         EXPECT_TRUE(true);
     } catch (...) {
