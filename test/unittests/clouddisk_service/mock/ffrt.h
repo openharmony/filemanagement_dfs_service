@@ -21,6 +21,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <vector>
 
 typedef void (*ffrt_timer_cb)(void* data);
 typedef int ffrt_timer_t;
@@ -74,7 +75,12 @@ struct task_attr {
     inline task_attr &delay(int64_t) { return *this; }
     inline task_attr &timeout(int64_t) { return *this; }
 };
-struct task_handle {};
+struct task_handle {
+    inline operator void*() const { return nullptr; }
+};
+struct dependence {
+    dependence(const task_handle &) {}
+};
 class queue {
 public:
     explicit queue(const char *) {}
@@ -88,6 +94,8 @@ inline void submit(std::function<void()> &&task, task_attr attr = {})
     if (task) {
     }
 }
+
+inline void submit(std::function<void()> &&task, const std::vector<dependence> &dependencies) {}
 
 inline task_handle submit_h(std::function<void()> &&task)
 {
