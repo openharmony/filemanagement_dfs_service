@@ -866,6 +866,9 @@ static int32_t ResolvePlaceholderQueryPath(
         CloudDiskServiceAccessToken::GetAccountId(userId);
     }
     std::string mntSyncFolder;
+    // Registration and bundle ownership are deliberately checked before the relative path format to align
+    // with the write family (create/convert/update): callers whose sync root is not registered get
+    // E_SYNC_FOLDER_NOT_REGISTERED instead of a misleading E_INVALID_ARG from the path format check.
     int32_t ret = GetRegisteredMntSyncFolder(syncFolder, userId, mntSyncFolder);
     if (ret != E_OK) {
         return ret;
@@ -1356,6 +1359,9 @@ static int32_t ResolvePlaceholderTaskContext(const std::string &syncFolder,
                                              const std::string &relativePath,
                                              PlaceholderStatePathContext &context)
 {
+    // Registration and bundle ownership are deliberately checked before the relative path format to align
+    // with the write family (create/convert/update): callers whose sync root is not registered get
+    // E_SYNC_FOLDER_NOT_REGISTERED instead of a misleading E_INVALID_ARG from the path format check.
     int32_t ret = ResolvePlaceholderOwner(syncFolder, context);
     if (ret != E_OK) {
         return ret;
