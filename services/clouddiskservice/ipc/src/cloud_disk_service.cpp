@@ -866,14 +866,12 @@ static int32_t ResolvePlaceholderQueryPath(
         CloudDiskServiceAccessToken::GetAccountId(userId);
     }
     std::string mntSyncFolder;
-    // Registration and bundle ownership are deliberately checked before the relative path format to align
-    // with the write family (create/convert/update): callers whose sync root is not registered get
-    // E_SYNC_FOLDER_NOT_REGISTERED instead of a misleading E_INVALID_ARG from the path format check.
     int32_t ret = GetRegisteredMntSyncFolder(syncFolder, userId, mntSyncFolder);
     if (ret != E_OK) {
         return ret;
     }
 
+    // The relative path format check is intentionally placed after the sync-root verification.
     if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
         relativePath.back() == '/') {
         LOGE("ResolvePlaceholderQueryPath branch=invalid_relative_path path_size=%{public}zu", relativePath.size());
@@ -1363,6 +1361,8 @@ static int32_t ResolvePlaceholderTaskContext(const std::string &syncFolder,
     if (ret != E_OK) {
         return ret;
     }
+
+    // The relative path format check is intentionally placed after the sync-root verification.
     if (!IsValidPlaceholderRelativePath(relativePath)) {
         LOGE("Resolve placeholder task context failed: invalid relative path");
         return E_INVALID_ARG;
