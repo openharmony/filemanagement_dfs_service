@@ -4147,5 +4147,35 @@ HWTEST_F(CloudDiskServiceStaticTest, PlaceholderServiceMutationOutstandingTask_0
     EXPECT_EQ(service.ConvertPlaceholderToFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, "file.txt"), E_HYDRATE_IN_PROGRESS);
     EXPECT_EQ(service.UpdatePlaceholderInner(PLACEHOLDER_TEST_SYNC_FOLDER, "file.txt", {}, {}), E_HYDRATE_IN_PROGRESS);
 }
+
+/**
+ * @tc.name: ConvertUpdatePlaceholderMissingFile_001
+ * @tc.desc: Verify Convert/Update return E_FILE_NOT_EXIST when the target file does not exist
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, ConvertUpdatePlaceholderMissingFile_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConvertUpdatePlaceholderMissingFile_001 start";
+    AddPlaceholderSyncFolder();
+    CloudDiskService service;
+
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).Times(2).WillRepeatedly(Return(TEST_USER_ID));
+    EXPECT_CALL(*dfsuAccessToken_, GetCallerBundleName(_))
+        .Times(2)
+        .WillRepeatedly(DoAll(SetArgReferee<0>(PLACEHOLDER_TEST_BUNDLE_NAME), Return(E_OK)));
+    EXPECT_CALL(*insMock_, access(StrEq(PLACEHOLDER_TEST_MNT_SYNC_FOLDER + "/not_exist.txt"), F_OK))
+        .Times(2)
+        .WillRepeatedly(Invoke([](const char *, int) {
+            errno = ENOENT;
+            return -1;
+        }));
+    EXPECT_CALL(*insMock_, MockStat(_, _)).Times(0);
+    EXPECT_CALL(*insMock_, Open(_, _, _)).Times(0);
+    EXPECT_EQ(service.ConvertPlaceholderToFileInner(PLACEHOLDER_TEST_SYNC_FOLDER, "not_exist.txt"),
+              E_FILE_NOT_EXIST);
+    EXPECT_EQ(service.UpdatePlaceholderInner(PLACEHOLDER_TEST_SYNC_FOLDER, "not_exist.txt", {}, {}), E_FILE_NOT_EXIST);
+    GTEST_LOG_(INFO) << "ConvertUpdatePlaceholderMissingFile_001 end";
+}
 #endif
 } // namespace OHOS::FileManagement::CloudDiskService::Test
