@@ -15,6 +15,7 @@
  
 #include <filesystem>
 #include <gmock/gmock.h>
+#include <exception>
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
@@ -24,6 +25,7 @@
 #include "fuse_manager/fuse_manager.h"
 #include "ipc/cloud_daemon.h"
 #include "iremote_object.h"
+#include "plugin_loader.h"
 #include "setting_data_helper.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
@@ -49,6 +51,13 @@ public:
 void CloudDaemonTest::SetUpTestCase(void)
 {
     FuseAssistantMock::EnableMock();
+    try {
+        CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
+    } catch (const std::exception &e) {
+        ADD_FAILURE() << "Preload CloudKitPlugin failed: " << e.what();
+    } catch (...) {
+        ADD_FAILURE() << "Preload CloudKitPlugin failed: unknown exception";
+    }
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 

@@ -288,6 +288,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${services_path}/cloudfiledaemon/src/utils/setting_data_helper.cpp",
     "cloud_daemon_test.cpp",
+    "mock/system_ability_mock.cpp",
     "mock/system_function_mock.cpp",
     "mock/fuse_assistant.cpp",
   ]
@@ -328,6 +329,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/utils/ioctl/include",
     "${utils_path}/cloud_disk/include",
     "${utils_path}/dentry/include",
+    "${utils_path}/load/include",
     "${utils_path}/log/include",
     "${utils_path}/system/include",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
@@ -337,6 +339,7 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/include/ipc/",
     "${services_path}/cloudfiledaemon/include/utils/",
     "${services_path}/cloudsyncservice/include/data_sync/",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
   ]
 
   deps = [
@@ -367,7 +370,6 @@ ohos_unittest("cloud_daemon_test") {
     "os_account:os_account_innerkits",
     "preferences:native_preferences",
     "relational_store:native_rdb",
-    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
