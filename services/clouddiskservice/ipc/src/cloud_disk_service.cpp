@@ -945,15 +945,15 @@ static int32_t ValidateCreatePlaceholderParams(const std::string &syncFolder, co
                                                const PlaceholderInfo &info, const PlaceholderCustomInfo &customInfo)
 {
     if (syncFolder.empty() || relativePath.empty()) {
-        LOGE("CreatePlaceholderFileInner branch=invalid_arg_empty_param");
+        LOGE("ValidateCreatePlaceholderParams branch=invalid_arg_empty_param");
         return E_INVALID_ARG;
     }
     if (customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
-        LOGE("CreatePlaceholderFileInner branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
+        LOGE("ValidateCreatePlaceholderParams branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
         return E_INVALID_ARG;
     }
     if (info.logicalSize > MAX_PLACEHOLDER_LOGICAL_SIZE) {
-        LOGE("CreatePlaceholderFileInner branch=logical_size_too_large size=%{public}" PRIu64, info.logicalSize);
+        LOGE("ValidateCreatePlaceholderParams branch=logical_size_too_large size=%{public}" PRIu64, info.logicalSize);
         return E_FILE_TOO_LARGE;
     }
     return E_OK;
