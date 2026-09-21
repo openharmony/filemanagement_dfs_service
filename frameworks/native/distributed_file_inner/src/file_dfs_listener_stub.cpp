@@ -14,8 +14,6 @@
  */
 #include "file_dfs_listener_stub.h"
 
-#include <thread>
-
 #include "file_dfs_listener_interface_code.h"
 #include "utils_log.h"
 
@@ -37,19 +35,6 @@ FileDfsListenerStub::FileDfsListenerStub()
     opToInterfaceMap_[static_cast<uint32_t>
         (Storage::DistributedFile::FileDfsListenerInterfaceCode::FILE_DFS_LISTENER_ON_STATUS)] =
         &FileDfsListenerStub::HandleOnStatus;
-    workerThread_ = std::thread([this]() { DispatchStatus(); });
-}
-
-FileDfsListenerStub::~FileDfsListenerStub()
-{
-    {
-        std::lock_guard<std::mutex> lock(queueMutex_);
-        stopFlag_.store(true);
-    }
-    queueCond_.notify_all();
-    if (workerThread_.joinable()) {
-        workerThread_.join();
-    }
 }
 
 int32_t FileDfsListenerStub::OnRemoteRequest(uint32_t code,
@@ -95,37 +80,8 @@ int32_t FileDfsListenerStub::HandleOnStatus(MessageParcel &data, MessageParcel &
         LOGE("Invalid arguments");
         return E_INVAL_ARG;
     }
-    {
-        std::lock_guard<std::mutex> lock(queueMutex_);
-        if (statusQueue_.size() >= MAX_STATUS_CALLBACK_QUEUE_SIZE) {
-            LOGW("status callback queue is full, drop the oldest callback");
-            statusQueue_.pop_front();
-        }
-        statusQueue_.emplace_back(StatusCallback { networkId, status, path, type });
-    }
-    queueCond_.notify_one();
+    OnStatus(networkId, status, path, type);
     return NO_ERROR;
-}
-
-void FileDfsListenerStub::DispatchStatus()
-{
-    for (;;) {
-        StatusCallback callback;
-        {
-            std::unique_lock<std::mutex> lock(queueMutex_);
-            queueCond_.wait(lock, [this]() {
-                return stopFlag_.load() || !statusQueue_.empty();
-            });
-            if (stopFlag_.load()) {
-                LOGW("status callback dispatcher exit, drop %{public}zu pending callbacks",
-                     statusQueue_.size());
-                return;
-            }
-            callback = std::move(statusQueue_.front());
-            statusQueue_.pop_front();
-        }
-        OnStatus(callback.networkId, callback.status, callback.path, callback.type);
-    }
 }
 
 } // namespace ModuleFileIO
