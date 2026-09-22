@@ -33,7 +33,7 @@ void FileDfsListenerProxy::OnStatus(const std::string &networkId, int32_t status
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("Failed to write interface token");
         return;
