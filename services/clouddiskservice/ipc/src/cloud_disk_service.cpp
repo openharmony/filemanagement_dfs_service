@@ -1651,7 +1651,7 @@ static int32_t ConvertPlaceholderToEmptyFile(const std::string &hmdfsPath,
         if (ftruncate(fd, 0) < 0) {
             ret = errno;
             LOGE("ftruncate failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-            ret = ConvertTargetErrnoToCloudDiskError(ret);
+            ret = ConvertErrnoToCloudDiskError(ret);
             break;
         }
 
@@ -2237,14 +2237,14 @@ static int32_t UpdatePlaceholderAttr(const std::string &hmdfsPath,
         int32_t error = errno;
         LOGE("ftruncate to zero failed, path:%{public}s, errno:%{public}d", GetAnonyStringStrictly(hmdfsPath).c_str(),
              error);
-        return ConvertTargetErrnoToCloudDiskError(error);
+        return ConvertErrnoToCloudDiskError(error);
     }
     uint8_t oldState = PLACEHOLDER_STATE_NONE;
     ret = SetPlaceholderFileAttributes(fd, metaData, &oldState, customInfo);
     if (ret != E_OK) {
         LOGE("set placeholder file attr failed, path:%{public}s, errno:%{public}d",
              GetAnonyStringStrictly(hmdfsPath).c_str(), ret);
-        return ConvertTargetErrnoToCloudDiskError(ret);
+        return ConvertErrnoToCloudDiskError(ret);
     }
     if (!IsValidPlaceholderState(oldState)) {
         LOGE("invalid old placeholder state, path:%{public}s, state:%{public}u",
