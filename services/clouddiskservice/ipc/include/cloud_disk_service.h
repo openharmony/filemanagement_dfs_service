@@ -16,13 +16,16 @@
 #ifndef CLOUD_DISK_SERVICE_H
 #define CLOUD_DISK_SERVICE_H
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
 #include "account_status_listener.h"
+#include "cloud_disk_service_error.h"
 #include "cloud_disk_service_stub.h"
+#include "ffrt.h"
 #include "i_cloud_disk_service_callback.h"
 #include "icloud_disk_service.h"
 #include "iremote_stub.h"
@@ -33,8 +36,6 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDiskService {
-enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
-
 class CloudDiskService final : public SystemAbility, public CloudDiskServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(CloudDiskService);
 
@@ -44,6 +45,7 @@ public:
 
     void OnStart(const SystemAbilityOnDemandReason &startReason) override;
     void OnStop() override;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     ErrCode RegisterSyncFolderChangesInner(const std::string &syncFolder,
                                            const sptr<IRemoteObject> &remoteObject) override;
     ErrCode UnregisterSyncFolderChangesInner(const std::string &syncFolder) override;
@@ -94,11 +96,18 @@ public:
 
 private:
     CloudDiskService();
-    ServiceRunningState state_{ServiceRunningState::STATE_NOT_START};
+    struct InitState {
+        int32_t result = E_TRY_AGAIN;
+        std::atomic<bool> stopped{false};
+    };
+    std::mutex startMutex_;
+    ffrt::task_handle initTask_;
+    std::shared_ptr<InitState> initState_;
     int32_t currentUserId_ = -1;
     static sptr<CloudDiskService> instance_;
-    bool registerToService_{false};
     bool PublishSA();
+    int32_t Init(const SystemAbilityOnDemandReason &startReason);
+    int32_t WaitForInit();
     int32_t ResolveOwnedSyncFolder(const std::string &syncFolder,
                                    std::string &bundleName,
                                    uint32_t &syncFolderIndex,

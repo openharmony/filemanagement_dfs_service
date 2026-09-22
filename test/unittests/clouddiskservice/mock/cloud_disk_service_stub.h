@@ -16,6 +16,7 @@
 #ifndef TEST_OHOS_FILEMANAGEMENT_CLOUDDISKSERVICE_CLOUDDISKSERVICESTUB_H
 #define TEST_OHOS_FILEMANAGEMENT_CLOUDDISKSERVICE_CLOUDDISKSERVICESTUB_H
 
+#include <atomic>
 #include <iremote_stub.h>
 #include "icloud_disk_service.h"
 
@@ -25,7 +26,8 @@ namespace CloudDiskService {
 
 class CloudDiskServiceStub : public IRemoteStub<ICloudDiskService> {
 public:
-    CloudDiskServiceStub(bool serialInvokeFlag = false): IRemoteStub(serialInvokeFlag){};
+    static inline std::atomic<uint32_t> onRemoteRequestCount_{0};
+    explicit CloudDiskServiceStub(bool serialInvokeFlag = false): IRemoteStub(serialInvokeFlag){};
     int32_t OnRemoteRequest(
         uint32_t code,
         MessageParcel& data,

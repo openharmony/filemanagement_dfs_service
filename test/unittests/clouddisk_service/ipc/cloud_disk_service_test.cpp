@@ -114,9 +114,7 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "PublishSATest001 start";
     try {
         g_publish = true;
-        cloudDiskService_->registerToService_ = true;
-        cloudDiskService_->PublishSA();
-        EXPECT_TRUE(cloudDiskService_->registerToService_);
+        EXPECT_TRUE(cloudDiskService_->PublishSA());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PublishSATest001 failed";
@@ -135,13 +133,13 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "PublishSATest002 start";
     try {
         g_publish = true;
-        cloudDiskService_->registerToService_ = false;
-        cloudDiskService_->PublishSA();
-        EXPECT_TRUE(cloudDiskService_->registerToService_);
+        EXPECT_TRUE(cloudDiskService_->PublishSA());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "PublishSATest002 failed";
     }
+    g_publish = false;
+    EXPECT_FALSE(cloudDiskService_->PublishSA());
     GTEST_LOG_(INFO) << "PublishSATest002 end";
 }
 
@@ -156,8 +154,7 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "PublishSATest003 start";
     try {
         g_publish = false;
-        cloudDiskService_->registerToService_ = false;
-        cloudDiskService_->PublishSA();
+        EXPECT_FALSE(cloudDiskService_->PublishSA());
     } catch (...) {
         EXPECT_TRUE(false);
     }
@@ -173,11 +170,10 @@ HWTEST_F(CloudDiskServiceTest, PublishSATest003, TestSize.Level1)
 HWTEST_F(CloudDiskServiceTest, OnStopTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnStopTest001 start";
-    cloudDiskService_->state_ = ServiceRunningState::STATE_RUNNING;
-    cloudDiskService_->OnStart(SystemAbilityOnDemandReason());
     cloudDiskService_->OnStop();
-    EXPECT_EQ(cloudDiskService_->state_, ServiceRunningState::STATE_NOT_START);
-    EXPECT_EQ(cloudDiskService_->registerToService_, false);
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    EXPECT_EQ(cloudDiskService_->initTask_, nullptr);
+#endif
     GTEST_LOG_(INFO) << "OnStopTest001 end";
 }
 
