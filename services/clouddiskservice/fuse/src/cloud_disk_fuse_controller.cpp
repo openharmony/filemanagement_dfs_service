@@ -653,12 +653,8 @@ bool CloudDiskFuseController::WaitForRetryReset(uint64_t failedRootEpoch, bool r
     auto shouldReset = [this, failedRootEpoch, resetWhenNoActiveRoot] {
         return shutdown_ || rootWarmupEpoch_ != failedRootEpoch || (resetWhenNoActiveRoot && !HasActiveRootLocked());
     };
-    while (true) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (shouldReset()) {
-            return !shutdown_;
-        }
-
+    std::unique_lock<std::mutex> lock(mutex_);
+    while (!shouldReset()) {
         auto retireDeadline = GetRetireDeadlineLocked();
         if (retireDeadline == std::chrono::steady_clock::time_point::max()) {
             condition_.wait(lock, shouldReset);
@@ -667,13 +663,17 @@ bool CloudDiskFuseController::WaitForRetryReset(uint64_t failedRootEpoch, bool r
         if (!condition_.wait_until(lock, retireDeadline, shouldReset)) {
             lock.unlock();
             FinalizeRetiredRoots();
+            lock.lock();
         }
     }
+    return !shutdown_;
 }
 
-bool CloudDiskFuseController::RetryUnmount(int32_t userId, const std::string &mountPoint, int32_t unmountRet)
+int32_t CloudDiskFuseController::RetryUnmountWithLimit(int32_t userId,
+                                                       const std::string &mountPoint,
+                                                       int32_t unmountRet,
+                                                       uint32_t &retryCount)
 {
-    uint32_t retryCount = 0;
     while (unmountRet != E_OK && retryCount < CLOUD_DISK_FUSE_UNMOUNT_RETRY_COUNT) {
         std::unique_lock<std::mutex> lock(mutex_);
         state_ = shutdown_ ? State::STOPPING : State::CLEANUP_RETRY;
@@ -696,7 +696,13 @@ bool CloudDiskFuseController::RetryUnmount(int32_t userId, const std::string &mo
 
         unmountRet = CloudDiskFuseMountAdapter::Unmount(userId, mountPoint);
     }
+    return unmountRet;
+}
 
+bool CloudDiskFuseController::RetryUnmount(int32_t userId, const std::string &mountPoint, int32_t unmountRet)
+{
+    uint32_t retryCount = 0;
+    unmountRet = RetryUnmountWithLimit(userId, mountPoint, unmountRet, retryCount);
     std::function<void()> idleCallback;
     uint64_t failedRootEpoch = 0;
     bool shouldStop = false;

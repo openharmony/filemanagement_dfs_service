@@ -218,6 +218,8 @@ private:
     bool WaitForRetryReset(uint64_t failedRootEpoch, bool resetWhenNoActiveRoot);
     int32_t CreateSession(int fuseFd);
     int32_t StopSession(int32_t userId, const std::string &mountPoint);
+    int32_t
+        RetryUnmountWithLimit(int32_t userId, const std::string &mountPoint, int32_t unmountRet, uint32_t &retryCount);
     bool RetryUnmount(int32_t userId, const std::string &mountPoint, int32_t unmountRet);
     void LoopMain(struct fuse_session *session);
     void WakeSession();
