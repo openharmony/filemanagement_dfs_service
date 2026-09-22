@@ -933,12 +933,6 @@ static int32_t GetRegisteredMntSyncFolder(const std::string &syncFolder, int32_t
 static int32_t ResolvePlaceholderQueryPath(
     const std::string &syncFolder, const std::string &relativePath, std::string &queryPath)
 {
-    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
-        relativePath.back() == '/') {
-        LOGE("ResolvePlaceholderQueryPath branch=invalid_relative_path path_size=%{public}zu", relativePath.size());
-        return E_INVALID_ARG;
-    }
-
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     if (userId == 0) {
         CloudDiskServiceAccessToken::GetAccountId(userId);
@@ -947,6 +941,13 @@ static int32_t ResolvePlaceholderQueryPath(
     int32_t ret = GetRegisteredMntSyncFolder(syncFolder, userId, mntSyncFolder);
     if (ret != E_OK) {
         return ret;
+    }
+
+    // The relative path format check is intentionally placed after the sync-root verification.
+    if (relativePath.empty() || HasInvalidRelativePathSegment(relativePath) || relativePath.front() == '/' ||
+        relativePath.back() == '/') {
+        LOGE("ResolvePlaceholderQueryPath branch=invalid_relative_path path_size=%{public}zu", relativePath.size());
+        return E_INVALID_ARG;
     }
 
     queryPath = JoinSyncFolderAndRelativePath(mntSyncFolder, relativePath);
@@ -1010,6 +1011,24 @@ int32_t CloudDiskService::GetFileSyncStatesInner(const std::string &syncFolder,
 #endif
 }
 
+static int32_t ValidateCreatePlaceholderParams(const std::string &syncFolder, const std::string &relativePath,
+                                               const PlaceholderInfo &info, const PlaceholderCustomInfo &customInfo)
+{
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("ValidateCreatePlaceholderParams branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
+    if (customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
+        LOGE("ValidateCreatePlaceholderParams branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
+        return E_INVALID_ARG;
+    }
+    if (info.logicalSize > MAX_PLACEHOLDER_LOGICAL_SIZE) {
+        LOGE("ValidateCreatePlaceholderParams branch=logical_size_too_large size=%{public}" PRIu64, info.logicalSize);
+        return E_FILE_TOO_LARGE;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFolder,
                                                      const std::string &relativePath,
                                                      const PlaceholderInfo &info,
@@ -1017,19 +1036,15 @@ int32_t CloudDiskService::CreatePlaceholderFileInner(const std::string &syncFold
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("CreatePlaceholderFileInner route=service_entry");
-    if (customInfo.data.size() > PLACEHOLDER_CUSTOM_INFO_MAX_SIZE) {
-        LOGE("CreatePlaceholderFileInner branch=custom_info_too_large size=%{public}zu", customInfo.data.size());
-        return E_INVALID_ARG;
-    }
-    if (info.logicalSize > MAX_PLACEHOLDER_LOGICAL_SIZE) {
-        LOGE("CreatePlaceholderFileInner branch=logical_size_too_large size=%{public}" PRIu64, info.logicalSize);
-        return E_FILE_TOO_LARGE;
+    int32_t ret = ValidateCreatePlaceholderParams(syncFolder, relativePath, info, customInfo);
+    if (ret != E_OK) {
+        return ret;
     }
 
     int32_t userId = CloudDiskServiceAccessToken::GetUserId();
     std::string syncFolderPhysicalPath;
-    int32_t ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
-                                                                        syncFolderPhysicalPath);
+    ret = CloudDiskSyncFolder::GetInstance().PathToPhysicalPath(syncFolder, std::to_string(userId),
+                                                                syncFolderPhysicalPath);
     if (ret != E_OK) {
         LOGE("CreatePlaceholderFileInner branch=sync_folder_physical_path_failed ret=%{public}d", ret);
         return NormalizeCreatePlaceholderError(ret);
@@ -1077,6 +1092,10 @@ int32_t CloudDiskService::IsPlaceholderFileInner(const std::string &syncFolder,
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("IsPlaceholderFileInner route=service_entry");
     isPlaceholder = false;
+    if (syncFolder.empty() || path.empty()) {
+        LOGE("IsPlaceholderFileInner branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
     std::string queryPath;
     int32_t ret = ResolvePlaceholderQueryPath(syncFolder, path, queryPath);
     if (ret != E_OK) {
@@ -1100,6 +1119,10 @@ int32_t CloudDiskService::GetPlaceholderStateInner(const std::string &syncFolder
 {
     state = PLACEHOLDER_STATE_NONE;
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (syncFolder.empty() || relativePath.empty()) {
+        LOGE("GetPlaceholderStateInner branch=invalid_arg_empty_param");
+        return E_INVALID_ARG;
+    }
     std::string queryPath;
     int32_t ret = ResolvePlaceholderQueryPath(syncFolder, relativePath, queryPath);
     if (ret != E_OK) {
@@ -1397,13 +1420,15 @@ static int32_t ResolvePlaceholderTaskContext(const std::string &syncFolder,
                                              const std::string &relativePath,
                                              PlaceholderStatePathContext &context)
 {
-    if (!IsValidPlaceholderRelativePath(relativePath)) {
-        LOGE("Resolve placeholder task context failed: invalid relative path");
-        return E_INVALID_ARG;
-    }
     int32_t ret = ResolvePlaceholderOwner(syncFolder, context);
     if (ret != E_OK) {
         return ret;
+    }
+
+    // The relative path format check is intentionally placed after the sync-root verification.
+    if (!IsValidPlaceholderRelativePath(relativePath)) {
+        LOGE("Resolve placeholder task context failed: invalid relative path");
+        return E_INVALID_ARG;
     }
     context.syncFolder = syncFolder;
     return E_OK;

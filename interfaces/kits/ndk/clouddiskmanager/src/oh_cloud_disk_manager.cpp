@@ -67,8 +67,6 @@ private:
 };
 
 namespace {
-constexpr size_t PLACEHOLDER_CUSTOM_INFO_MAX_SIZE = 4096;
-
 CloudDisk_PathInfo ToPublicPathInfo(const CloudDiskPathInfo &pathInfo)
 {
     return {pathInfo.value, pathInfo.length};
@@ -78,6 +76,9 @@ OH_CloudDisk_DataBuf ToPublicDataBuf(const CloudDiskDataBuf &dataBuf)
 {
     return {dataBuf.data, dataBuf.dataSize};
 }
+
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+constexpr size_t PLACEHOLDER_CUSTOM_INFO_MAX_SIZE = 4096;
 
 bool ConvertPlaceholderCustomInfo(const OH_CloudDisk_PlaceholderCustomInfo *customInfo,
     PlaceholderCustomInfo &innerCustomInfo)
@@ -97,6 +98,7 @@ bool ConvertPlaceholderCustomInfo(const OH_CloudDisk_PlaceholderCustomInfo *cust
     innerCustomInfo.data.assign(customInfo->data, customInfo->data + customInfo->dataLength);
     return true;
 }
+#endif // SUPPORT_CLOUD_DISK_SERVICE
 } // namespace
 
 void CloudDiskServiceCallbackImpl::OnChangeData(const std::string &syncFolder,
@@ -420,6 +422,7 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
                                                    const OH_CloudDisk_PlaceholderInfo placeholderInfo,
                                                    const OH_CloudDisk_PlaceholderCustomInfo *customInfo)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (!IsValidPathInfo(syncFolderPath.value, syncFolderPath.length) ||
         !IsValidPathInfo(relativePathInfo.value, relativePathInfo.length)) {
         LOGE("CreatePlaceholderFile branch=invalid_arg");
@@ -444,12 +447,16 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
 
     LOGI("CreatePlaceholderFile branch=success");
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPath syncFolderPath,
                                                    const CloudDisk_PathInfo path,
                                                    bool *isPlaceholder)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (isPlaceholder == nullptr) {
         LOGE("IsPlaceholderFile branch=invalid_arg_result_null");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -475,12 +482,16 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
 
     LOGI("IsPlaceholderFile branch=success isPlaceholder=%{public}d", *isPlaceholder);
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderState(const CloudDisk_SyncFolderPath syncFolderPath,
                                                      const CloudDisk_PathInfo relativePathInfo,
                                                      OH_CloudDisk_PlaceholderState *state)
 {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (state == nullptr) {
         LOGE("GetPlaceholderState branch=invalid_arg_state_null");
         return CloudDisk_ErrorCode::CLOUD_DISK_INVALID_ARG;
@@ -502,6 +513,9 @@ CloudDisk_ErrorCode OH_CloudDisk_GetPlaceholderState(const CloudDisk_SyncFolderP
     }
     *state = static_cast<OH_CloudDisk_PlaceholderState>(innerState);
     return CloudDisk_ErrorCode::CLOUD_DISK_OK;
+#else
+    return CloudDisk_ErrorCode::CLOUD_DISK_NOT_SUPPORTED;
+#endif
 }
 
 CloudDisk_ErrorCode OH_CloudDisk_RegisterSyncFolder(const CloudDisk_SyncFolder *syncFolder)

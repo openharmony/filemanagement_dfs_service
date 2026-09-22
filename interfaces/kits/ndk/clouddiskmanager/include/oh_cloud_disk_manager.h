@@ -723,6 +723,7 @@ CloudDisk_ErrorCode OH_CloudDisk_UpdateCustomAlias(const CloudDisk_SyncFolderPat
  * @param placeholderInfo Indicates the placeholder metadata.
  * @param customInfo Indicates optional opaque custom information. NULL means it is not provided.
  * @return Returns {@link CLOUD_DISK_OK} if the operation is successful;
+ * <br> returns {@link CLOUD_DISK_NOT_SUPPORTED} if the cloud disk feature is not supported on the device;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26.1.0
  */
@@ -737,8 +738,11 @@ CloudDisk_ErrorCode OH_CloudDisk_CreatePlaceholder(const CloudDisk_SyncFolderPat
  * @param syncFolderPath Indicates the registered sync folder path information.
  * @param path Indicates the file path relative to the sync folder to check.
  * @param isPlaceholder Output parameter. The value is valid only when the return value is {@link CLOUD_DISK_OK}.
- * <br>Returns true if the file is a placeholder file; returns false otherwise. The value is set to false on error.
+ * <br>Returns true if the file is a placeholder file; returns false otherwise. The value is initialized to
+ * <br>false and keeps false when any error code other than {@link CLOUD_DISK_NOT_SUPPORTED} is returned;
+ * <br>when {@link CLOUD_DISK_NOT_SUPPORTED} is returned, the value is not modified.
  * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
+ * <br> returns {@link CLOUD_DISK_NOT_SUPPORTED} if the cloud disk feature is not supported on the device;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26.1.0
  */
@@ -752,9 +756,12 @@ CloudDisk_ErrorCode OH_CloudDisk_IsPlaceholderFile(const CloudDisk_SyncFolderPat
  * @param syncFolderPath Indicates the registered sync folder path information.
  * @param relativePathInfo Indicates the file path relative to the sync folder.
  * @param state Output parameter. The value is valid only when the return value is {@link CLOUD_DISK_OK}.
- * <br>The value is set to {@link OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE} on error.
+ * <br>The value is initialized to {@link OH_CLOUD_DISK_PLACEHOLDER_STATE_NONE} and keeps it when any error
+ * <br>code other than {@link CLOUD_DISK_NOT_SUPPORTED} is returned; when {@link CLOUD_DISK_NOT_SUPPORTED}
+ * <br>is returned, the value is not modified.
  * @return Returns {@link CLOUD_DISK_OK} if the query is successful;
  * <br> returns {@link OH_CLOUD_DISK_INVALID_PLACEHOLDER_STATE} if the stored state is invalid;
+ * <br> returns {@link CLOUD_DISK_NOT_SUPPORTED} if the cloud disk feature is not supported on the device;
  * <br> otherwise, returns an error code defined in {@link cloud_disk_error_code.h}.
  * @since 26.1.0
  */
