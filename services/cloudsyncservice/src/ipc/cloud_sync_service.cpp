@@ -413,10 +413,10 @@ static int32_t GetTargetBundleName(string &targetBundleName, string &callerBundl
     if (DfsuAccessTokenHelper::GetCallerBundleName(callerBundleName)) {
         return E_INVAL_ARG;
     }
-    if (targetBundleName == "") {
-        targetBundleName = callerBundleName;
+    if (callerBundleName == MEDIALIBRARYDATA_BUNDLENAME) {
+        callerBundleName = targetBundleName;
     }
-    if (targetBundleName != callerBundleName && callerBundleName != MEDIALIBRARYDATA_BUNDLENAME &&
+    if (targetBundleName != callerBundleName &&
         !DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied: cloudfile_sync_manager");
         return E_PERMISSION_DENIED;
