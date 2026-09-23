@@ -69,6 +69,7 @@ const std::string CLOUDFILESERVICE_BUNDLENAME = "cloudfileservice";
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string ACL_XATTR_ACCESS = "system.posix_acl_access";
 const std::string ACL_XATTR_DEFAULT = "system.posix_acl_default";
+const std::string MEDIALIBRARYDATA_BUNDLENAME = "com.ohos.medialibrary.medialibrarydata";
 const std::uint32_t WEARD_SA_UID = 7500;
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
@@ -412,8 +413,8 @@ static int32_t GetTargetBundleName(string &targetBundleName, string &callerBundl
     if (DfsuAccessTokenHelper::GetCallerBundleName(callerBundleName)) {
         return E_INVAL_ARG;
     }
-    if (targetBundleName == "") {
-        targetBundleName = callerBundleName;
+    if (callerBundleName == MEDIALIBRARYDATA_BUNDLENAME) {
+        callerBundleName = targetBundleName;
     }
     if (targetBundleName != callerBundleName &&
         !DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
