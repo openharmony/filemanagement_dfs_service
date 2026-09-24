@@ -631,7 +631,7 @@ int32_t Daemon::ChooseCopyMode(const std::string &srcUri, const std::string &dst
         HiAudit::GetInstance().WriteEnd("PrepareSession", EINVAL);
         return EINVAL;
     }
-    if (!DfsuAccessTokenHelper::CheckSrcUriPermission(srcUri) || !CheckPathPermission(destPhysicalPath)) {
+    if (!DfsuAccessTokenHelper::CheckUriPermission(srcUri) || !CheckPathPermission(destPhysicalPath)) {
         LOGE("permission verify failed");
         return EINVAL;
     }
