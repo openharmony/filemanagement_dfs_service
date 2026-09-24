@@ -16,6 +16,7 @@
 #include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -130,23 +131,23 @@ HWTEST_F(PlaceholderProgressTest, Subscription_001, TestSize.Level2)
     auto &manager = PlaceholderProgressManager::GetInstance();
     auto first = sptr(new RecordingProgress());
     auto second = sptr(new RecordingProgress());
-    EXPECT_EQ(manager.Register({1, 10}, 100, nullptr), E_INVALID_ARG);
-    ASSERT_EQ(manager.Register({1, 10}, 100, first), E_OK);
-    EXPECT_EQ(manager.Register({1, 10}, 100, first), E_OK);
-    EXPECT_EQ(manager.Register({1, 10}, 101, first), E_CALLBACK_ALREADY_REGISTERED);
-    EXPECT_EQ(manager.Register({1, 10}, 100, second), E_CALLBACK_ALREADY_REGISTERED);
-    ASSERT_EQ(manager.Register({2, 20}, 101, second), E_OK);
+    EXPECT_EQ(manager.Register({1, 10, 11}, 100, nullptr), E_INVALID_ARG);
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, first), E_OK);
+    EXPECT_EQ(manager.Register({1, 10, 11}, 100, first), E_OK);
+    EXPECT_EQ(manager.Register({1, 10, 11}, 101, first), E_CALLBACK_ALREADY_REGISTERED);
+    EXPECT_EQ(manager.Register({1, 10, 11}, 100, second), E_CALLBACK_ALREADY_REGISTERED);
+    ASSERT_EQ(manager.Register({2, 20, 22}, 101, second), E_OK);
     HydrateProgress event;
     event.filePath = "/storage/Users/currentUser/sync/file";
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     manager.Drain();
     ASSERT_EQ(first->events.size(), 1u);
     EXPECT_TRUE(second->events.empty());
-    manager.OnRemoteDied({1, 10}, wptr<IRemoteObject>(second->AsObject()));
+    manager.OnRemoteDied({1, 10, 11}, wptr<IRemoteObject>(second->AsObject()));
     EXPECT_EQ(manager.subscribers_.size(), 2u);
-    manager.OnRemoteDied({1, 10}, wptr<IRemoteObject>(first->AsObject()));
-    EXPECT_EQ(manager.Unregister({1, 10}), E_CALLBACK_NOT_REGISTERED);
-    EXPECT_EQ(manager.Unregister({2, 20}), E_OK);
+    manager.OnRemoteDied({1, 10, 11}, wptr<IRemoteObject>(first->AsObject()));
+    EXPECT_EQ(manager.Unregister({1, 10, 11}), E_CALLBACK_NOT_REGISTERED);
+    EXPECT_EQ(manager.Unregister({2, 20, 22}), E_OK);
     EXPECT_TRUE(manager.subscribers_.empty());
 }
 /**
@@ -159,25 +160,25 @@ HWTEST_F(PlaceholderProgressTest, Throttle_001, TestSize.Level2)
 {
     auto &manager = PlaceholderProgressManager::GetInstance();
     auto callback = sptr(new RecordingProgress());
-    ASSERT_EQ(manager.Register({1, 10}, 100, callback), E_OK);
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, callback), E_OK);
     HydrateProgress event;
     event.filePath = "/path";
     event.totalSize = 100;
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     event.state = 1;
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     event.processedSize = 10;
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     manager.Drain();
     ASSERT_EQ(callback->events.size(), 2u);
     {
         std::lock_guard<std::mutex> lock(manager.mutex_);
         manager.lastProgress_.at({1}).time -= std::chrono::milliseconds(501);
     }
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     event.state = 2;
     event.processedSize = 100;
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     manager.Drain();
     ASSERT_EQ(callback->events.size(), 4u);
     EXPECT_EQ(callback->events[0].state, 0);
@@ -198,18 +199,27 @@ HWTEST_F(PlaceholderProgressTest, Multiplex_001, TestSize.Level2)
     auto client = sptr(new CloudDiskProgressCallbackClient());
     auto first = sptr(new RecordingProgress());
     auto second = sptr(new RecordingProgress());
-    EXPECT_TRUE(client->Add(first));
-    EXPECT_FALSE(client->Add(first));
-    EXPECT_TRUE(client->Add(second));
+    bool added = false;
+    ASSERT_EQ(client->Add(11, first, added), E_OK);
+    EXPECT_TRUE(added);
+    EXPECT_EQ(client->Add(11, first, added), E_OK);
+    EXPECT_FALSE(added);
+    ASSERT_EQ(client->Add(22, second, added), E_OK);
     HydrateProgress event;
+    event.accessorId = 11;
+    client->OnProgress(event);
+    event.accessorId = 22;
     client->OnProgress(event);
     EXPECT_EQ(first->events.size(), 1u);
     EXPECT_EQ(second->events.size(), 1u);
-    EXPECT_FALSE(client->Remove(first));
+    EXPECT_TRUE(client->Remove(11, first));
+    event.accessorId = 11;
+    client->OnProgress(event);
+    event.accessorId = 22;
     client->OnProgress(event);
     EXPECT_EQ(first->events.size(), 1u);
     EXPECT_EQ(second->events.size(), 2u);
-    EXPECT_TRUE(client->Remove(nullptr));
+    EXPECT_TRUE(client->Remove(22, second));
     client->OnProgress(event);
     EXPECT_EQ(second->events.size(), 2u);
 }
@@ -223,11 +233,11 @@ HWTEST_F(PlaceholderProgressTest, Unregister_001, TestSize.Level2)
 {
     auto &manager = PlaceholderProgressManager::GetInstance();
     auto callback = sptr(new RecordingProgress());
-    ASSERT_EQ(manager.Register({1, 10}, 100, callback), E_OK);
-    EXPECT_EQ(manager.Unregister({1, 10}), E_OK);
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, callback), E_OK);
+    EXPECT_EQ(manager.Unregister({1, 10, 11}), E_OK);
     HydrateProgress event;
     event.state = 3;
-    manager.OnTaskProgress({1}, 100, event);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
     manager.Drain();
     EXPECT_TRUE(callback->events.empty());
     EXPECT_TRUE(manager.lastProgress_.empty());
@@ -244,8 +254,8 @@ HWTEST_F(PlaceholderProgressTest, Register_001, TestSize.Level2)
     auto &manager = PlaceholderProgressManager::GetInstance();
     sptr<ICloudDiskProgressCallback> nullRemote = sptr(new NullRemoteProgress());
     auto callback = sptr(new RecordingProgress());
-    EXPECT_EQ(manager.Register({1, 1}, 100, nullRemote), E_INVALID_ARG);
-    EXPECT_EQ(manager.Register({1, 1}, -1, callback), E_INVALID_ARG);
+    EXPECT_EQ(manager.Register({1, 1, 11}, 100, nullRemote), E_INVALID_ARG);
+    EXPECT_EQ(manager.Register({1, 1, 11}, -1, callback), E_INVALID_ARG);
     EXPECT_TRUE(manager.subscribers_.empty());
 }
 
@@ -261,18 +271,18 @@ HWTEST_F(PlaceholderProgressTest, ProxyDeathRecipient_001, TestSize.Level2)
     auto remote = sptr(new ControlledProxyRemote());
     auto callback = sptr(new ProxyBackedProgress(remote));
 
-    ASSERT_EQ(manager.Register({1, 1}, 100, callback), E_OK);
+    ASSERT_EQ(manager.Register({1, 1, 11}, 100, callback), E_OK);
     EXPECT_EQ(remote->addCount, 1);
-    EXPECT_EQ(manager.Unregister({1, 1}), E_OK);
+    EXPECT_EQ(manager.Unregister({1, 1, 11}), E_OK);
     EXPECT_EQ(remote->removeCount, 1);
 
     remote->addResult = false;
-    EXPECT_EQ(manager.Register({2, 2}, 100, callback), E_IPC_FAILED);
+    EXPECT_EQ(manager.Register({2, 2, 22}, 100, callback), E_IPC_FAILED);
     EXPECT_EQ(remote->addCount, 2);
     EXPECT_TRUE(manager.subscribers_.empty());
 
     remote->addResult = true;
-    ASSERT_EQ(manager.Register({3, 3}, 100, callback), E_OK);
+    ASSERT_EQ(manager.Register({3, 3, 33}, 100, callback), E_OK);
     manager.Clear();
     EXPECT_EQ(remote->addCount, 3);
     EXPECT_EQ(remote->removeCount, 2);
@@ -288,16 +298,53 @@ HWTEST_F(PlaceholderProgressTest, OnTaskProgress_001, TestSize.Level1)
 {
     auto &manager = PlaceholderProgressManager::GetInstance();
     auto callback = sptr(new RecordingProgress());
-    PlaceholderProgressManager::SubscriberKey key{1, 10};
+    PlaceholderProgressManager::SubscriberKey key{1, 10, 11};
     ASSERT_EQ(manager.Register(key, 100, callback), E_OK);
     {
         std::lock_guard<std::mutex> lock(manager.mutex_);
         manager.subscribers_.at(key)->active = false;
     }
     HydrateProgress progress;
-    manager.OnTaskProgress({1}, 100, progress);
+    manager.OnTaskProgress({1}, 100, progress, key);
     manager.Drain();
     EXPECT_TRUE(callback->events.empty());
+}
+
+/**
+ * @tc.name: OnTaskProgress_002
+ * @tc.desc: Queued events are discarded after their subscriber is replaced without affecting other accessors.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderProgressTest, OnTaskProgress_002, TestSize.Level2)
+{
+    auto &manager = PlaceholderProgressManager::GetInstance();
+    auto original = sptr(new RecordingProgress());
+    auto replacement = sptr(new RecordingProgress());
+    auto other = sptr(new RecordingProgress());
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, original), E_OK);
+    ASSERT_EQ(manager.Register({1, 10, 22}, 100, other), E_OK);
+    auto gate = std::make_shared<std::mutex>();
+    HydrateProgress progress;
+    {
+        std::unique_lock<std::mutex> lock(*gate);
+        manager.queue_.submit([gate] { std::lock_guard<std::mutex> lock(*gate); });
+        manager.OnTaskProgress({1}, 100, progress, {1, 10, 11});
+        ASSERT_EQ(manager.Unregister({1, 10, 11}), E_OK);
+        ASSERT_EQ(manager.Register({1, 10, 11}, 100, replacement), E_OK);
+        manager.OnTaskProgress({2}, 100, progress, {1, 10, 22});
+    }
+    manager.Drain();
+    EXPECT_TRUE(original->events.empty());
+    EXPECT_TRUE(replacement->events.empty());
+    ASSERT_EQ(other->events.size(), 1U);
+    EXPECT_EQ(other->events.front().accessorId, 22U);
+    progress.state = static_cast<int32_t>(HydrateProgressState::COMPLETED);
+    manager.OnTaskProgress({1}, 100, progress, {1, 10, 11});
+    manager.Drain();
+    ASSERT_EQ(replacement->events.size(), 1U);
+    EXPECT_EQ(replacement->events.front().state, progress.state);
+    EXPECT_EQ(other->events.size(), 1U);
 }
 
 /**
@@ -311,11 +358,13 @@ HWTEST_F(PlaceholderProgressTest, Remove_001, TestSize.Level1)
     auto client = sptr(new CloudDiskProgressCallbackClient());
     auto first = sptr(new RecordingProgress());
     auto absent = sptr(new RecordingProgress());
-    EXPECT_FALSE(client->Add(nullptr));
-    ASSERT_TRUE(client->Add(first));
-    EXPECT_FALSE(client->Remove(absent));
-    EXPECT_TRUE(client->Remove(first));
+    bool added = false;
+    EXPECT_EQ(client->Add(11, nullptr, added), E_INVALID_ARG);
+    ASSERT_EQ(client->Add(11, first, added), E_OK);
+    EXPECT_FALSE(client->Remove(11, absent));
+    EXPECT_TRUE(client->Remove(11, first));
     HydrateProgress progress;
+    progress.accessorId = 11;
     client->OnProgress(progress);
     EXPECT_TRUE(first->events.empty());
 }
@@ -389,5 +438,140 @@ HWTEST_F(PlaceholderProgressTest, ProgressProxyOnProgress_001, TestSize.Level2)
         .WillOnce(Return(E_IPC_FAILED));
     proxy.OnProgress(progress);
     proxy.OnProgress(progress);
+}
+/**
+ * @tc.name: AccessorIsolation_001
+ * @tc.desc: Route equal paths by accessor, token and pid; anonymous tasks never notify accessors.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderProgressTest, AccessorIsolation_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderProgressManager::GetInstance();
+    auto first = sptr(new RecordingProgress());
+    auto second = sptr(new RecordingProgress());
+    auto otherPid = sptr(new RecordingProgress());
+    auto otherToken = sptr(new RecordingProgress());
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(manager.Register({1, 10, 22}, 100, second), E_OK);
+    ASSERT_EQ(manager.Register({1, 20, 11}, 100, otherPid), E_OK);
+    ASSERT_EQ(manager.Register({2, 10, 11}, 100, otherToken), E_OK);
+    HydrateProgress event;
+    event.filePath = "/same/path";
+    event.accessorId = 22;
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
+    manager.OnTaskProgress({2}, 100, event, {1, 10, 22});
+    manager.OnTaskProgress({3}, 101, event, {1, 10, 11});
+    manager.Drain();
+    ASSERT_EQ(first->events.size(), 1U);
+    ASSERT_EQ(second->events.size(), 1U);
+    EXPECT_EQ(first->events.front().accessorId, 11U);
+    EXPECT_EQ(second->events.front().accessorId, 22U);
+    EXPECT_TRUE(otherPid->events.empty());
+    EXPECT_TRUE(otherToken->events.empty());
+    manager.OnTaskProgress({4}, 100, event, {});
+    manager.Drain();
+    EXPECT_EQ(manager.lastProgress_.count({4}), 0U);
+    EXPECT_EQ(first->events.size(), 1U);
+    EXPECT_EQ(second->events.size(), 1U);
+    EXPECT_TRUE(otherPid->events.empty());
+    EXPECT_TRUE(otherToken->events.empty());
+}
+
+/**
+ * @tc.name: AccessorSubscription_001
+ * @tc.desc: Off/on resumes the owner's future progress and stale death does not remove its replacement.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderProgressTest, AccessorSubscription_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderProgressManager::GetInstance();
+    auto oldCallback = sptr(new RecordingProgress());
+    auto replacement = sptr(new RecordingProgress());
+    auto other = sptr(new RecordingProgress());
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, oldCallback), E_OK);
+    ASSERT_EQ(manager.Register({1, 10, 22}, 100, other), E_OK);
+    HydrateProgress event;
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
+    manager.Drain();
+    ASSERT_EQ(oldCallback->events.size(), 1U);
+    ASSERT_EQ(manager.Unregister({1, 10, 11}), E_OK);
+    event.state = static_cast<int32_t>(HydrateProgressState::IN_PROGRESS);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
+    manager.OnTaskProgress({2}, 100, event, {1, 10, 22});
+    manager.Drain();
+    ASSERT_EQ(manager.Register({1, 10, 11}, 100, replacement), E_OK);
+    manager.OnRemoteDied({1, 10, 11}, wptr<IRemoteObject>(oldCallback->AsObject()));
+    event.state = static_cast<int32_t>(HydrateProgressState::COMPLETED);
+    manager.OnTaskProgress({1}, 100, event, {1, 10, 11});
+    manager.Drain();
+    EXPECT_EQ(oldCallback->events.size(), 1U);
+    ASSERT_EQ(replacement->events.size(), 1U);
+    EXPECT_EQ(replacement->events.front().state, event.state);
+    EXPECT_EQ(other->events.size(), 1U);
+    EXPECT_EQ(manager.Unregister({1, 10, 22}), E_OK);
+}
+
+/**
+ * @tc.name: AccessorClient_001
+ * @tc.desc: A client routes nonzero ids to exactly one callback and ignores zero or unknown ids.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderProgressTest, AccessorClient_001, TestSize.Level2)
+{
+    auto client = sptr(new CloudDiskProgressCallbackClient());
+    auto first = sptr(new RecordingProgress());
+    auto second = sptr(new RecordingProgress());
+    bool added = false;
+    EXPECT_EQ(client->Add(11, nullptr, added), E_INVALID_ARG);
+    ASSERT_EQ(client->Add(11, first, added), E_OK);
+    EXPECT_TRUE(added);
+    ASSERT_EQ(client->Add(11, first, added), E_OK);
+    EXPECT_FALSE(added);
+    EXPECT_EQ(client->Add(11, second, added), E_CALLBACK_ALREADY_REGISTERED);
+    ASSERT_EQ(client->Add(22, second, added), E_OK);
+    HydrateProgress event;
+    event.accessorId = 11;
+    client->OnProgress(event);
+    EXPECT_EQ(first->events.size(), 1U);
+    EXPECT_TRUE(second->events.empty());
+    event.accessorId = 22;
+    client->OnProgress(event);
+    event.accessorId = 0;
+    client->OnProgress(event);
+    event.accessorId = 99;
+    client->OnProgress(event);
+    EXPECT_EQ(first->events.size(), 1U);
+    EXPECT_EQ(second->events.size(), 1U);
+}
+
+/**
+ * @tc.name: AccessorClient_002
+ * @tc.desc: Removing an accessor or requesting removal for id zero leaves other registrations intact.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderProgressTest, AccessorClient_002, TestSize.Level2)
+{
+    auto client = sptr(new CloudDiskProgressCallbackClient());
+    auto first = sptr(new RecordingProgress());
+    auto second = sptr(new RecordingProgress());
+    bool added = false;
+    ASSERT_EQ(client->Add(11, first, added), E_OK);
+    ASSERT_EQ(client->Add(22, second, added), E_OK);
+    EXPECT_FALSE(client->Remove(11, second));
+    EXPECT_FALSE(client->Remove(11, nullptr));
+    EXPECT_TRUE(client->Remove(11, first));
+    EXPECT_FALSE(client->Remove(11, first));
+    EXPECT_FALSE(client->Remove(0, second));
+    HydrateProgress event;
+    event.accessorId = 11;
+    client->OnProgress(event);
+    event.accessorId = 22;
+    client->OnProgress(event);
+    EXPECT_TRUE(first->events.empty());
+    EXPECT_EQ(second->events.size(), 1U);
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

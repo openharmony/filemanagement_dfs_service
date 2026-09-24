@@ -185,6 +185,15 @@ int32_t CheckHydrationState(int32_t fd)
     return state == PLACEHOLDER_STATE_FULLY_HYDRATED ? E_ALREADY_HYDRATED : E_OK;
 }
 
+void SetHydrateProgressContext(PlaceholderTaskRecord &task, const PlaceholderProgressContext &context)
+{
+    task.absolutePath = context.absolutePath.empty() ? task.syncFolder + "/" + task.filePath : context.absolutePath;
+    task.hmdfsPath = context.hmdfsPath;
+    task.mountSyncFolder = context.mountSyncFolder;
+    task.userId = context.userId;
+    task.owner = context.owner;
+}
+
 int32_t OpenCanonicalHydrationFile(const CanonicalPath &rootPath, const CanonicalPath &filePath, UniqueFd &fd)
 {
     UniqueFd currentFd(open(rootPath.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
@@ -289,8 +298,7 @@ void PlaceholderTaskManager::StopScheduler()
         std::lock_guard<std::mutex> lock(mapMutex_);
         running_ = false;
         stopping_ = true;
-        for (const auto &[reqKey, task] : taskMap_) {
-            (void)reqKey;
+        for (const auto &[_, task] : taskMap_) {
             tasks.push_back(task);
         }
         monitorHandles.swap(monitorHandles_);
@@ -345,8 +353,7 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
         LOGW("Reject hydrate task while scheduler is stopping");
         return E_TRY_AGAIN;
     }
-    for (const auto &[key, task] : taskMap_) {
-        (void)key;
+    for (const auto &[_, task] : taskMap_) {
         if (task->syncFolder == syncFolder && task->filePath == filePath && task->syncFolderIndex == syncFolderIndex &&
             (task->state == PlaceholderTaskState::PENDING || task->state == PlaceholderTaskState::IN_PROGRESS)) {
             LOGW("Reject duplicate active hydrate task");
@@ -356,8 +363,7 @@ int32_t PlaceholderTaskManager::PrepareHydrateTaskLocked(const std::string &sync
 
     size_t appPendingCount = 0;
     size_t globalPendingCount = 0;
-    for (const auto &[key, task] : taskMap_) {
-        (void)key;
+    for (const auto &[_, task] : taskMap_) {
         if (task->state != PlaceholderTaskState::PENDING) {
             continue;
         }
@@ -428,11 +434,7 @@ int32_t PlaceholderTaskManager::CreateHydrateTask(const std::string &syncFolder,
         task->bundleName = bundleName;
         task->syncFolderIndex = syncFolderIndex;
         task->priority = priority;
-        task->absolutePath =
-            progressContext.absolutePath.empty() ? syncFolder + "/" + filePath : progressContext.absolutePath;
-        task->hmdfsPath = progressContext.hmdfsPath;
-        task->mountSyncFolder = progressContext.mountSyncFolder;
-        task->userId = progressContext.userId;
+        SetHydrateProgressContext(*task, progressContext);
         task->deviceId = static_cast<uint64_t>(metadata.st_dev);
         task->inodeId = static_cast<uint64_t>(metadata.st_ino);
         task->totalSize = static_cast<uint64_t>(metadata.st_size);
@@ -449,8 +451,7 @@ bool PlaceholderTaskManager::HasOutstandingTask(const std::string &syncFolder,
                                                 uint32_t syncFolderIndex)
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
-    for (const auto &[reqKey, task] : taskMap_) {
-        (void)reqKey;
+    for (const auto &[_, task] : taskMap_) {
         if (task->syncFolder == syncFolder && task->filePath == filePath && task->syncFolderIndex == syncFolderIndex &&
             (task->state == PlaceholderTaskState::PENDING || task->state == PlaceholderTaskState::IN_PROGRESS)) {
             return true;
@@ -461,13 +462,13 @@ bool PlaceholderTaskManager::HasOutstandingTask(const std::string &syncFolder,
 
 int32_t PlaceholderTaskManager::CancelTask(const std::string &syncFolder,
                                            const std::string &filePath,
-                                           uint32_t syncFolderIndex)
+                                           uint32_t syncFolderIndex,
+                                           const HydrateProgressOwner &cancelOwner)
 {
     std::vector<std::shared_ptr<PlaceholderTaskRecord>> tasks;
     {
         std::lock_guard<std::mutex> lock(mapMutex_);
-        for (const auto &[reqKey, task] : taskMap_) {
-            (void)reqKey;
+        for (const auto &[_, task] : taskMap_) {
             if (task->syncFolder == syncFolder && task->filePath == filePath &&
                 task->syncFolderIndex == syncFolderIndex) {
                 tasks.push_back(task);
@@ -478,7 +479,7 @@ int32_t PlaceholderTaskManager::CancelTask(const std::string &syncFolder,
     for (const auto &task : tasks) {
         std::lock_guard<std::mutex> lock(task->mutex);
         if (task->state == PlaceholderTaskState::PENDING || task->state == PlaceholderTaskState::IN_PROGRESS) {
-            CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::USER_REQUEST);
+            CancelTaskRecordLocked(task, PlaceholderTaskCancelReason::USER_REQUEST, cancelOwner);
             cancelled = true;
         }
     }
@@ -496,8 +497,7 @@ void PlaceholderTaskManager::CancelTasksBySyncFolder(const std::string &bundleNa
     std::vector<std::shared_ptr<PlaceholderTaskRecord>> tasks;
     {
         std::lock_guard<std::mutex> lock(mapMutex_);
-        for (const auto &[reqKey, task] : taskMap_) {
-            (void)reqKey;
+        for (const auto &[_, task] : taskMap_) {
             if (task->bundleName == bundleName && task->syncFolderIndex == syncFolderIndex) {
                 tasks.push_back(task);
             }
@@ -517,8 +517,7 @@ void PlaceholderTaskManager::CancelAllTasks(PlaceholderTaskCancelReason reason)
     std::vector<std::shared_ptr<PlaceholderTaskRecord>> tasks;
     {
         std::lock_guard<std::mutex> lock(mapMutex_);
-        for (const auto &[reqKey, task] : taskMap_) {
-            (void)reqKey;
+        for (const auto &[_, task] : taskMap_) {
             tasks.push_back(task);
         }
     }
@@ -559,8 +558,7 @@ std::shared_ptr<PlaceholderTaskRecord> PlaceholderTaskManager::SelectNextTaskLoc
 {
     size_t globalActiveCount = 0;
     std::map<std::string, size_t> appActiveCounts;
-    for (const auto &[reqKey, task] : taskMap_) {
-        (void)reqKey;
+    for (const auto &[_, task] : taskMap_) {
         if (task->state == PlaceholderTaskState::IN_PROGRESS) {
             ++globalActiveCount;
             ++appActiveCounts[task->bundleName];
@@ -571,8 +569,7 @@ std::shared_ptr<PlaceholderTaskRecord> PlaceholderTaskManager::SelectNextTaskLoc
     }
 
     std::shared_ptr<PlaceholderTaskRecord> selected;
-    for (const auto &[reqKey, task] : taskMap_) {
-        (void)reqKey;
+    for (const auto &[_, task] : taskMap_) {
         if (task->state != PlaceholderTaskState::PENDING ||
             appActiveCounts[task->bundleName] >= CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP) {
             continue;
@@ -589,6 +586,7 @@ void PlaceholderTaskManager::ScheduleDispatch()
 {
     std::lock_guard<std::mutex> lock(mapMutex_);
     if (!running_ || stopping_ || dispatchScheduled_) {
+        LOGI("PlaceholderTaskManager stop!");
         return;
     }
     dispatchScheduled_ = true;
@@ -894,14 +892,15 @@ int32_t PlaceholderTaskManager::CommitFetchDataLocked(const std::shared_ptr<Plac
 }
 
 void PlaceholderTaskManager::CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
-                                                    PlaceholderTaskCancelReason reason)
+                                                    PlaceholderTaskCancelReason reason,
+                                                    const HydrateProgressOwner &cancelOwner)
 {
     if (task->state != PlaceholderTaskState::PENDING && task->state != PlaceholderTaskState::IN_PROGRESS) {
         return;
     }
     bool notifyCallback = !task->cancelCallbackAttempted && ShouldNotifyCancellation(reason);
     task->state = PlaceholderTaskState::CANCELLED;
-    NotifyProgressLocked(task);
+    NotifyProgressLocked(task, cancelOwner);
     if (notifyCallback) {
         task->cancelCallbackAttempted = true;
     }
@@ -1010,7 +1009,8 @@ int32_t PlaceholderTaskManager::FindCancellationResultLocked(const std::string &
     return E_CANCELLED;
 }
 
-void PlaceholderTaskManager::NotifyProgressLocked(const std::shared_ptr<PlaceholderTaskRecord> &task)
+void PlaceholderTaskManager::NotifyProgressLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
+    const HydrateProgressOwner &recipient)
 {
     if (task->terminalProgressSent) {
         return;
@@ -1022,7 +1022,9 @@ void PlaceholderTaskManager::NotifyProgressLocked(const std::shared_ptr<Placehol
     progress.totalSize = task->totalSize;
     task->terminalProgressSent =
         task->state == PlaceholderTaskState::COMPLETED || task->state == PlaceholderTaskState::CANCELLED;
-    PlaceholderProgressManager::GetInstance().OnTaskProgress(task->reqKey, task->userId, progress);
+    // Explicit accessor cancellation notifies its caller; other progress uses the task's original owner.
+    const auto &progressOwner = recipient.accessorId != 0 ? recipient : task->owner;
+    PlaceholderProgressManager::GetInstance().OnTaskProgress(task->reqKey, task->userId, progress, progressOwner);
 }
 
 void PlaceholderTaskManager::EraseTaskLocked(const std::shared_ptr<PlaceholderTaskRecord> &task)

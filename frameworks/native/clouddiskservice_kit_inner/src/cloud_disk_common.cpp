@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ bool HydrateProgress::Marshalling(Parcel &parcel) const
     if (state < static_cast<int32_t>(HydrateProgressState::PENDING) ||
         state > static_cast<int32_t>(HydrateProgressState::CANCELLED) ||
         !parcel.WriteString(filePath) || !parcel.WriteInt32(state) ||
-        !parcel.WriteUint64(processedSize) || !parcel.WriteUint64(totalSize)) {
+        !parcel.WriteUint64(processedSize) || !parcel.WriteUint64(totalSize) || !parcel.WriteUint64(accessorId)) {
         LOGE("Write hydration progress failed");
         return false;
     }
@@ -42,6 +42,14 @@ bool HydrateProgress::ReadFromParcel(Parcel &parcel)
         state < static_cast<int32_t>(HydrateProgressState::PENDING) ||
         state > static_cast<int32_t>(HydrateProgressState::CANCELLED)) {
         LOGE("Read hydration progress failed");
+        return false;
+    }
+    accessorId = 0;
+    if (parcel.GetReadableBytes() == 0) {
+        return true;
+    }
+    if (parcel.GetReadableBytes() < sizeof(accessorId) || !parcel.ReadUint64(accessorId)) {
+        LOGE("Read hydration progress accessor id failed");
         return false;
     }
     return true;

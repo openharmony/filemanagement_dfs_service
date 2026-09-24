@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,10 +73,13 @@ public:
                                      const std::string &relativePath,
                                      PlaceholderCustomInfo &customInfo) override;
 
-    int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority) override;
+    int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority,
+        uint64_t accessorId) override;
     int32_t DehydrateFileByPath(const std::string &path) override;
-    int32_t RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback) override;
-    int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) override;
+    int32_t RegisterProgressCallback(uint64_t accessorId,
+        const sptr<ICloudDiskProgressCallback> &callback) override;
+    int32_t UnregisterProgressCallback(uint64_t accessorId,
+        const sptr<ICloudDiskProgressCallback> &callback) override;
 
     int32_t UnregisterForSa(const std::string &path) override;
     int32_t

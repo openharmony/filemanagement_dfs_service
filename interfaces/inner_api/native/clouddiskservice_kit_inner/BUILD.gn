@@ -100,6 +100,10 @@ ohos_shared_library("clouddiskservice_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
+
   deps = [
     "${services_path}/clouddiskservice:libcloud_disk_service_proxy",
     "${utils_path}:libdistributedfiledentry",
@@ -168,6 +172,10 @@ ohos_static_library("clouddiskservice_kit_inner_static") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (dfs_service_feature_enable_cloud_disk) {
+    external_deps += [ "user_file_service:cloud_disk_manager_kit" ]
+  }
 
   deps = [
     "${services_path}/clouddiskservice:libcloud_disk_service_proxy",

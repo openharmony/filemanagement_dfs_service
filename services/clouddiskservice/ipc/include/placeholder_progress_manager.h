@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <tuple>
 #include <utility>
 
 #include "ffrt.h"
@@ -30,14 +31,31 @@
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
+struct HydrateProgressOwner {
+    uint64_t tokenId = 0;
+    int32_t pid = 0;
+    uint64_t accessorId = 0;
+
+    bool operator<(const HydrateProgressOwner &other) const
+    {
+        return std::tie(tokenId, pid, accessorId) < std::tie(other.tokenId, other.pid, other.accessorId);
+    }
+
+    bool operator==(const HydrateProgressOwner &other) const
+    {
+        return tokenId == other.tokenId && pid == other.pid && accessorId == other.accessorId;
+    }
+};
+
 class PlaceholderProgressManager final : public NoCopyable {
 public:
-    using SubscriberKey = std::pair<uint64_t, int32_t>;
+    using SubscriberKey = HydrateProgressOwner;
     static PlaceholderProgressManager &GetInstance();
     int32_t Register(const SubscriberKey &key, int32_t userId, const sptr<ICloudDiskProgressCallback> &callback);
     int32_t Unregister(const SubscriberKey &key);
     void OnRemoteDied(const SubscriberKey &key, const wptr<IRemoteObject> &remote);
-    void OnTaskProgress(const std::vector<uint8_t> &reqKey, int32_t userId, const HydrateProgress &progress);
+    void OnTaskProgress(const std::vector<uint8_t> &reqKey, int32_t userId, const HydrateProgress &progress,
+        const SubscriberKey &owner);
     void Drain();
     void Clear();
 

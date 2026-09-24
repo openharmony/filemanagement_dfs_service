@@ -232,8 +232,8 @@ int32_t CloudDiskSyncFolder::ReplacePathPrefix(const string &oldPrefix,
 
 int32_t CloudDiskSyncFolder::PathToPhysicalPath(const string &path, const string &userId, string &realPath)
 {
-    string sandboxPath = "/storage/Users/currentUser";
-    string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs";
+    string sandboxPath = "/storage/Users/currentUser/";
+    string replacementPath = "/data/service/el2/" + userId + "/hmdfs/account/files/Docs/";
 
     return ReplacePathPrefix(sandboxPath, replacementPath, path, realPath);
 }

@@ -54,10 +54,10 @@ public:
     MOCK_METHOD3(StartHydration, int32_t(const std::string &, const std::string &, CloudDiskHydratePriority));
     MOCK_METHOD2(CancelHydration, int32_t(const std::string &, const std::string &));
     MOCK_METHOD1(Execute, int32_t(const CallbackExecuteRequest &));
-    MOCK_METHOD3(StartHydrationByPath, int32_t(const std::string &, int32_t, int32_t));
     MOCK_METHOD1(DehydrateFileByPath, int32_t(const std::string &));
-    MOCK_METHOD1(RegisterProgressCallback, int32_t(const sptr<ICloudDiskProgressCallback> &));
-    MOCK_METHOD1(UnregisterProgressCallback, int32_t(const sptr<ICloudDiskProgressCallback> &));
+    MOCK_METHOD4(StartHydrationByPath, int32_t(const std::string &, int32_t, int32_t, uint64_t));
+    MOCK_METHOD2(RegisterProgressCallback, int32_t(uint64_t, const sptr<ICloudDiskProgressCallback> &));
+    MOCK_METHOD2(UnregisterProgressCallback, int32_t(uint64_t, const sptr<ICloudDiskProgressCallback> &));
     MOCK_METHOD2(DehydrateFile, int32_t(const std::string &, const std::string &));
     MOCK_METHOD4(UpdatePlaceholder,
         int32_t(const std::string &, const std::string &, const PlaceholderInfo &, const PlaceholderCustomInfo &));

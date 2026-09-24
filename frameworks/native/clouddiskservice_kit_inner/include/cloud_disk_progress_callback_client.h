@@ -18,20 +18,20 @@
 #define OHOS_FILEMGMT_CLOUD_DISK_PROGRESS_CALLBACK_CLIENT_H
 
 #include <mutex>
-#include <vector>
+#include <unordered_map>
 
 #include "cloud_disk_progress_callback_stub.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
 class CloudDiskProgressCallbackClient final : public CloudDiskProgressCallbackStub {
 public:
-    bool Add(const sptr<ICloudDiskProgressCallback> &callback);
-    bool Remove(const sptr<ICloudDiskProgressCallback> &callback);
+    int32_t Add(uint64_t accessorId, const sptr<ICloudDiskProgressCallback> &callback, bool &added);
+    bool Remove(uint64_t accessorId, const sptr<ICloudDiskProgressCallback> &callback);
     void OnProgress(const HydrateProgress &progress) override;
 
 private:
     std::mutex mutex_;
-    std::vector<sptr<ICloudDiskProgressCallback>> callbacks_;
+    std::unordered_map<uint64_t, sptr<ICloudDiskProgressCallback>> accessorCallbacks_;
 };
 } // namespace OHOS::FileManagement::CloudDiskService
 

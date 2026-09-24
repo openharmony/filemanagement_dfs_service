@@ -117,6 +117,8 @@ struct HydrateProgress final : public Parcelable {
     int32_t state = static_cast<int32_t>(HydrateProgressState::PENDING);
     uint64_t processedSize = 0;
     uint64_t totalSize = 0;
+    // Zero indicates that no accessor is associated with the task.
+    uint64_t accessorId = 0;
 
     bool Marshalling(Parcel &parcel) const override;
     bool ReadFromParcel(Parcel &parcel);

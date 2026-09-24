@@ -1518,12 +1518,10 @@ static int32_t CheckDehydrateState(uint8_t state)
     if (state == PLACEHOLDER_STATE_NONE) {
         return E_NOT_A_PLACEHOLDER;
     }
-    if (state == PLACEHOLDER_STATE_UNHYDRATED) {
+    if (state == PLACEHOLDER_STATE_UNHYDRATED || state == PLACEHOLDER_STATE_FULLY_HYDRATED) {
         return E_OK;
     }
-    if (state != PLACEHOLDER_STATE_FULLY_HYDRATED) {
-        return E_PLACEHOLDER_NOT_FULLY_HYDRATED;
-    }
+    // PARTIALLY_HYDRATED: 允许脱水，ftruncate 会丢弃已下载的部分数据
     return E_OK;
 }
 
@@ -1879,7 +1877,8 @@ int32_t CloudDiskService::UnmarkPlaceholderFileInner(const std::string &syncFold
 
 static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
                                    const std::string &relativePath,
-                                   CloudDiskHydratePriority priority)
+                                   CloudDiskHydratePriority priority,
+                                   const HydrateProgressOwner &owner = {})
 {
     LOGI("Begin, path:%{private}s, syncFolderIndex:%{private}u, priority:%{public}d", context.hmdfsPath.c_str(),
          context.syncFolderIndex, static_cast<int32_t>(priority));
@@ -1902,7 +1901,7 @@ static int32_t CreateHydrationTask(const PlaceholderStatePathContext &context,
         return taskManager.CreateHydrateTask(
             context.syncFolder, relativePath, context.bundleName, context.syncFolderIndex, priority,
             std::move(validationFd), reqKey,
-            {context.userId, context.absolutePath, context.hmdfsPath, context.mntSyncFolder});
+            {context.userId, context.absolutePath, context.hmdfsPath, context.mntSyncFolder, owner});
     });
     LOGI("Hydration task accepted, userId:%{private}d, syncFolderIndex:%{private}u, ret:%{public}d", context.userId,
          context.syncFolderIndex, ret);
@@ -2087,39 +2086,35 @@ static int32_t ResolveSystemAccessorTargetPath(const std::string &path,
     std::string physicalPath;
     std::string user = std::to_string(context.userId);
     int32_t ret = folders.PathToPhysicalPath(path, user, physicalPath);
-    const std::string userRoot = "/data/service/el2/" + user + "/hmdfs/account/files/Docs";
     if (ret != E_OK) {
         LOGE("Resolve system accessor physical path failed, path:%{private}s, ret:%{public}d", path.c_str(), ret);
         return ret;
     }
-    if (!IsPathInSyncFolder(userRoot, physicalPath)) {
-        LOGE("System accessor path is outside user root, path:%{private}s, userId:%{private}d", physicalPath.c_str(),
-             context.userId);
-        return E_CALLBACK_NOT_REGISTERED;
-    }
     SyncFolderValue selected;
     for (const auto &[index, folder] : folders.GetSyncFolderMap()) {
         if (!folder.bundleName.empty() && folder.path.size() > selected.path.size() &&
-            IsPathInSyncFolder(userRoot, folder.path) && IsPathInSyncFolder(folder.path, physicalPath)) {
+            IsPathInSyncFolder(folder.path, physicalPath)) {
             selected = folder;
             context.syncFolderIndex = index;
         }
     }
     if (selected.path.empty() || !folders.PathToSandboxPathByPhysicalPath(selected.path, user, context.syncFolder)) {
         LOGE("No usable sync folder for system accessor, selectedEmpty:%{public}d, path:%{private}s",
-             static_cast<int32_t>(selected.path.empty()), physicalPath.c_str());
+            selected.path.empty(), physicalPath.c_str());
         return E_CALLBACK_NOT_REGISTERED;
     }
     context.absolutePath = path;
     context.bundleName = selected.bundleName;
     relativePath = physicalPath.substr(selected.path.size() + 1);
     ret = folders.PathToMntPathBySandboxPath(context.syncFolder, user, context.mntSyncFolder);
-    if (ret == E_OK) {
-        ret = GetHmdfsPath(context.syncFolder, relativePath, context.userId, context.hmdfsPath);
-    }
     if (ret != E_OK) {
-        LOGE("Resolve system accessor mount failed, syncFolder:%{private}s, ret:%{public}d", context.syncFolder.c_str(),
-             ret);
+        LOGE("Resolve system accessor sync folder mount failed, syncFolder:%{private}s, ret:%{public}d",
+            context.syncFolder.c_str(), ret);
+        return ret;
+    }
+    ret = GetHmdfsPath(context.syncFolder, relativePath, context.userId, context.hmdfsPath);
+    if (ret != E_OK) {
+        LOGE("Resolve system accessor target mount failed, path:%{private}s, ret:%{public}d", path.c_str(), ret);
         return ret;
     }
     LOGI("Path resolved, syncFolderIndex:%{private}u, bundleName:%{private}s, hmdfsPath:%{private}s",
@@ -2132,7 +2127,7 @@ static int32_t ResolveSystemAccessorPath(const std::string &path,
                                          std::string &relativePath,
                                          bool resolveTarget = true)
 {
-    LOGI("Begin, path:%{private}s, resolveTarget:%{public}d", path.c_str(), static_cast<int32_t>(resolveTarget));
+    LOGI("Begin, path:%{private}s, resolveTarget:%{public}d", path.c_str(), resolveTarget);
     if (!IsValidSystemAccessorPath(path)) {
         LOGE("Invalid system accessor path, path:%{private}s", path.c_str());
         return E_INVALID_ARG;
@@ -2142,22 +2137,17 @@ static int32_t ResolveSystemAccessorPath(const std::string &path,
         LOGE("Resolve path account failed, ret:%{public}d", ret);
         return ret;
     }
-    if (!resolveTarget) {
+    if (resolveTarget) {
+        return ResolveSystemAccessorTargetPath(path, context, relativePath);
+    } else {
         return ResolveSystemAccessorTaskPath(path, context.userId, context, relativePath);
     }
-    return ResolveSystemAccessorTargetPath(path, context, relativePath);
 }
-#endif
 
-int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority)
+static int32_t StartSystemAccessorHydration(const std::string &path, int32_t callbackType, int32_t priority,
+    const HydrateProgressOwner &owner)
 {
     LOGI("Begin, path:%{private}s, callbackType:%{public}d, priority:%{public}d", path.c_str(), callbackType, priority);
-#ifdef SUPPORT_CLOUD_DISK_SERVICE
-    int32_t ret = CheckSystemAccessorPermission();
-    if (ret != E_OK) {
-        LOGE("Hydration permission check failed, ret:%{public}d", ret);
-        return ret;
-    }
     if (callbackType < static_cast<int32_t>(CloudDiskCallbackType::FETCH_DATA) ||
         callbackType > static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA) ||
         priority < static_cast<int32_t>(CLOUD_DISK_HYDRATE_PRIORITY_LOW) ||
@@ -2168,7 +2158,7 @@ int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int
     PlaceholderStatePathContext context;
     std::string relativePath;
     bool isCancellation = callbackType == static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA);
-    ret = ResolveSystemAccessorPath(path, context, relativePath, !isCancellation);
+    int32_t ret = ResolveSystemAccessorPath(path, context, relativePath, !isCancellation);
     if (ret != E_OK) {
         LOGE("Hydration path resolution failed, ret:%{public}d", ret);
         return ret;
@@ -2179,13 +2169,46 @@ int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int
         return E_CALLBACK_NOT_REGISTERED;
     }
     if (isCancellation) {
-        ret =
-            PlaceholderTaskManager::GetInstance().CancelTask(context.syncFolder, relativePath, context.syncFolderIndex);
+        ret = PlaceholderTaskManager::GetInstance().CancelTask(
+            context.syncFolder, relativePath, context.syncFolderIndex, owner);
     } else {
-        ret = CreateHydrationTask(context, relativePath, static_cast<CloudDiskHydratePriority>(priority));
+        ret = CreateHydrationTask(context, relativePath, static_cast<CloudDiskHydratePriority>(priority), owner);
     }
     LOGI("Hydration by path  request finished, isCancellation: %{public}d, ret:%{public}d", isCancellation, ret);
     return ret;
+}
+
+static int32_t RegisterSystemAccessorProgress(uint64_t accessorId, const sptr<IRemoteObject> &callback)
+{
+    int32_t userId = -1;
+    int32_t ret = ResolveSystemAccessorUser(userId);
+    if (ret != E_OK) {
+        LOGE("Progress registration account resolution failed, ret:%{public}d", ret);
+        return ret;
+    }
+    auto proxy = iface_cast<ICloudDiskProgressCallback>(callback);
+    ret = PlaceholderProgressManager::GetInstance().Register(
+        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid(), accessorId}, userId, proxy);
+    LOGI("Register progress callback finished, userId:%{private}d, ret:%{public}d", userId, ret);
+    return ret;
+}
+#endif
+
+int32_t CloudDiskService::StartHydrationByPathInner(const std::string &path, int32_t callbackType,
+    int32_t priority, uint64_t accessorId)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSystemAccessorPermission();
+    if (ret != E_OK) {
+        LOGE("Accessor hydration permission check failed, ret:%{public}d", ret);
+        return ret;
+    }
+    if (accessorId == 0) {
+        LOGE("Accessor hydration rejected: empty accessor ID");
+        return E_INVALID_ARG;
+    }
+    HydrateProgressOwner owner {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid(), accessorId};
+    return StartSystemAccessorHydration(path, callbackType, priority, owner);
 #else
     return E_NOT_SUPPORTED;
 #endif
@@ -2215,43 +2238,41 @@ int32_t CloudDiskService::DehydrateFileByPathInner(const std::string &path)
 #endif
 }
 
-int32_t CloudDiskService::RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback)
+int32_t CloudDiskService::RegisterProgressCallbackInner(uint64_t accessorId, const sptr<IRemoteObject> &callback)
 {
     LOGI("Begin RegisterProgressCallbackInner");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     int32_t ret = CheckSystemAccessorPermission();
     if (ret != E_OK) {
-        LOGE("Progress registration permission check failed, ret:%{public}d", ret);
+        LOGE("Accessor registration permission check failed, ret:%{public}d", ret);
         return ret;
     }
-    int32_t userId = -1;
-    ret = ResolveSystemAccessorUser(userId);
-    if (ret != E_OK) {
-        LOGE("Progress registration account resolution failed, ret:%{public}d", ret);
-        return ret;
+    if (accessorId == 0) {
+        LOGE("Accessor registration rejected: empty accessor ID");
+        return E_INVALID_ARG;
     }
-    auto proxy = iface_cast<ICloudDiskProgressCallback>(callback);
-    ret = PlaceholderProgressManager::GetInstance().Register(
-        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid()}, userId, proxy);
-    LOGI("Register progress callback finished, userId:%{private}d, ret:%{public}d", userId, ret);
-    return ret;
+    return RegisterSystemAccessorProgress(accessorId, callback);
 #else
     return E_NOT_SUPPORTED;
 #endif
 }
 
-int32_t CloudDiskService::UnregisterProgressCallbackInner()
+int32_t CloudDiskService::UnregisterProgressCallbackInner(uint64_t accessorId)
 {
     LOGI("Begin UnregisterProgressCallbackInner");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     int32_t ret = CheckSystemAccessorPermission();
     if (ret != E_OK) {
-        LOGE("Progress unregistration permission check failed, ret:%{public}d", ret);
+        LOGE("Accessor unregistration permission check failed, ret:%{public}d", ret);
         return ret;
     }
+    if (accessorId == 0) {
+        LOGE("Accessor unregistration rejected: empty accessor ID");
+        return E_INVALID_ARG;
+    }
     ret = PlaceholderProgressManager::GetInstance().Unregister(
-        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid()});
-    LOGI("Unregister progress callback finished, ret:%{public}d", ret);
+        {IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid(), accessorId});
+    LOGI("Unregister accessor progress callback finished, ret:%{public}d", ret);
     return ret;
 #else
     return E_NOT_SUPPORTED;

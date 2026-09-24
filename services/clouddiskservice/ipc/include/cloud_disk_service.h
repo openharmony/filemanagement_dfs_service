@@ -79,10 +79,11 @@ public:
                                 int32_t priority) override;
     ErrCode CancelHydrationInner(const std::string &syncFolder, const std::string &relativePath) override;
     ErrCode ExecuteInner(const CallbackExecuteRequest &request) override;
-    ErrCode StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority) override;
+    ErrCode StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority,
+        uint64_t accessorId) override;
     ErrCode DehydrateFileByPathInner(const std::string &path) override;
-    ErrCode RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback) override;
-    ErrCode UnregisterProgressCallbackInner() override;
+    ErrCode RegisterProgressCallbackInner(uint64_t accessorId, const sptr<IRemoteObject> &callback) override;
+    ErrCode UnregisterProgressCallbackInner(uint64_t accessorId) override;
     ErrCode DehydrateInner(const std::string &syncFolder, const std::string &relativePath) override;
     ErrCode UpdatePlaceholderInner(const std::string &syncFolder, const std::string &relativePath,
         const PlaceholderInfo &metaData,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_DISK_SERVICE_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_DISK_SERVICE_MANAGER_H
 
+#include <cstdint>
 #include <memory>
 
 #include "cloud_disk_service_callback.h"
@@ -65,10 +66,13 @@ public:
     virtual int32_t GetPlaceholderCustomInfo(const std::string &syncFolder, const std::string &relativePath,
         PlaceholderCustomInfo &customInfo) = 0;
 
-    virtual int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority) = 0;
+    virtual int32_t StartHydrationByPath(const std::string &path, int32_t callbackType, int32_t priority,
+        uint64_t accessorId) = 0;
     virtual int32_t DehydrateFileByPath(const std::string &path) = 0;
-    virtual int32_t RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback) = 0;
-    virtual int32_t UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback = nullptr) = 0;
+    virtual int32_t RegisterProgressCallback(uint64_t accessorId,
+        const sptr<ICloudDiskProgressCallback> &callback) = 0;
+    virtual int32_t UnregisterProgressCallback(uint64_t accessorId,
+        const sptr<ICloudDiskProgressCallback> &callback) = 0;
 
     virtual int32_t UnregisterForSa(const std::string &path) = 0;
     virtual int32_t

@@ -841,7 +841,9 @@ CloudDisk_ErrorCode OH_CloudDisk_Execute(const OH_CloudDisk_CallbackReqHead reqH
                                          OH_CloudDisk_CallbackResponse rsp);
 
 /**
- * @brief Dehydrates a fully hydrated placeholder after application authorization.
+ * @brief Dehydrates a fully or partially hydrated placeholder after application authorization.
+ *
+ * For a partially hydrated placeholder, the already downloaded data is discarded.
  *
  * @param syncFolderPath Pointer to the registered sync folder path information.
  * @param filePath Pointer to the file path information relative to the sync folder.

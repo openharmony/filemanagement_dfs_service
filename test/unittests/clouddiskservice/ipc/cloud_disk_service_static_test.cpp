@@ -183,6 +183,19 @@ void ExpectPlaceholderQueryContext(const shared_ptr<AssistantMock> &assistant,
         .WillRepeatedly(DoAll(SetArgPointee<1>(statInfo), Return(0)));
 }
 
+class AccessorProgressRecorder final : public IRemoteStub<ICloudDiskProgressCallback> {
+public:
+    void OnProgress(const HydrateProgress &progress) override
+    {
+        events.push_back(progress);
+    }
+    int32_t OnRemoteRequest(uint32_t, MessageParcel &, MessageParcel &, MessageOption &) override
+    {
+        return E_OK;
+    }
+    std::vector<HydrateProgress> events;
+};
+
 class DehydrateCallbackTableStub final : public IRemoteStub<ICloudDiskServiceCallbackTable> {
 public:
     explicit DehydrateCallbackTableStub(bool allow) : allow_(allow) {}
@@ -246,6 +259,8 @@ void CloudDiskServiceStaticTest::SetUp()
 void CloudDiskServiceStaticTest::TearDown()
 {
     PlaceholderTaskManager::GetInstance().StopScheduler();
+    PlaceholderProgressManager::GetInstance().Drain();
+    PlaceholderProgressManager::GetInstance().Clear();
     Mock::VerifyAndClearExpectations(insMock_.get());
     Mock::VerifyAndClearExpectations(dfsuAccessToken_.get());
     Mock::VerifyAndClearExpectations(messageParcelMock_.get());
@@ -3056,7 +3071,7 @@ HWTEST_F(CloudDiskServiceStaticTest, PlaceholderStateOnlyServiceValidationTest00
 
 /**
  * @tc.name: DehydrateStatePreconditionTest001
- * @tc.desc: Verify normal, unhydrated, and partially hydrated files follow the dehydration state contract.
+ * @tc.desc: Verify normal and unhydrated files follow the dehydration state contract.
  * @tc.type: FUNC
  * @tc.require: NA
  */
@@ -3068,7 +3083,6 @@ HWTEST_F(CloudDiskServiceStaticTest, DehydrateStatePreconditionTest001, TestSize
     const std::vector<std::pair<uint8_t, int32_t>> cases = {
         {PLACEHOLDER_STATE_NONE, E_NOT_A_PLACEHOLDER},
         {PLACEHOLDER_STATE_UNHYDRATED, E_OK},
-        {PLACEHOLDER_STATE_PARTIALLY_HYDRATED, E_PLACEHOLDER_NOT_FULLY_HYDRATED},
     };
     for (const auto &item : cases) {
         ExpectPlaceholderPathType(insMock_, PLACEHOLDER_TEST_PATH, S_IFREG);
@@ -3082,6 +3096,52 @@ HWTEST_F(CloudDiskServiceStaticTest, DehydrateStatePreconditionTest001, TestSize
         EXPECT_EQ(DehydratePlaceholderFile(context, PLACEHOLDER_TEST_PATH), item.second);
         Mock::VerifyAndClearExpectations(insMock_.get());
     }
+}
+
+/**
+ * @tc.name: DehydratePartiallyHydratedTest001
+ * @tc.desc: Verify a partially hydrated placeholder can be dehydrated, discarding downloaded data.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, DehydratePartiallyHydratedTest001, TestSize.Level1)
+{
+    PlaceholderStatePathContext context = {
+        PLACEHOLDER_TEST_PATH, "", TEST_USER_ID, 1, PLACEHOLDER_TEST_BUNDLE_NAME, PLACEHOLDER_TEST_SYNC_FOLDER};
+    auto callback = sptr(new DehydrateCallbackTableStub(true));
+    ASSERT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(context.bundleName,
+                                                                              context.syncFolderIndex, callback),
+              E_OK);
+    constexpr int32_t fileFd = 95;
+    constexpr off_t logicalSize = 4096;
+    constexpr uint8_t syncState = static_cast<uint8_t>(SyncState::SYNCING);
+    struct stat fileStat = {};
+    fileStat.st_mode = S_IFREG;
+    fileStat.st_size = logicalSize;
+
+    EXPECT_CALL(*insMock_, MockStat(StrEq(PLACEHOLDER_TEST_PATH), _))
+        .WillOnce(DoAll(SetArgPointee<1>(fileStat), Return(0)));
+    EXPECT_CALL(*insMock_, Open(StrEq(PLACEHOLDER_TEST_PATH), _, _)).WillOnce(Return(fileFd));
+    EXPECT_CALL(*insMock_, fgetxattr(fileFd, StrEq(PLACEHOLDER_TEST_XATTR), _, PLACEHOLDER_XATTR_VALUE_SIZE))
+        .Times(2)
+        .WillRepeatedly(Invoke([](int, const char *, void *value, size_t size) {
+            static_cast<uint8_t *>(value)[0] = MakeFileSyncState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED, syncState);
+            return static_cast<ssize_t>(size);
+        }));
+    EXPECT_CALL(*insMock_, fstat(fileFd, _)).WillOnce(DoAll(SetArgPointee<1>(fileStat), Return(0)));
+    {
+        InSequence sequence;
+        EXPECT_CALL(*insMock_, ftruncate(fileFd, 0)).WillOnce(Return(0));
+        EXPECT_CALL(*insMock_, ftruncate(fileFd, logicalSize)).WillOnce(Return(0));
+    }
+    EXPECT_CALL(*insMock_, fsetxattr(fileFd, StrEq(PLACEHOLDER_TEST_XATTR), _, PLACEHOLDER_XATTR_VALUE_SIZE, 0))
+        .WillOnce(Invoke([](int, const char *, const void *value, size_t, int) {
+            EXPECT_EQ(*static_cast<const uint8_t *>(value), MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, syncState));
+            return 0;
+        }));
+    EXPECT_CALL(*insMock_, fsetxattr(_, StrEq(CLOUD_DISK_CUSTOM_INFO_XATTR), _, _, _)).Times(0);
+
+    EXPECT_EQ(DehydratePlaceholderFile(context, "file.txt"), E_OK);
 }
 
 /**
@@ -3609,7 +3669,7 @@ HWTEST_F(CloudDiskServiceStaticTest, PlaceholderInfoParcelTest008, TestSize.Leve
 }
 /**
  * @tc.name: SystemAccessorPermission_001
- * @tc.desc: All four system API methods reject missing permission before other work.
+ * @tc.desc: System-accessor methods reject missing permission before other work.
  * @tc.type: SECU
  * @tc.require: NA
  */
@@ -3621,15 +3681,15 @@ HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorPermission_001, TestSize.Leve
         .Times(4)
         .WillRepeatedly(Return(false));
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).Times(0);
-    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2), E_PERMISSION_DENIED);
     EXPECT_EQ(service.DehydrateFileByPathInner("/path"), E_PERMISSION_DENIED);
-    EXPECT_EQ(service.RegisterProgressCallbackInner(nullptr), E_PERMISSION_DENIED);
-    EXPECT_EQ(service.UnregisterProgressCallbackInner(), E_PERMISSION_DENIED);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2, 0), E_PERMISSION_DENIED);
+    EXPECT_EQ(service.RegisterProgressCallbackInner(0, nullptr), E_PERMISSION_DENIED);
+    EXPECT_EQ(service.UnregisterProgressCallbackInner(0), E_PERMISSION_DENIED);
 #else
-    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2), E_NOT_SUPPORTED);
     EXPECT_EQ(service.DehydrateFileByPathInner("/path"), E_NOT_SUPPORTED);
-    EXPECT_EQ(service.RegisterProgressCallbackInner(nullptr), E_NOT_SUPPORTED);
-    EXPECT_EQ(service.UnregisterProgressCallbackInner(), E_NOT_SUPPORTED);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2, 0), E_NOT_SUPPORTED);
+    EXPECT_EQ(service.RegisterProgressCallbackInner(0, nullptr), E_NOT_SUPPORTED);
+    EXPECT_EQ(service.UnregisterProgressCallbackInner(0), E_NOT_SUPPORTED);
 #endif
 }
 /**
@@ -3646,12 +3706,32 @@ HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorPermission_002, TestSize.Leve
         .Times(4)
         .WillRepeatedly(Return(true));
     EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).Times(4).WillRepeatedly(Return(false));
-    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2), E_PERMISSION_SYSTEM);
     EXPECT_EQ(service.DehydrateFileByPathInner("/path"), E_PERMISSION_SYSTEM);
-    EXPECT_EQ(service.RegisterProgressCallbackInner(nullptr), E_PERMISSION_SYSTEM);
-    EXPECT_EQ(service.UnregisterProgressCallbackInner(), E_PERMISSION_SYSTEM);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2, 0), E_PERMISSION_SYSTEM);
+    EXPECT_EQ(service.RegisterProgressCallbackInner(0, nullptr), E_PERMISSION_SYSTEM);
+    EXPECT_EQ(service.UnregisterProgressCallbackInner(0), E_PERMISSION_SYSTEM);
 #endif
 }
+/**
+ * @tc.name: SystemAccessorId_001
+ * @tc.desc: Reject a zero accessor id before resolving account or subscription state.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorId_001, TestSize.Level2)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    CloudDiskService service;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(PERM_CLOUD_DISK_SERVICE))
+        .Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).Times(3).WillRepeatedly(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).Times(0);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 2, 0), E_INVALID_ARG);
+    EXPECT_EQ(service.RegisterProgressCallbackInner(0, nullptr), E_INVALID_ARG);
+    EXPECT_EQ(service.UnregisterProgressCallbackInner(0), E_INVALID_ARG);
+#endif
+}
+
 /**
  * @tc.name: SystemAccessorPath_001
  * @tc.desc: Reject non-sandbox and traversal paths and invalid explicit enums.
@@ -3667,11 +3747,11 @@ HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorPath_001, TestSize.Level2)
     EXPECT_CALL(*dfsuAccessToken_, GetUserId()).Times(0);
     for (const auto &path : {"", "relative/file", "/data/service/el2/101/file",
                              "/storage/Users/currentUser/../other/file", "/storage/Users/currentUser/root/."}) {
-        EXPECT_EQ(service.StartHydrationByPathInner(path, 0, 2), E_INVALID_ARG);
+        EXPECT_EQ(service.StartHydrationByPathInner(path, 0, 2, 11), E_INVALID_ARG);
         EXPECT_EQ(service.DehydrateFileByPathInner(path), E_INVALID_ARG);
     }
-    EXPECT_EQ(service.StartHydrationByPathInner("/path", 2, 2), E_INVALID_ARG);
-    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 3), E_INVALID_ARG);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 2, 2, 11), E_INVALID_ARG);
+    EXPECT_EQ(service.StartHydrationByPathInner("/path", 0, 3, 11), E_INVALID_ARG);
 #endif
 }
 /**
@@ -3738,7 +3818,7 @@ HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorCancellation_001, TestSize.Le
     CloudDiskService service;
     EXPECT_EQ(service.StartHydrationByPathInner("/storage/Users/currentUser/sync/mockPhysicalFailed/file.txt",
                                                 static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA),
-                                                CLOUD_DISK_HYDRATE_PRIORITY_NORMAL),
+                                                CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, 11),
               E_OK);
     EXPECT_FALSE(PlaceholderTaskManager::GetInstance().HasOutstandingTask(PLACEHOLDER_TEST_SYNC_FOLDER, relativePath,
                                                                           syncFolderIndex));
@@ -3746,6 +3826,57 @@ HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorCancellation_001, TestSize.Le
     EXPECT_EQ(PlaceholderCallbackManager::GetInstance().UnregisterCallbackTable(PLACEHOLDER_TEST_BUNDLE_NAME,
                                                                                 syncFolderIndex),
               E_OK);
+#endif
+}
+
+/**
+ * @tc.name: SystemAccessorCancellation_002
+ * @tc.desc: Cancellation follows the calling instance while preserving the task's original owner.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStaticTest, SystemAccessorCancellation_002, TestSize.Level2)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    AddPlaceholderSyncFolder();
+    uint32_t index = CloudDisk::CloudFileUtils::DentryHash(PLACEHOLDER_TEST_PHYSICAL_SYNC_FOLDER);
+    auto provider = sptr(new DehydrateCallbackTableStub(true));
+    ASSERT_EQ(PlaceholderCallbackManager::GetInstance().RegisterCallbackTable(
+        PLACEHOLDER_TEST_BUNDLE_NAME, index, provider), E_OK);
+    PlaceholderProgressContext context{TEST_USER_ID, PLACEHOLDER_TEST_SYNC_FOLDER + "/file.txt"};
+    context.owner = {1, 10, 11};
+    auto first = sptr(new AccessorProgressRecorder());
+    auto canceller = sptr(new AccessorProgressRecorder());
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    ASSERT_EQ(progress.Register(context.owner, TEST_USER_ID, first), E_OK);
+    ASSERT_EQ(progress.Register({IPCSkeleton::GetCallingFullTokenID(), IPCSkeleton::GetCallingPid(), 22},
+        TEST_USER_ID, canceller), E_OK);
+    PlaceholderTaskManager::RequestKey key;
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    ASSERT_EQ(manager.CreateHydrateTask(PLACEHOLDER_TEST_SYNC_FOLDER, "file.txt", PLACEHOLDER_TEST_BUNDLE_NAME,
+        index, CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, UniqueFd(dup(STDOUT_FILENO)), key, context), E_OK);
+    auto task = manager.taskMap_.at(key);
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(PERM_CLOUD_DISK_SERVICE)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
+    EXPECT_CALL(*insMock_, access(_, F_OK)).Times(0);
+    CloudDiskService service;
+    EXPECT_EQ(service.StartHydrationByPathInner(context.absolutePath,
+        static_cast<int32_t>(CloudDiskCallbackType::CANCEL_FETCH_DATA), CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, 22), E_OK);
+    progress.Drain();
+    ASSERT_EQ(first->events.size(), 1U);
+    EXPECT_EQ(first->events.front().state, static_cast<int32_t>(HydrateProgressState::PENDING));
+    ASSERT_EQ(canceller->events.size(), 1U);
+    EXPECT_EQ(canceller->events.front().state, static_cast<int32_t>(HydrateProgressState::CANCELLED));
+    EXPECT_EQ(canceller->events.front().accessorId, 22U);
+    EXPECT_EQ(task->state.load(), PlaceholderTaskState::CANCELLED);
+    EXPECT_EQ(task->owner.tokenId, 1U);
+    EXPECT_EQ(task->owner.pid, 10);
+    EXPECT_EQ(task->owner.accessorId, 11U);
+    EXPECT_FALSE(manager.HasOutstandingTask(PLACEHOLDER_TEST_SYNC_FOLDER, "file.txt", index));
+    EXPECT_EQ(provider->callbackCount_, 1U);
+    EXPECT_EQ(PlaceholderCallbackManager::GetInstance().UnregisterCallbackTable(
+        PLACEHOLDER_TEST_BUNDLE_NAME, index), E_OK);
 #endif
 }
 
@@ -3837,7 +3968,7 @@ HWTEST_F(CloudDiskServiceStaticTest, PlaceholderScalarHelperBranches_001, TestSi
     EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_FULLY_HYDRATED + 1), E_INVALID_PLACEHOLDER_STATE);
     EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_NONE), E_NOT_A_PLACEHOLDER);
     EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_UNHYDRATED), E_OK);
-    EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED), E_PLACEHOLDER_NOT_FULLY_HYDRATED);
+    EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_PARTIALLY_HYDRATED), E_OK);
     EXPECT_EQ(CheckDehydrateState(PLACEHOLDER_STATE_FULLY_HYDRATED), E_OK);
 }
 

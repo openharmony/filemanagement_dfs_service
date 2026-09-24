@@ -30,6 +30,7 @@
 #include "cloud_disk_common.h"
 #include "ffrt.h"
 #include "nocopyable.h"
+#include "placeholder_progress_manager.h"
 #include "unique_fd.h"
 
 #ifndef CLOUD_DISK_MAX_ACTIVE_TASKS_PER_APP
@@ -72,6 +73,7 @@ struct PlaceholderProgressContext {
     std::string absolutePath;
     std::string hmdfsPath;
     std::string mountSyncFolder;
+    HydrateProgressOwner owner {};
 };
 
 struct HydrationFileMetadata {
@@ -101,6 +103,7 @@ struct PlaceholderTaskRecord {
     std::atomic<PlaceholderTaskState> state{PlaceholderTaskState::PENDING};
     std::string absolutePath;
     int32_t userId = -1;
+    HydrateProgressOwner owner {};
     uint64_t cachedSize = 0;
     bool terminalProgressSent = false;
     uint64_t totalSize = 0;
@@ -129,7 +132,8 @@ public:
                               RequestKey &reqKey,
                               const PlaceholderProgressContext &progressContext = {});
     bool HasOutstandingTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
-    int32_t CancelTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex);
+    int32_t CancelTask(const std::string &syncFolder, const std::string &filePath, uint32_t syncFolderIndex,
+        const HydrateProgressOwner &cancelOwner = {});
     void CancelTasksBySyncFolder(const std::string &bundleName,
                                  uint32_t syncFolderIndex,
                                  PlaceholderTaskCancelReason reason = PlaceholderTaskCancelReason::UNREGISTER);
@@ -150,7 +154,8 @@ private:
         uint64_t createSeq = 0;
     };
 
-    void NotifyProgressLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
+    void NotifyProgressLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
+        const HydrateProgressOwner &recipient = {});
     RequestKey GenerateRequestKeyLocked();
     int32_t PrepareHydrateTaskLocked(const std::string &syncFolder,
                                      const std::string &filePath,
@@ -170,7 +175,8 @@ private:
                                   const CallbackExecuteRequest &request);
     int32_t ExecuteFetchDataLocked(const std::shared_ptr<PlaceholderTaskRecord> &task,
                                    const CallbackExecuteRequest &request);
-    void CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task, PlaceholderTaskCancelReason reason);
+    void CancelTaskRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task, PlaceholderTaskCancelReason reason,
+        const HydrateProgressOwner &cancelOwner = {});
     void AddCancellationRecordLocked(const std::shared_ptr<PlaceholderTaskRecord> &task);
     void PurgeExpiredCancellationRecordsLocked();
     int32_t FindCancellationResultLocked(const std::string &callerBundleName,

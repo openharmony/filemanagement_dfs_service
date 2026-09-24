@@ -22,6 +22,34 @@
 #include "iremote_stub.h"
 #include "service_proxy.h"
 
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_sync_folder_manager.h"
+
+namespace OHOS::FileManagement {
+class SyncFolderQueryMock : public CloudDiskSyncFolderManager {
+public:
+    static SyncFolderQueryMock &GetMock()
+    {
+        static testing::NiceMock<SyncFolderQueryMock> instance;
+        return instance;
+    }
+    MOCK_METHOD1(Register, int32_t(const SyncFolder));
+    MOCK_METHOD1(Unregister, int32_t(const std::string));
+    MOCK_METHOD1(Active, int32_t(const std::string));
+    MOCK_METHOD1(Deactive, int32_t(const std::string));
+    MOCK_METHOD1(GetSyncFolders, int32_t(std::vector<SyncFolder> &));
+    MOCK_METHOD2(UpdateDisplayName, int32_t(const std::string, const std::string));
+    MOCK_METHOD1(UnregisterForSa, int32_t(const std::string));
+    MOCK_METHOD1(GetAllSyncFoldersForSa, int32_t(std::vector<SyncFolderExt> &));
+};
+
+CloudDiskSyncFolderManager &CloudDiskSyncFolderManager::GetInstance()
+{
+    return SyncFolderQueryMock::GetMock();
+}
+} // namespace OHOS::FileManagement
+#endif
+
 namespace OHOS::FileManagement::CloudDiskService {
 sptr<ICloudDiskService> ServiceProxy::GetInstance()
 {
@@ -72,10 +100,12 @@ public:
     MOCK_METHOD(ErrCode, StartHydrationInner, (const std::string &, const std::string &, int32_t), (override));
     MOCK_METHOD(ErrCode, CancelHydrationInner, (const std::string &, const std::string &), (override));
     MOCK_METHOD(ErrCode, ExecuteInner, (const CallbackExecuteRequest &), (override));
-    MOCK_METHOD(ErrCode, StartHydrationByPathInner, (const std::string &, int32_t, int32_t), (override));
     MOCK_METHOD(ErrCode, DehydrateFileByPathInner, (const std::string &), (override));
-    MOCK_METHOD(ErrCode, RegisterProgressCallbackInner, (const sptr<IRemoteObject> &), (override));
-    MOCK_METHOD(ErrCode, UnregisterProgressCallbackInner, (), (override));
+    MOCK_METHOD(ErrCode, StartHydrationByPathInner,
+        (const std::string &, int32_t, int32_t, uint64_t), (override));
+    MOCK_METHOD(ErrCode, RegisterProgressCallbackInner,
+        (uint64_t, const sptr<IRemoteObject> &), (override));
+    MOCK_METHOD(ErrCode, UnregisterProgressCallbackInner, (uint64_t), (override));
     MOCK_METHOD(ErrCode, DehydrateInner, (const std::string &, const std::string &), (override));
     MOCK_METHOD(ErrCode,
                 UpdatePlaceholderInner,
@@ -102,7 +132,11 @@ public:
 
 class RecordingProgressCallback final : public CloudDiskProgressCallbackStub {
 public:
-    void OnProgress(const HydrateProgress &) override {}
+    void OnProgress(const HydrateProgress &progress) override
+    {
+        events.push_back(progress);
+    }
+    std::vector<HydrateProgress> events;
 };
 
 class RecordingLegacyCallback final : public CloudDiskServiceCallback {
@@ -160,6 +194,13 @@ class CloudDiskServiceManagerImplTest : public testing::Test {
 public:
     void SetUp() override
     {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        ON_CALL(SyncFolderQueryMock::GetMock(), GetAllSyncFoldersForSa(_))
+            .WillByDefault(Invoke([](std::vector<FileManagement::SyncFolderExt> &folders) {
+                folders.resize(1);
+                return E_OK;
+            }));
+#endif
         remote_ = sptr(new NiceMock<MockCloudDiskRemote>());
         ResetManager();
         ServiceProxy::serviceProxy_ = remote_;
@@ -167,6 +208,9 @@ public:
 
     void TearDown() override
     {
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+        Mock::VerifyAndClear(&SyncFolderQueryMock::GetMock());
+#endif
         Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
         ResetManager();
         ServiceProxy::serviceProxy_ = nullptr;
@@ -497,24 +541,24 @@ HWTEST_F(CloudDiskServiceManagerImplTest, GetPlaceholderCustomInfo_001, TestSize
 }
 
 /**
- * @tc.name: StartHydrationByPath_001
+ * @tc.name: StartHydrationByPath_002
  * @tc.desc: Forward system-accessor hydration and cover service failure and missing proxy.
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(CloudDiskServiceManagerImplTest, StartHydrationByPath_001, TestSize.Level1)
+HWTEST_F(CloudDiskServiceManagerImplTest, StartHydrationByPath_002, TestSize.Level1)
 {
     auto &manager = CloudDiskServiceManagerImpl::GetInstance();
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
-    EXPECT_CALL(*remote_, StartHydrationByPathInner("/path", 0, 2))
+    EXPECT_CALL(*remote_, StartHydrationByPathInner("/path", 0, 2, 11))
         .WillOnce(Return(E_OK))
         .WillOnce(Return(E_TRY_AGAIN));
-    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2), E_OK);
-    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2), E_TRY_AGAIN);
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_OK);
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_TRY_AGAIN);
     ServiceProxy::serviceProxy_ = nullptr;
-    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2), E_IPC_FAILED);
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_IPC_FAILED);
 #else
-    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2), E_NOT_SUPPORTED);
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_NOT_SUPPORTED);
 #endif
 }
 
@@ -539,79 +583,73 @@ HWTEST_F(CloudDiskServiceManagerImplTest, DehydrateFileByPath_001, TestSize.Leve
 }
 
 /**
- * @tc.name: RegisterProgressCallback_001
+ * @tc.name: RegisterProgressCallback_002
  * @tc.desc: Cover validation, multiplexing, duplicate registration, and failed-add rollback.
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(CloudDiskServiceManagerImplTest, RegisterProgressCallback_001, TestSize.Level1)
+HWTEST_F(CloudDiskServiceManagerImplTest, RegisterProgressCallback_002, TestSize.Level1)
 {
     auto &manager = CloudDiskServiceManagerImpl::GetInstance();
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto first = sptr(new RecordingProgressCallback());
     auto second = sptr(new RecordingProgressCallback());
-    EXPECT_EQ(manager.RegisterProgressCallback(nullptr), E_INVALID_ARG);
+    EXPECT_EQ(manager.RegisterProgressCallback(11, nullptr), E_INVALID_ARG);
     ServiceProxy::serviceProxy_ = nullptr;
-    EXPECT_EQ(manager.RegisterProgressCallback(first), E_IPC_FAILED);
+    EXPECT_EQ(manager.RegisterProgressCallback(11, first), E_IPC_FAILED);
 
     RestoreRemote();
-    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(_)).WillOnce(Return(E_OK));
-    EXPECT_EQ(manager.RegisterProgressCallback(first), E_OK);
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(11, _)).WillOnce(Return(E_OK));
+    EXPECT_EQ(manager.RegisterProgressCallback(11, first), E_OK);
     ASSERT_NE(manager.progressClient_, nullptr);
-    EXPECT_EQ(manager.progressClient_->callbacks_.size(), 1U);
+    EXPECT_EQ(manager.progressClient_->accessorCallbacks_.size(), 1U);
 
     Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
-    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(_)).WillOnce(Return(E_IPC_FAILED));
-    EXPECT_EQ(manager.RegisterProgressCallback(first), E_IPC_FAILED);
-    EXPECT_EQ(manager.progressClient_->callbacks_.size(), 1U);
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(11, _)).WillOnce(Return(E_IPC_FAILED));
+    EXPECT_EQ(manager.RegisterProgressCallback(11, first), E_IPC_FAILED);
+    EXPECT_EQ(manager.progressClient_->accessorCallbacks_.size(), 1U);
 
     Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
-    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(_)).WillOnce(Return(E_IPC_FAILED));
-    EXPECT_EQ(manager.RegisterProgressCallback(second), E_IPC_FAILED);
-    EXPECT_EQ(manager.progressClient_->callbacks_.size(), 1U);
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(22, _)).WillOnce(Return(E_IPC_FAILED));
+    EXPECT_EQ(manager.RegisterProgressCallback(22, second), E_IPC_FAILED);
+    EXPECT_EQ(manager.progressClient_->accessorCallbacks_.size(), 1U);
 #else
-    EXPECT_EQ(manager.RegisterProgressCallback(nullptr), E_NOT_SUPPORTED);
+    EXPECT_EQ(manager.RegisterProgressCallback(11, nullptr), E_NOT_SUPPORTED);
 #endif
 }
 
 /**
- * @tc.name: UnregisterProgressCallback_001
+ * @tc.name: UnregisterProgressCallback_002
  * @tc.desc: Cover empty, non-last, missing-proxy, service error pass-through, failure, and success branches.
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(CloudDiskServiceManagerImplTest, UnregisterProgressCallback_001, TestSize.Level1)
+HWTEST_F(CloudDiskServiceManagerImplTest, UnregisterProgressCallback_002, TestSize.Level1)
 {
     auto &manager = CloudDiskServiceManagerImpl::GetInstance();
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     auto first = sptr(new RecordingProgressCallback());
     auto second = sptr(new RecordingProgressCallback());
-    EXPECT_EQ(manager.UnregisterProgressCallback(first), E_OK);
+    EXPECT_EQ(manager.UnregisterProgressCallback(11, first), E_CALLBACK_NOT_REGISTERED);
     manager.progressClient_ = sptr(new CloudDiskProgressCallbackClient());
-    ASSERT_TRUE(manager.progressClient_->Add(first));
-    ASSERT_TRUE(manager.progressClient_->Add(second));
-    EXPECT_EQ(manager.UnregisterProgressCallback(first), E_OK);
-    EXPECT_EQ(manager.progressClient_->callbacks_.size(), 1U);
-
+    bool added = false;
+    ASSERT_EQ(manager.progressClient_->Add(11, first, added), E_OK);
+    ASSERT_EQ(manager.progressClient_->Add(22, second, added), E_OK);
+    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner(11)).WillOnce(Return(E_OK));
+    EXPECT_EQ(manager.UnregisterProgressCallback(11, first), E_OK);
+    EXPECT_EQ(manager.progressClient_->accessorCallbacks_.size(), 1U);
     ServiceProxy::serviceProxy_ = nullptr;
-    EXPECT_EQ(manager.UnregisterProgressCallback(second), E_IPC_FAILED);
+    EXPECT_EQ(manager.UnregisterProgressCallback(22, second), E_IPC_FAILED);
     RestoreRemote();
-    ASSERT_TRUE(manager.progressClient_->Add(second));
-    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner()).WillOnce(Return(E_CALLBACK_NOT_REGISTERED));
-    EXPECT_EQ(manager.UnregisterProgressCallback(second), E_CALLBACK_NOT_REGISTERED);
-    EXPECT_TRUE(manager.progressClient_->callbacks_.empty());
-
-    Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
-    ASSERT_TRUE(manager.progressClient_->Add(second));
-    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner()).WillOnce(Return(E_IPC_FAILED));
-    EXPECT_EQ(manager.UnregisterProgressCallback(second), E_IPC_FAILED);
-
-    Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
-    ASSERT_TRUE(manager.progressClient_->Add(second));
-    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner()).WillOnce(Return(E_OK));
-    EXPECT_EQ(manager.UnregisterProgressCallback(second), E_OK);
+    for (int32_t ret : {E_CALLBACK_NOT_REGISTERED, E_IPC_FAILED, E_OK}) {
+        ASSERT_EQ(manager.progressClient_->Add(22, second, added), E_OK);
+        EXPECT_CALL(*remote_, UnregisterProgressCallbackInner(22)).WillOnce(Return(ret));
+        EXPECT_EQ(manager.UnregisterProgressCallback(22, second), ret);
+        EXPECT_TRUE(manager.progressClient_->accessorCallbacks_.empty());
+        Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
+    }
 #else
-    EXPECT_EQ(manager.UnregisterProgressCallback(nullptr), E_NOT_SUPPORTED);
+    EXPECT_EQ(manager.UnregisterProgressCallback(11, nullptr), E_NOT_SUPPORTED);
 #endif
 }
 
@@ -711,5 +749,112 @@ HWTEST_F(CloudDiskServiceManagerImplTest, SetDeathRecipient_002, TestSize.Level2
     SUCCEED();
 #endif
 }
+/**
+ * @tc.name: RegisterProgressCallback_001
+ * @tc.desc: Service-rejected registrations roll back only themselves; retry failure preserves an existing callback.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceManagerImplTest, RegisterProgressCallback_001, TestSize.Level2)
+{
+    auto &manager = CloudDiskServiceManagerImpl::GetInstance();
+    auto first = sptr(new RecordingProgressCallback());
+    auto second = sptr(new RecordingProgressCallback());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(0, _)).WillOnce(Return(E_INVALID_ARG));
+    EXPECT_EQ(manager.RegisterProgressCallback(0, first), E_INVALID_ARG);
+    ASSERT_NE(manager.progressClient_, nullptr);
+    EXPECT_TRUE(manager.progressClient_->accessorCallbacks_.empty());
+    EXPECT_EQ(manager.RegisterProgressCallback(11, nullptr), E_INVALID_ARG);
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(11, _))
+        .WillOnce(Return(E_OK)).WillOnce(Return(E_IPC_FAILED));
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(22, _)).WillOnce(Return(E_IPC_FAILED));
+    ASSERT_EQ(manager.RegisterProgressCallback(11, first), E_OK);
+    EXPECT_EQ(manager.RegisterProgressCallback(22, second), E_IPC_FAILED);
+    EXPECT_EQ(manager.RegisterProgressCallback(11, first), E_IPC_FAILED);
+    EXPECT_EQ(manager.RegisterProgressCallback(11, second), E_CALLBACK_ALREADY_REGISTERED);
+    HydrateProgress event;
+    event.accessorId = 11;
+    manager.progressClient_->OnProgress(event);
+    event.accessorId = 22;
+    manager.progressClient_->OnProgress(event);
+    EXPECT_EQ(first->events.size(), 1U);
+    EXPECT_TRUE(second->events.empty());
+#else
+    EXPECT_EQ(manager.RegisterProgressCallback(11, first), E_NOT_SUPPORTED);
+#endif
+}
+
+/**
+ * @tc.name: UnregisterProgressCallback_001
+ * @tc.desc: Failed off still removes its local callback; other accessors keep receiving progress.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceManagerImplTest, UnregisterProgressCallback_001, TestSize.Level2)
+{
+    auto &manager = CloudDiskServiceManagerImpl::GetInstance();
+    auto first = sptr(new RecordingProgressCallback());
+    auto second = sptr(new RecordingProgressCallback());
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(11, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(22, _)).WillOnce(Return(E_OK));
+    ASSERT_EQ(manager.RegisterProgressCallback(11, first), E_OK);
+    ASSERT_EQ(manager.RegisterProgressCallback(22, second), E_OK);
+    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner(11)).WillOnce(Return(E_IPC_FAILED));
+    EXPECT_CALL(*remote_, UnregisterProgressCallbackInner(22)).Times(0);
+    EXPECT_EQ(manager.UnregisterProgressCallback(22, first), E_CALLBACK_NOT_REGISTERED);
+    EXPECT_EQ(manager.UnregisterProgressCallback(11, first), E_IPC_FAILED);
+    HydrateProgress event;
+    event.accessorId = 11;
+    manager.progressClient_->OnProgress(event);
+    event.accessorId = 22;
+    manager.progressClient_->OnProgress(event);
+    EXPECT_TRUE(first->events.empty());
+    EXPECT_EQ(second->events.size(), 1U);
+    ServiceProxy::serviceProxy_ = nullptr;
+    EXPECT_EQ(manager.UnregisterProgressCallback(22, second), E_IPC_FAILED);
+    manager.progressClient_->OnProgress(event);
+    EXPECT_EQ(second->events.size(), 1U);
+#else
+    EXPECT_EQ(manager.UnregisterProgressCallback(11, first), E_NOT_SUPPORTED);
+#endif
+}
+
+/**
+ * @tc.name: StartHydrationByPath_001
+ * @tc.desc: Reject missing roots before RPC and preserve accessor ids and downstream errors when starting tasks.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceManagerImplTest, StartHydrationByPath_001, TestSize.Level2)
+{
+    auto &manager = CloudDiskServiceManagerImpl::GetInstance();
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    EXPECT_CALL(*remote_, StartHydrationByPathInner("/path", 0, 2, 0)).WillOnce(Return(E_INVALID_ARG));
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 0), E_INVALID_ARG);
+    EXPECT_CALL(SyncFolderQueryMock::GetMock(), GetAllSyncFoldersForSa(_))
+        .WillOnce(Return(E_PERMISSION_DENIED))
+        .WillOnce(Invoke([](std::vector<FileManagement::SyncFolderExt> &folders) {
+            folders.clear();
+            return E_OK;
+        }));
+    EXPECT_CALL(*remote_, StartHydrationByPathInner(_, _, _, _)).Times(0);
+    EXPECT_CALL(*remote_, RegisterProgressCallbackInner(_, _)).Times(0);
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_SYNC_FOLDER_NOT_REGISTERED);
+    auto callback = sptr(new RecordingProgressCallback());
+    EXPECT_EQ(manager.RegisterProgressCallback(11, callback), E_SYNC_FOLDER_NOT_REGISTERED);
+    EXPECT_EQ(manager.progressClient_, nullptr);
+    Mock::VerifyAndClearExpectations(remote_.GetRefPtr());
+    Mock::VerifyAndClearExpectations(&SyncFolderQueryMock::GetMock());
+    EXPECT_CALL(*remote_, StartHydrationByPathInner("/path", 0, 2, 11)).WillOnce(Return(E_TRY_AGAIN));
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_TRY_AGAIN);
+    ServiceProxy::serviceProxy_ = nullptr;
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_IPC_FAILED);
+#else
+    EXPECT_EQ(manager.StartHydrationByPath("/path", 0, 2, 11), E_NOT_SUPPORTED);
+#endif
+}
+
 } // namespace Test
 } // namespace OHOS::FileManagement::CloudDiskService

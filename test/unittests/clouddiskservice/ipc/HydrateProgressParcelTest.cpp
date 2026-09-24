@@ -36,6 +36,7 @@ HWTEST_F(HydrateProgressParcelTest, RoundTrip_001, TestSize.Level2)
     progress.state = static_cast<int32_t>(HydrateProgressState::COMPLETED);
     progress.processedSize = std::numeric_limits<uint64_t>::max() - 1;
     progress.totalSize = std::numeric_limits<uint64_t>::max();
+    progress.accessorId = std::numeric_limits<uint64_t>::max();
     Parcel parcel;
     ASSERT_TRUE(progress.Marshalling(parcel));
     std::unique_ptr<HydrateProgress> copy(HydrateProgress::Unmarshalling(parcel));
@@ -44,10 +45,11 @@ HWTEST_F(HydrateProgressParcelTest, RoundTrip_001, TestSize.Level2)
     EXPECT_EQ(copy->state, progress.state);
     EXPECT_EQ(copy->processedSize, progress.processedSize);
     EXPECT_EQ(copy->totalSize, progress.totalSize);
+    EXPECT_EQ(copy->accessorId, progress.accessorId);
 }
 /**
  * @tc.name: Truncated_001
- * @tc.desc: Reject truncation at every field and byte boundary.
+ * @tc.desc: Accept an exact legacy payload but reject incomplete fields, including a partial accessor id.
  * @tc.type: SECU
  * @tc.require: NA
  */
@@ -57,6 +59,7 @@ HWTEST_F(HydrateProgressParcelTest, Truncated_001, TestSize.Level2)
     progress.filePath = "/absolute/path";
     progress.processedSize = 5;
     progress.totalSize = 9;
+    progress.accessorId = 123;
     Parcel complete;
     ASSERT_TRUE(progress.Marshalling(complete));
     for (size_t size = 0; size < complete.GetDataSize(); ++size) {
@@ -66,7 +69,13 @@ HWTEST_F(HydrateProgressParcelTest, Truncated_001, TestSize.Level2)
             ASSERT_TRUE(parcel.SetDataSize(size));
         }
         std::unique_ptr<HydrateProgress> copy(HydrateProgress::Unmarshalling(parcel));
-        EXPECT_EQ(copy, nullptr) << size;
+        if (size == complete.GetDataSize() - sizeof(uint64_t)) {
+            ASSERT_NE(copy, nullptr);
+            EXPECT_EQ(copy->accessorId, 0U);
+            EXPECT_EQ(copy->totalSize, progress.totalSize);
+        } else {
+            EXPECT_EQ(copy, nullptr) << size;
+        }
     }
 }
 /**
@@ -114,5 +123,26 @@ HWTEST_F(HydrateProgressParcelTest, StateBoundaries_001, TestSize.Level1)
         ASSERT_NE(copy, nullptr);
         EXPECT_EQ(copy->state, progress.state);
     }
+}
+/**
+ * @tc.name: LegacyPayload_001
+ * @tc.desc: Reading an old payload resets a reused object's accessor id to the legacy channel.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(HydrateProgressParcelTest, LegacyPayload_001, TestSize.Level2)
+{
+    Parcel parcel;
+    ASSERT_TRUE(parcel.WriteString("/legacy/file"));
+    ASSERT_TRUE(parcel.WriteInt32(static_cast<int32_t>(HydrateProgressState::IN_PROGRESS)));
+    ASSERT_TRUE(parcel.WriteUint64(1));
+    ASSERT_TRUE(parcel.WriteUint64(2));
+    HydrateProgress progress;
+    progress.accessorId = 99;
+    ASSERT_TRUE(progress.ReadFromParcel(parcel));
+    EXPECT_EQ(progress.accessorId, 0U);
+    EXPECT_EQ(progress.filePath, "/legacy/file");
+    EXPECT_EQ(progress.processedSize, 1U);
+    EXPECT_EQ(progress.totalSize, 2U);
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test
