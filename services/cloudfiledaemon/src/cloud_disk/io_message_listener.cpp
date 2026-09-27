@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "io_message_listener.h"
+#include "parse_io_int.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -153,9 +154,15 @@ template <typename T>
 void PushField(const std::string &value, std::vector<T> &vec)
 {
     if constexpr (std::is_same_v<T, int32_t>) {
-        vec.push_back(std::stoi(value));
+        int32_t parsed = 0;
+        if (ParseIoInt32(value, parsed)) {
+            vec.push_back(parsed);
+        }
     } else if constexpr (std::is_same_v<T, int64_t>) {
-        vec.push_back(std::stoll(value));
+        int64_t parsed = 0;
+        if (ParseIoInt64(value, parsed)) {
+            vec.push_back(parsed);
+        }
     } else if constexpr (std::is_same_v<T, double>) {
         vec.push_back(std::stod(value));
     } else {
@@ -207,9 +214,11 @@ struct CheckVisitor {
     void operator()(std::vector<T> &vec)
     {
         if constexpr (std::is_same_v<T, int32_t>) {
-            checkType = CheckInt(value);
+            int32_t dummy = 0;
+            checkType = ParseIoInt32(value, dummy);
         } else if constexpr (std::is_same_v<T, int64_t>) {
-            checkType = CheckInt(value);
+            int64_t dummy = 0;
+            checkType = ParseIoInt64(value, dummy);
         } else if constexpr (std::is_same_v<T, double>) {
             checkType = CheckDouble(value);
         } else if constexpr (std::is_same_v<T, std::string>) {
