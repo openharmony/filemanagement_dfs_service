@@ -18,7 +18,7 @@ ohos_unittest("dfsu_fd_guard_test") {
   module_out_path = "dfs_service/dfs_service"
 
   sources = [
-    "${utils_path}/system/src/dfsu_fd_guard.cpp",
+    "dfsu_fd_guard.cpp",
     "dfsu_fd_guard_test.cpp",
   ]
 
