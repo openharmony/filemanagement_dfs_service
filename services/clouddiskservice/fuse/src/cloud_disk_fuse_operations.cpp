@@ -178,11 +178,14 @@ void CloudDiskFuseOperations::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fus
     }
 
     struct stat attr {};
-    if (lstat(node.path.c_str(), &attr) != 0) {
+    /* Use physicalPath to avoid hmdfs getattr redirect loop */
+    const std::string &statPath = node.physicalPath.empty() ? node.path : node.physicalPath;
+    if (lstat(statPath.c_str(), &attr) != 0) {
         (void)fuse_reply_err(req, errno);
         return;
     }
-    if (!S_ISREG(attr.st_mode) || attr.st_dev != node.device || attr.st_ino != node.inode) {
+    if ((!S_ISREG(attr.st_mode) && !S_ISDIR(attr.st_mode)) ||
+        attr.st_dev != node.device || attr.st_ino != node.inode) {
         (void)fuse_reply_err(req, ESTALE);
         return;
     }

@@ -107,6 +107,7 @@ private:
         uint32_t syncFolderIndex{0};
         std::string physicalPath;
         std::string mountPath;
+        ino_t rootInode{0};
         uint64_t warmupEpoch{0};
         RootState state{RootState::WARMING};
         int32_t lastWarmupError{0};
@@ -119,6 +120,7 @@ private:
         fuse_ino_t nodeId{0};
         uint32_t syncFolderIndex{0};
         std::string path;
+        std::string physicalPath;
         dev_t device{0};
         ino_t inode{0};
         uint64_t rootEpoch{0};
@@ -140,6 +142,7 @@ private:
         uint32_t syncFolderIndex{0};
         uint64_t rootEpoch{0};
         std::string path;
+        std::string physicalPath;
         struct stat attr {};
     };
 
@@ -240,6 +243,10 @@ private:
                                           const char *name,
                                           const RootContext &root,
                                           LookupResult &result);
+    RootLookupOutcome BuildLookupBackingPath(const RootContext &root,
+                                             const char *name,
+                                             const std::string &relativePath,
+                                             LookupResult &result);
     RootLookupOutcome ScanLookupRoots(const LookupSnapshot &snapshot,
                                       fuse_ino_t parent,
                                       const char *name,

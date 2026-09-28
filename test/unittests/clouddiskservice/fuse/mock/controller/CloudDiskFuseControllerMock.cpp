@@ -142,9 +142,8 @@ MetaFileMgr &MetaFileMgr::GetInstance()
     return instance;
 }
 
-std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFileIfExists(const int32_t userId,
-                                                                                          const uint32_t syncFolderIndex,
-                                                                                          const uint64_t inode)
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFileIfExists(
+    const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
 {
     auto &state = CloudDiskFuseControllerMock::GetState();
     const auto &behaviors = state.metaBehaviors;

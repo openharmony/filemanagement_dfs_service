@@ -161,13 +161,14 @@ bool GetUserIdByStartReason(const SystemAbilityOnDemandReason &startReason, int3
     LOGI("Get userId by start reason, reason: %{public}s", reason.c_str());
     if (reason == USER_UNLOCKED_REASON) {
         return ParseAndVerifyUserIdFromReasonValue(startReason, userId);
+    } else {
+        userId = CloudDiskServiceAccessToken::GetUserId();
+        if (userId == 0 && CloudDiskServiceAccessToken::GetAccountId(userId) != E_OK) {
+            LOGE("Get account id failed");
+            return false;
+        }
+        return true;
     }
-
-    userId = CloudDiskServiceAccessToken::GetUserId();
-    if (userId == 0) {
-        CloudDiskServiceAccessToken::GetAccountId(userId);
-    }
-    return true;
 }
 
 constexpr int32_t GET_SYNC_FOLDERS_RETRY_ERR_CODE = 34400001;
@@ -298,6 +299,21 @@ static int32_t NormalizeCreatePlaceholderError(int32_t ret)
             return ConvertErrnoToCloudDiskError(ret);
     }
 }
+
+void RequestUnloadCloudDiskService()
+{
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        LOGE("get samgr failed");
+        return;
+    }
+    int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID);
+    if (ret != ERR_OK) {
+        LOGE("remove system ability failed");
+        return;
+    }
+    LOGI("Unload clouddiskservice success");
+}
 } // namespace
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDiskService, FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID, true);
 
@@ -310,16 +326,12 @@ CloudDiskService::CloudDiskService() {}
 
 bool CloudDiskService::PublishSA()
 {
-    LOGI("Begin to init");
-    if (!registerToService_) {
-        bool ret = SystemAbility::Publish(this);
-        if (!ret) {
-            LOGE("Failed to publish the clouddiskservice");
-            return false;
-        }
-        registerToService_ = true;
+    LOGI("Begin to publish service");
+    if (!SystemAbility::Publish(this)) {
+        LOGE("Failed to publish the clouddiskservice");
+        return false;
     }
-    LOGI("Init finished successfully");
+    LOGI("Publish service successfully");
     return true;
 }
 
@@ -345,23 +357,75 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
 {
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     LOGI("Begin to start service");
-    if (state_ == ServiceRunningState::STATE_RUNNING) {
-        LOGI("CloudDiskService has already started");
+    std::lock_guard<std::mutex> lock(startMutex_);
+    auto initState = std::make_shared<InitState>();
+    initState_ = initState;
+    if (!PublishSA()) {
         return;
     }
+    initTask_ = ffrt::submit_h([this, startReason, initState]() { initState->result = Init(startReason); });
+    // Finish initialization before asking the framework to stop the published service.
+    ffrt::submit(
+        [initState]() {
+            if (initState->result != E_OK && !initState->stopped.load()) {
+                LOGE("Init service failed, ret: %{public}d", initState->result);
+                RequestUnloadCloudDiskService();
+            }
+        },
+        {initTask_});
+#endif
+}
 
+int32_t CloudDiskService::WaitForInit()
+{
+    ffrt::task_handle initTask;
+    std::shared_ptr<InitState> initState;
+    {
+        std::lock_guard<std::mutex> lock(startMutex_);
+        initTask = initTask_;
+        initState = initState_;
+    }
+    if (initTask == nullptr || initState == nullptr) {
+        LOGE("init is nullptr");
+        return E_IPC_FAILED;
+    }
+    ffrt::wait({initTask});
+    if (initState->stopped.load() || initState->result != E_OK) {
+        LOGE("init result: %{public}d", initState->result);
+        return E_IPC_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskService::OnRemoteRequest(uint32_t code,
+                                          MessageParcel &data,
+                                          MessageParcel &reply,
+                                          MessageOption &option)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = WaitForInit();
+    if (ret != E_OK) {
+        return reply.WriteInt32(ret) ? ERR_NONE : ERR_INVALID_VALUE;
+    }
+#endif
+    return CloudDiskServiceStub::OnRemoteRequest(code, data, reply, option);
+}
+
+int32_t CloudDiskService::Init(const SystemAbilityOnDemandReason &startReason)
+{
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
     int32_t userId = 0;
     if (!GetUserIdByStartReason(startReason, userId)) {
-        return;
+        return E_TRY_AGAIN;
     }
     currentUserId_ = userId;
+    LOGI("get userId: %{public}d success", currentUserId_);
 
     std::vector<FileManagement::SyncFolderExt> syncFolders;
     int32_t ret = GetAllSyncFoldersForSaWithRetry(syncFolders);
     if (ret != E_OK) {
-        LOGE("Get all sync folders for sa failed, ret: %{public}d, syncFolderSize: %{public}zu", ret,
-             syncFolders.size());
-        return;
+        LOGE("Get all sync folders failed, ret: %{public}d, syncFolderSize: %{public}zu", ret, syncFolders.size());
+        return ret;
     }
     for (const auto &item : syncFolders) {
         std::string path;
@@ -377,20 +441,19 @@ void CloudDiskService::OnStart(const SystemAbilityOnDemandReason &startReason)
     }
 
     StartFuseForUser(userId);
-    if (!PublishSA()) {
-        StopFuseForServiceExit();
-        return;
-    }
     PlaceholderTaskManager::GetInstance().StartScheduler();
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 
     if (CloudDiskSyncFolder::GetInstance().GetSyncFolderSize() > 0) {
         DiskMonitor::GetInstance().StartMonitor(userId);
+    } else {
+        UnloadSa();
     }
-    state_ = ServiceRunningState::STATE_RUNNING;
-    UnloadSa();
 
-    LOGI("Start service successfully");
+    LOGI("Init service successfully");
+    return E_OK;
+#else
+    return E_NOT_SUPPORTED;
 #endif
 }
 
@@ -398,6 +461,16 @@ void CloudDiskService::OnStop()
 {
     LOGI("Begin to stop");
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    {
+        std::lock_guard<std::mutex> lock(startMutex_);
+        if (initState_ != nullptr) {
+            initState_->stopped.store(true);
+        }
+        if (initTask_ != nullptr) {
+            ffrt::wait({initTask_});
+            initTask_ = {};
+        }
+    }
     if (accountStatusListener_ != nullptr) {
         accountStatusListener_->Stop();
     }
@@ -407,8 +480,6 @@ void CloudDiskService::OnStop()
     PlaceholderProgressManager::GetInstance().Drain();
     PlaceholderProgressManager::GetInstance().Clear();
 #endif
-    state_ = ServiceRunningState::STATE_NOT_START;
-    registerToService_ = false;
     LOGI("Stop finished successfully");
 }
 
@@ -1231,16 +1302,7 @@ void CloudDiskService::UnloadSa()
         }
 #endif
         DiskMonitor::GetInstance().StopMonitor();
-        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgrProxy == nullptr) {
-            LOGE("get samgr failed");
-            return;
-        }
-        int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_DISK_SERVICE_SA_ID);
-        if (ret != ERR_OK) {
-            LOGE("remove system ability failed");
-            return;
-        }
+        RequestUnloadCloudDiskService();
     }
 }
 

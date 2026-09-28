@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -34,6 +35,8 @@ public:
     static int32_t IncreaseRecycleBinSize(int32_t userId, const std::string &bundleName, const MetaBase &metaBase);
     static int32_t DecreaseRecycleBinSize(int32_t userId, const std::string &bundleName, const MetaBase &metaBase);
     static int32_t ResetRecycleBinSize(int32_t userId, const std::string &bundleName);
+    static int32_t ResetRecycleBinSize(int32_t userId, const std::string &bundleName,
+        const std::vector<MetaBase> &metaBases);
 
 private:
     static std::string GetCacheFilePath(int32_t userId, const std::string &bundleName);

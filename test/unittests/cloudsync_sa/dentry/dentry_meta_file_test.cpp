@@ -16,6 +16,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+#include <ctime>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "base_interface_lib_mock.h"
 #include "directory_ex.h"
 #include "meta_file.h"
@@ -844,5 +850,394 @@ HWTEST_F(DentryMetaFileTest, RoomForFilename_002, TestSize.Level1)
         GTEST_LOG_(INFO) << " RoomForFilename_002 ERROR";
     }
     GTEST_LOG_(INFO) << "RoomForFilename_002 End";
+}
+
+namespace {
+std::string MakeUniqueTestRoot(uint32_t userId, const std::string &tag)
+{
+    return "/data/service/el2/" + std::to_string(userId) +
+           "/hmdfs/cache/test_root_" + tag + "_" +
+           std::to_string(static_cast<long long>(std::time(nullptr))) + "_" +
+           std::to_string(static_cast<long long>(getpid()));
+}
+ 
+bool PreCreateDentryFile(uint32_t userId, const std::string &path)
+{
+    std::string dentryFile = MetaFile::GetDentryfileByPath(userId, path);
+    std::string parent = dentryFile.substr(0, dentryFile.find_last_of('/'));
+    OHOS::ForceCreateDirectory(parent);
+    int fd = open(dentryFile.c_str(), O_RDWR | O_CREAT, 0644);
+    if (fd < 0) {
+        return false;
+    }
+    close(fd);
+    return true;
+}
+ 
+bool DentryFileExists(uint32_t userId, const std::string &path)
+{
+    std::string dentryFile = MetaFile::GetDentryfileByPath(userId, path);
+    return access(dentryFile.c_str(), F_OK) == 0;
+}
+ 
+void CleanupDentryFiles(uint32_t userId, const std::vector<std::string> &paths)
+{
+    for (const auto &p : paths) {
+        std::string dentryFile = MetaFile::GetDentryfileByPath(userId, p);
+        (void)unlink(dentryFile.c_str());
+    }
+}
+} // namespace
+ 
+/**
+ * @tc.name: RemoveSharedFIleDentryFiles_001
+ * @tc.desc: Verify empty bucketRootPath returns -EINVAL and is rejected before any I/O.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemoveSharedFIleDentryFiles_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_001 Start";
+    try {
+        int32_t ret = MetaFile::RemoveSharedFIleDentryFiles(TEST_USER_ID, "");
+        EXPECT_EQ(ret, -EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemoveSharedFIleDentryFiles_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_001 End";
+}
+ 
+/**
+ * @tc.name: RemoveSharedFIleDentryFiles_002
+ * @tc.desc: Verify non-existent bucketRootPath returns a negative errno and does not crash.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemoveSharedFIleDentryFiles_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_002 Start";
+    try {
+        std::string nonExistent = MakeUniqueTestRoot(TEST_USER_ID, "nonexistent");
+        OHOS::ForceRemoveDirectory(nonExistent);
+        int32_t ret = MetaFile::RemoveSharedFIleDentryFiles(TEST_USER_ID, nonExistent);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemoveSharedFIleDentryFiles_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_002 End";
+}
+ 
+/**
+ * @tc.name: RemoveSharedFIleDentryFiles_003
+ * @tc.desc: Threshold semantics: buckets with ID > 20000 have their dentryfile entity
+ *           files (bucket dir + every descendant) unlinked; buckets with ID <= 20000
+ *           and non-numeric / non-directory entries are skipped. Return value equals
+ *           the number of dentryfiles successfully unlinked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemoveSharedFIleDentryFiles_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_003 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "thresh");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+ 
+        OHOS::ForceCreateDirectory(testRoot + "/19999");
+        OHOS::ForceCreateDirectory(testRoot + "/20000");
+        OHOS::ForceCreateDirectory(testRoot + "/20001");
+        OHOS::ForceCreateDirectory(testRoot + "/20002/subdir");
+        OHOS::ForceCreateDirectory(testRoot + "/20003/nested/deep");
+        OHOS::ForceCreateDirectory(testRoot + "/not_a_number");
+        OHOS::ForceCreateDirectory(testRoot + "/abc");
+ 
+        std::vector<std::string> shouldBeDeleted = {
+            testRoot + "/20001",
+            testRoot + "/20002",
+            testRoot + "/20002/subdir",
+            testRoot + "/20003",
+            testRoot + "/20003/nested",
+            testRoot + "/20003/nested/deep"
+        };
+        for (const auto &p : shouldBeDeleted) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p)) << "pre-create failed: " << p;
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should pre-exist: " << p;
+        }
+ 
+        std::vector<std::string> shouldBeKept = { testRoot + "/19999", testRoot + "/20000" };
+        for (const auto &p : shouldBeKept) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p)) << "pre-create failed: " << p;
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should pre-exist: " << p;
+        }
+ 
+        int32_t ret = MetaFile::RemoveSharedFIleDentryFiles(TEST_USER_ID, testRoot);
+ 
+        for (const auto &p : shouldBeDeleted) {
+            EXPECT_FALSE(DentryFileExists(TEST_USER_ID, p)) << "should be deleted: " << p;
+        }
+        for (const auto &p : shouldBeKept) {
+            EXPECT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should be kept: " << p;
+        }
+        EXPECT_EQ(ret, static_cast<int32_t>(shouldBeDeleted.size()));
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        CleanupDentryFiles(TEST_USER_ID, shouldBeKept);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemoveSharedFIleDentryFiles_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_003 End";
+}
+ 
+/**
+ * @tc.name: RemoveSharedFIleDentryFiles_004
+ * @tc.desc: Non-directory entries with numeric names (regular files) are skipped and
+ *           are not deleted. Function returns 0 because no bucket > threshold was found.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemoveSharedFIleDentryFiles_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_004 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "filedir");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+ 
+        std::string regularFile = testRoot + "/21000";
+        int fd = open(regularFile.c_str(), O_RDWR | O_CREAT, 0644);
+        ASSERT_GE(fd, 0);
+        close(fd);
+ 
+        int32_t ret = MetaFile::RemoveSharedFIleDentryFiles(TEST_USER_ID, testRoot);
+        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(access(regularFile.c_str(), F_OK), 0);
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemoveSharedFIleDentryFiles_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_004 End";
+}
+ 
+/**
+ * @tc.name: RemoveSharedFIleDentryFiles_005
+ * @tc.desc: Empty bucket root and root with only sub-threshold buckets return 0 and
+ *           do not touch any dentryfile.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemoveSharedFIleDentryFiles_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_005 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "subonly");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot + "/0");
+        OHOS::ForceCreateDirectory(testRoot + "/19999");
+        OHOS::ForceCreateDirectory(testRoot + "/20000");
+ 
+        std::vector<std::string> untouched = {
+            testRoot + "/0", testRoot + "/19999", testRoot + "/20000"
+        };
+        for (const auto &p : untouched) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p));
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p));
+        }
+ 
+        int32_t ret = MetaFile::RemoveSharedFIleDentryFiles(TEST_USER_ID, testRoot);
+        EXPECT_EQ(ret, 0);
+        for (const auto &p : untouched) {
+            EXPECT_TRUE(DentryFileExists(TEST_USER_ID, p));
+        }
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        CleanupDentryFiles(TEST_USER_ID, untouched);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemoveSharedFIleDentryFiles_005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveSharedFIleDentryFiles_005 End";
+}
+ 
+/**
+ * @tc.name: RemovePrivateFIleDentryFiles_001
+ * @tc.desc: Verify empty bucketRootPath returns -EINVAL and is rejected before any I/O.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemovePrivateFIleDentryFiles_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_001 Start";
+    try {
+        int32_t ret = MetaFile::RemovePrivateFIleDentryFiles(TEST_USER_ID, "");
+        EXPECT_EQ(ret, -EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemovePrivateFIleDentryFiles_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_001 End";
+}
+ 
+/**
+ * @tc.name: RemovePrivateFIleDentryFiles_002
+ * @tc.desc: Verify non-existent bucketRootPath returns a negative errno and does not crash.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemovePrivateFIleDentryFiles_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_002 Start";
+    try {
+        std::string nonExistent = MakeUniqueTestRoot(TEST_USER_ID, "priv_nonexistent");
+        OHOS::ForceRemoveDirectory(nonExistent);
+        int32_t ret = MetaFile::RemovePrivateFIleDentryFiles(TEST_USER_ID, nonExistent);
+        EXPECT_LT(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemovePrivateFIleDentryFiles_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_002 End";
+}
+ 
+/**
+ * @tc.name: RemovePrivateFIleDentryFiles_003
+ * @tc.desc: Threshold semantics: buckets with ID <= 20000 have their dentryfile entity
+ *           files (bucket dir + every descendant) unlinked; buckets with ID > 20000
+ *           (including the boundary bucket 20000 itself) and non-numeric / non-directory
+ *           entries are skipped. Return value equals the number of dentryfiles
+ *           successfully unlinked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemovePrivateFIleDentryFiles_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_003 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "priv_thresh");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+ 
+        OHOS::ForceCreateDirectory(testRoot + "/0");
+        OHOS::ForceCreateDirectory(testRoot + "/1");
+        OHOS::ForceCreateDirectory(testRoot + "/19999");
+        OHOS::ForceCreateDirectory(testRoot + "/20000");
+        OHOS::ForceCreateDirectory(testRoot + "/20001");
+        OHOS::ForceCreateDirectory(testRoot + "/21000/subdir");
+        OHOS::ForceCreateDirectory(testRoot + "/not_a_number");
+        OHOS::ForceCreateDirectory(testRoot + "/abc");
+ 
+        std::vector<std::string> shouldBeDeleted = {
+            testRoot + "/0",
+            testRoot + "/1",
+            testRoot + "/19999",
+            testRoot + "/20000"
+        };
+        for (const auto &p : shouldBeDeleted) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p)) << "pre-create failed: " << p;
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should pre-exist: " << p;
+        }
+ 
+        std::vector<std::string> shouldBeKept = {
+            testRoot + "/20001",
+            testRoot + "/21000",
+            testRoot + "/21000/subdir"
+        };
+        for (const auto &p : shouldBeKept) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p)) << "pre-create failed: " << p;
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should pre-exist: " << p;
+        }
+ 
+        int32_t ret = MetaFile::RemovePrivateFIleDentryFiles(TEST_USER_ID, testRoot);
+ 
+        for (const auto &p : shouldBeDeleted) {
+            EXPECT_FALSE(DentryFileExists(TEST_USER_ID, p)) << "should be deleted: " << p;
+        }
+        for (const auto &p : shouldBeKept) {
+            EXPECT_TRUE(DentryFileExists(TEST_USER_ID, p)) << "should be kept: " << p;
+        }
+        EXPECT_EQ(ret, static_cast<int32_t>(shouldBeDeleted.size()));
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        CleanupDentryFiles(TEST_USER_ID, shouldBeKept);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemovePrivateFIleDentryFiles_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_003 End";
+}
+ 
+/**
+ * @tc.name: RemovePrivateFIleDentryFiles_004
+ * @tc.desc: Non-directory entries with numeric names (regular files) are skipped and
+ *           are not deleted. Function returns 0 because no bucket <= threshold was found.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemovePrivateFIleDentryFiles_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_004 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "priv_filedir");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+ 
+        std::string regularFile = testRoot + "/21000";
+        int fd = open(regularFile.c_str(), O_RDWR | O_CREAT, 0644);
+        ASSERT_GE(fd, 0);
+        close(fd);
+ 
+        int32_t ret = MetaFile::RemovePrivateFIleDentryFiles(TEST_USER_ID, testRoot);
+        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(access(regularFile.c_str(), F_OK), 0);
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemovePrivateFIleDentryFiles_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_004 End";
+}
+ 
+/**
+ * @tc.name: RemovePrivateFIleDentryFiles_005
+ * @tc.desc: Empty bucket root and root with only super-threshold buckets return 0 and
+ *           do not touch any dentryfile.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DentryMetaFileTest, RemovePrivateFIleDentryFiles_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_005 Start";
+    try {
+        std::string testRoot = MakeUniqueTestRoot(TEST_USER_ID, "priv_suponly");
+        OHOS::ForceRemoveDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot);
+        OHOS::ForceCreateDirectory(testRoot + "/20001");
+        OHOS::ForceCreateDirectory(testRoot + "/20002");
+        OHOS::ForceCreateDirectory(testRoot + "/21000");
+ 
+        std::vector<std::string> untouched = {
+            testRoot + "/20001", testRoot + "/20002", testRoot + "/21000"
+        };
+        for (const auto &p : untouched) {
+            ASSERT_TRUE(PreCreateDentryFile(TEST_USER_ID, p));
+            ASSERT_TRUE(DentryFileExists(TEST_USER_ID, p));
+        }
+ 
+        int32_t ret = MetaFile::RemovePrivateFIleDentryFiles(TEST_USER_ID, testRoot);
+        EXPECT_EQ(ret, 0);
+        for (const auto &p : untouched) {
+            EXPECT_TRUE(DentryFileExists(TEST_USER_ID, p));
+        }
+ 
+        OHOS::ForceRemoveDirectory(testRoot);
+        CleanupDentryFiles(TEST_USER_ID, untouched);
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RemovePrivateFIleDentryFiles_005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemovePrivateFIleDentryFiles_005 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

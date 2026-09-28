@@ -290,13 +290,13 @@ HWTEST_F(CloudDiskFuseOperationsTest, GetAttr_004, TestSize.Level2)
 
 /*
  * @tc.name: GetAttr_005
- * @tc.desc: Verify getattr rejects a non-regular backing object as stale.
+ * @tc.desc: Verify getattr rejects a non-regular non-directory backing object as stale.
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskFuseOperationsTest, GetAttr_005, TestSize.Level2)
 {
     SetRegularLstatResult();
-    state_->lstatAttr.st_mode = S_IFDIR | 0550;
+    state_->lstatAttr.st_mode = S_IFLNK | 0777;
     CloudDiskFuseOperations::GetAttr(&request_, TEST_NODE, nullptr);
     EXPECT_EQ(request_.reply.error, ESTALE);
 }

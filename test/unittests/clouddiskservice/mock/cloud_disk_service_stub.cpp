@@ -13,26 +13,16 @@
  * limitations under the License.
  */
 
-#include <iremote_stub.h>
-#include "icloud_disk_service.h"
+#include "cloud_disk_service_stub.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
-class CloudDiskServiceStub : public IRemoteStub<ICloudDiskService> {
-public:
-    explicit CloudDiskServiceStub(bool serialInvokeFlag = false): IRemoteStub(serialInvokeFlag){};
-    int32_t OnRemoteRequest(
-        uint32_t code,
-        MessageParcel& data,
-        MessageParcel& reply,
-        MessageOption& option) override;
-};
-
 int32_t CloudDiskServiceStub::OnRemoteRequest(
     uint32_t code,
     MessageParcel& data,
     MessageParcel& reply,
     MessageOption& option)
 {
+    ++onRemoteRequestCount_;
     return 0;
 }
 }

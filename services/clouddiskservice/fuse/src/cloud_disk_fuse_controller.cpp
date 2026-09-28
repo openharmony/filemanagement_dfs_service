@@ -95,9 +95,15 @@ bool CloudDiskFuseController::BuildRootContext(int32_t userId,
         LOGE("Convert FUSE root to HMDFS mount path failed, index: %{public}u", syncFolderIndex);
         return false;
     }
+    struct stat rootStat {};
+    if (stat(physicalPath.c_str(), &rootStat) != 0) {
+        LOGE("Stat sync root physical path failed, index: %{public}u, errno: %{public}d", syncFolderIndex, errno);
+        return false;
+    }
     root.syncFolderIndex = syncFolderIndex;
     root.physicalPath = physicalPath;
     root.mountPath = mountPath;
+    root.rootInode = rootStat.st_ino;
     return true;
 }
 
@@ -951,12 +957,12 @@ int32_t CloudDiskFuseController::BuildLookupCandidate(const RootContext &root,
     bool needsSeparator = relativePath.empty() || relativePath.back() != '/';
     size_t separatorLength = needsSeparator ? 1 : 0;
     size_t nameLength = strlen(name);
-    if (root.mountPath.size() > PATH_MAX || relativePath.size() > PATH_MAX ||
-        root.mountPath.size() + relativePath.size() > PATH_MAX - separatorLength ||
-        root.mountPath.size() + relativePath.size() + separatorLength > PATH_MAX - nameLength) {
+    if (root.physicalPath.size() > PATH_MAX || relativePath.size() > PATH_MAX ||
+        root.physicalPath.size() + relativePath.size() > PATH_MAX - separatorLength ||
+        root.physicalPath.size() + relativePath.size() + separatorLength > PATH_MAX - nameLength) {
         return ENAMETOOLONG;
     }
-    candidate = root.mountPath + relativePath;
+    candidate = root.physicalPath + relativePath;
     if (needsSeparator) {
         candidate.push_back('/');
     }
@@ -972,12 +978,12 @@ int32_t CloudDiskFuseController::ValidateLookupCandidate(const RootContext &root
     if (lstat(candidate.c_str(), &candidateAttr) != 0) {
         return errno;
     }
-    if (!S_ISREG(candidateAttr.st_mode)) {
+    if (!S_ISREG(candidateAttr.st_mode) && !S_ISDIR(candidateAttr.st_mode)) {
         return ESTALE;
     }
     char canonicalRootBuffer[PATH_MAX] = {'\0'};
     char canonicalPathBuffer[PATH_MAX] = {'\0'};
-    if (realpath(root.mountPath.c_str(), canonicalRootBuffer) == nullptr) {
+    if (realpath(root.physicalPath.c_str(), canonicalRootBuffer) == nullptr) {
         return errno;
     }
     if (realpath(candidate.c_str(), canonicalPathBuffer) == nullptr) {
@@ -989,7 +995,7 @@ int32_t CloudDiskFuseController::ValidateLookupCandidate(const RootContext &root
     if (lstat(canonicalPathBuffer, &candidateAttr) != 0) {
         return errno;
     }
-    if (!S_ISREG(candidateAttr.st_mode)) {
+    if (!S_ISREG(candidateAttr.st_mode) && !S_ISDIR(candidateAttr.st_mode)) {
         return ESTALE;
     }
     canonicalPath = canonicalPathBuffer;
@@ -999,8 +1005,22 @@ int32_t CloudDiskFuseController::ValidateLookupCandidate(const RootContext &root
 CloudDiskFuseController::RootLookupOutcome CloudDiskFuseController::ResolveLookupInRoot(
     int32_t userId, fuse_ino_t parent, const char *name, const RootContext &root, LookupResult &result)
 {
+    ino_t physicalInode = 0;
+    if (parent == FUSE_ROOT_ID) {
+        physicalInode = root.rootInode;
+    } else {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto nodeIt = nodes_.find(parent);
+        if (nodeIt == nodes_.end()) {
+            return {RootLookupState::NO_PARENT, E_OK};
+        }
+        physicalInode = nodeIt->second.inode;
+    }
+    if (physicalInode == 0) {
+        return {RootLookupState::NO_PARENT, E_OK};
+    }
     auto parentMetaFile =
-        MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFileIfExists(userId, root.syncFolderIndex, parent);
+        MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFileIfExists(userId, root.syncFolderIndex, physicalInode);
     if (parentMetaFile == nullptr) {
         return {RootLookupState::NO_PARENT, E_OK};
     }
@@ -1012,15 +1032,23 @@ CloudDiskFuseController::RootLookupOutcome CloudDiskFuseController::ResolveLooku
     if (ret != E_OK) {
         return {RootLookupState::CONTINUE, EIO};
     }
-    if (meta.placeholder == PLACEHOLDER_STATE_NONE || !S_ISREG(meta.mode)) {
+    if (S_ISDIR(meta.mode)) {
+        /* Directory: allow lookup so multi-level paths (e.g. Download/file) work */
+    } else if (meta.placeholder == PLACEHOLDER_STATE_NONE || !S_ISREG(meta.mode)) {
         return {RootLookupState::TERMINAL_ERROR, ESTALE};
     }
     std::string relativePath;
     if (MetaFileMgr::GetInstance().GetRelativePathIfExists(parentMetaFile, relativePath) != E_OK) {
         return {RootLookupState::CONTINUE, EIO};
     }
+    return BuildLookupBackingPath(root, name, relativePath, result);
+}
+
+CloudDiskFuseController::RootLookupOutcome CloudDiskFuseController::BuildLookupBackingPath(
+    const RootContext &root, const char *name, const std::string &relativePath, LookupResult &result)
+{
     std::string candidate;
-    ret = BuildLookupCandidate(root, relativePath, name, candidate);
+    int32_t ret = BuildLookupCandidate(root, relativePath, name, candidate);
     if (ret != E_OK) {
         return {RootLookupState::TERMINAL_ERROR, ret};
     }
@@ -1030,10 +1058,24 @@ CloudDiskFuseController::RootLookupOutcome CloudDiskFuseController::ResolveLooku
     if (ret != E_OK) {
         return {RootLookupState::CONTINUE, ret};
     }
+    (void)candidateAttr;
     result.syncFolderIndex = root.syncFolderIndex;
     result.rootEpoch = root.warmupEpoch;
     result.path = canonicalPath;
-    result.attr = candidateAttr;
+    bool needsSep = relativePath.empty() || relativePath.back() != '/';
+    result.physicalPath = root.physicalPath + relativePath;
+    if (needsSep) {
+        result.physicalPath.push_back('/');
+    }
+    result.physicalPath += name;
+    struct stat physicalAttr {};
+    if (lstat(result.physicalPath.c_str(), &physicalAttr) != 0) {
+        return {RootLookupState::CONTINUE, errno};
+    }
+    if (!S_ISREG(physicalAttr.st_mode) && !S_ISDIR(physicalAttr.st_mode)) {
+        return {RootLookupState::TERMINAL_ERROR, ESTALE};
+    }
+    result.attr = physicalAttr;
     return {RootLookupState::MATCH, E_OK};
 }
 
@@ -1204,6 +1246,7 @@ int32_t CloudDiskFuseController::RegisterLookupNode(const LookupResult &result, 
             return EOVERFLOW;
         }
         nodeIt->second.path = result.path;
+        nodeIt->second.physicalPath = result.physicalPath;
         nodeIt->second.syncFolderIndex = result.syncFolderIndex;
         nodeIt->second.rootEpoch = result.rootEpoch;
         ++nodeIt->second.nlookup;
@@ -1217,6 +1260,7 @@ int32_t CloudDiskFuseController::RegisterLookupNode(const LookupResult &result, 
     node.nodeId = nodeId;
     node.syncFolderIndex = result.syncFolderIndex;
     node.path = result.path;
+    node.physicalPath = result.physicalPath;
     node.device = result.attr.st_dev;
     node.inode = result.attr.st_ino;
     node.rootEpoch = result.rootEpoch;
@@ -1302,7 +1346,9 @@ void CloudDiskFuseController::ReleaseOpenReservation()
 
 int32_t CloudDiskFuseController::OpenBackingFile(OpenOperation &operation) const
 {
-    UniqueFd fd(open(operation.node.path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
+    const std::string &backingPath = operation.node.physicalPath.empty()
+        ? operation.node.path : operation.node.physicalPath;
+    UniqueFd fd(open(backingPath.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
     if (fd < 0) {
         return errno;
     }

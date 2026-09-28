@@ -203,9 +203,8 @@ MetaFileMgr &MetaFileMgr::GetInstance()
     return instance;
 }
 
-std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(const int32_t userId,
-                                                                                    const uint32_t syncFolderIndex,
-                                                                                    const uint64_t inode)
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFile(
+    const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
 {
     ++g_createMetaFileCalls;
     MetaKey key(syncFolderIndex, inode);
@@ -216,9 +215,8 @@ std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFi
     return metaFile;
 }
 
-std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFileIfExists(const int32_t userId,
-                                                                                          const uint32_t syncFolderIndex,
-                                                                                          const uint64_t inode)
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFileIfExists(
+    const int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
 {
     if (g_existingInodes.find(inode) == g_existingInodes.end()) {
         return nullptr;

@@ -12,24 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cloud_status_mock.h"
-#include "utils_log.h"
+
+#include "database_manager_mock.h"
+
+#include "dfs_error.h"
+
 namespace OHOS::FileManagement::CloudSync {
-bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t userId)
+DataSyncerRdbStore &DataSyncerRdbStore::GetInstance()
 {
-    if (CloudStatusMethod::proxy_ == nullptr) {
-        return false;
-    }
-    LOGI("do mock IsCloudStatusOkay");
-    return CloudStatusMethod::proxy_->IsCloudStatusOkay(bundleName, userId);
+    static DataSyncerRdbStore instance;
+    return instance;
 }
 
-bool CloudStatus::IsSwitchOn(const std::string &bundleName, const int32_t userId)
+int32_t DataSyncerRdbStore::QueryCloudSync(int32_t userId, const std::string &bundleName,
+    std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
-    if (CloudStatusMethod::proxy_ == nullptr) {
-        return false;
+    if (DataSyncerRdbStoreMock::proxy_ != nullptr) {
+        return DataSyncerRdbStoreMock::proxy_->QueryCloudSync(userId, bundleName, resultSet);
     }
-    LOGI("do mock IsSwitchOn");
-    return CloudStatusMethod::proxy_->IsSwitchOn(bundleName, userId);
+    return E_OK;
 }
+
+int32_t DataSyncerRdbStore::RdbInit()
+{
+    return E_OK;
 }
+} // namespace OHOS::FileManagement::CloudSync

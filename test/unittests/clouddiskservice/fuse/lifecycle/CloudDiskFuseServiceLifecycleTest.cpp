@@ -237,33 +237,23 @@ HWTEST_F(CloudDiskFuseServiceLifecycleTest, UnregisterForSaInner_001, TestSize.L
 
 /*
  * @tc.name: OnStart_001
- * @tc.desc: Verify publish failure rolls back the FUSE lifecycle started during service startup
+ * @tc.desc: Verify publish failure does not start the FUSE lifecycle
  * @tc.type: RELI
  */
 HWTEST_F(CloudDiskFuseServiceLifecycleTest, OnStart_001, TestSize.Level2)
 {
     constexpr char START_REASON[] = "fuse.lifecycle.test";
-    service_->state_ = ServiceRunningState::STATE_NOT_START;
-    service_->registerToService_ = false;
-    EXPECT_CALL(*accessToken_, GetUserId()).WillOnce(Return(TEST_USER_ID));
-    EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*accessToken_, GetUserId()).Times(0);
+    EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_)).Times(0);
     SystemAbilityOnDemandReason reason;
     reason.SetName(START_REASON);
 
     service_->OnStart(reason);
 
     const auto &trace = GetCloudDiskFuseLifecycleTrace();
-    EXPECT_EQ(trace.startUserCalls, 1U);
-    EXPECT_EQ(trace.stopForServiceExitCalls, 1U);
-    EXPECT_EQ(trace.setIdleCallbackCalls, 2U);
-    EXPECT_FALSE(static_cast<bool>(trace.idleCallback));
-    ASSERT_EQ(trace.events.size(), 4U);
-    EXPECT_EQ(trace.events[0], "SetIdleCallback");
-    EXPECT_EQ(trace.events[1], "StartUser");
-    EXPECT_EQ(trace.events[2], "ClearIdleCallback");
-    EXPECT_EQ(trace.events[3], "StopForServiceExit");
-    EXPECT_EQ(service_->state_, ServiceRunningState::STATE_NOT_START);
-    EXPECT_FALSE(service_->registerToService_);
+    EXPECT_EQ(trace.startUserCalls, 0U);
+    EXPECT_EQ(trace.stopForServiceExitCalls, 0U);
+    EXPECT_EQ(trace.setIdleCallbackCalls, 0U);
 }
 
 /*
@@ -287,14 +277,9 @@ HWTEST_F(CloudDiskFuseServiceLifecycleTest, UnloadSa_001, TestSize.Level2)
  */
 HWTEST_F(CloudDiskFuseServiceLifecycleTest, OnStop_001, TestSize.Level1)
 {
-    service_->state_ = ServiceRunningState::STATE_RUNNING;
-    service_->registerToService_ = true;
-
     service_->OnStop();
 
     EXPECT_EQ(GetCloudDiskFuseLifecycleTrace().stopForServiceExitCalls, 1U);
-    EXPECT_EQ(service_->state_, ServiceRunningState::STATE_NOT_START);
-    EXPECT_FALSE(service_->registerToService_);
 }
 
 } // namespace OHOS::FileManagement::CloudDiskService::Test

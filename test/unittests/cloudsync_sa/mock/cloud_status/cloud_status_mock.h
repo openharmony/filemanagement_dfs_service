@@ -14,23 +14,25 @@
  */
 #ifndef OHOS_CLOUD_STATUS_MOCK_H
 #define OHOS_CLOUD_STATUS_MOCK_H
-
+ 
 #include <gmock/gmock.h>
 #include <memory>
 #include <string>
 #include "cloud_status.h"
-
+ 
 namespace OHOS::FileManagement::CloudSync {
 class CloudStatusMethod {
 public:
     virtual ~CloudStatusMethod() = default;
     virtual bool IsCloudStatusOkay(const std::string &bundleName, const int32_t userId);
+    virtual bool IsSwitchOn(const std::string &bundleName, const int32_t userId);
     static inline std::shared_ptr<CloudStatusMethod> proxy_ = nullptr;
 };
-
+ 
 class CloudStatusMethodMock : public CloudStatusMethod {
 public:
     MOCK_METHOD2(IsCloudStatusOkay, bool(const std::string &bundleName, const int32_t userId));
+    MOCK_METHOD2(IsSwitchOn, bool(const std::string &bundleName, const int32_t userId));
 };
 }
 #endif

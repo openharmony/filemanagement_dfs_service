@@ -59,6 +59,7 @@ constexpr uint64_t TEST_ROOT_EPOCH = 11;
 constexpr fuse_ino_t TEST_NODE_ID = FUSE_ROOT_ID + 1;
 constexpr dev_t TEST_DEVICE = 21;
 constexpr ino_t TEST_INODE = 34;
+constexpr ino_t TEST_ROOT_INODE = 34;
 constexpr mode_t TEST_LOOKUP_FILE_MODE = 0600;
 constexpr int32_t E_OK = 0;
 
@@ -101,6 +102,7 @@ protected:
         root.syncFolderIndex = index;
         root.physicalPath = "/physical/root";
         root.mountPath = "/mnt/mock/root";
+        root.rootInode = TEST_ROOT_INODE;
         root.warmupEpoch = epoch;
         root.state = state;
         controller_->roots_[index] = root;
@@ -117,6 +119,7 @@ protected:
         node.nodeId = nodeId;
         node.syncFolderIndex = index;
         node.path = "/mock/file";
+        node.physicalPath = "/mock/file";
         node.device = device;
         node.inode = inode;
         node.rootEpoch = epoch;
@@ -132,6 +135,7 @@ protected:
         result.syncFolderIndex = TEST_ROOT_INDEX;
         result.rootEpoch = TEST_ROOT_EPOCH;
         result.path = "/mock/file";
+        result.physicalPath = "/mock/file";
         result.attr.st_dev = TEST_DEVICE;
         result.attr.st_ino = TEST_INODE;
         result.attr.st_mode = S_IFREG | TEST_LOOKUP_FILE_MODE;
@@ -223,10 +227,13 @@ protected:
 HWTEST_F(CloudDiskFuseControllerTest, BuildRootContext_001, TestSize.Level1)
 {
     auto &mock = CloudDiskFuseControllerMock::GetState();
+    std::string rootPath = CreateTempDirectory();
+    ASSERT_FALSE(rootPath.empty());
     CloudDiskFuseController::RootContext root;
-    EXPECT_TRUE(controller_->BuildRootContext(TEST_USER_ID, TEST_ROOT_INDEX, "/physical/root", root));
+    EXPECT_TRUE(controller_->BuildRootContext(TEST_USER_ID, TEST_ROOT_INDEX, rootPath, root));
     EXPECT_EQ(root.syncFolderIndex, TEST_ROOT_INDEX);
     EXPECT_EQ(root.mountPath, mock.convertedPath);
+    EXPECT_NE(root.rootInode, 0U);
 
     mock.convertResult = false;
     EXPECT_FALSE(controller_->BuildRootContext(TEST_USER_ID, TEST_ROOT_INDEX, "/invalid", root));
@@ -320,11 +327,13 @@ HWTEST_F(CloudDiskFuseControllerTest, AddRoot_001, TestSize.Level2)
 HWTEST_F(CloudDiskFuseControllerTest, AddRoot_002, TestSize.Level1)
 {
     auto &mock = CloudDiskFuseControllerMock::GetState();
+    std::string rootPath = CreateTempDirectory();
+    ASSERT_FALSE(rootPath.empty());
     controller_->started_ = true;
     controller_->activeUserId_ = TEST_USER_ID;
     controller_->rootWarmupEpoch_ = TEST_ROOT_EPOCH;
 
-    controller_->AddRoot(TEST_USER_ID, TEST_ROOT_INDEX, "/physical/root");
+    controller_->AddRoot(TEST_USER_ID, TEST_ROOT_INDEX, rootPath);
     ffrt::wait();
 
     ASSERT_EQ(controller_->roots_.size(), 1U);
@@ -338,7 +347,9 @@ HWTEST_F(CloudDiskFuseControllerTest, AddRoot_002, TestSize.Level1)
     const uint64_t previousEpoch = controller_->roots_[TEST_ROOT_INDEX].warmupEpoch;
     controller_->roots_[TEST_ROOT_INDEX].warmupTaskCount = 2;
     mock.warmupCalls = 0;
-    controller_->AddRoot(TEST_USER_ID, TEST_ROOT_INDEX, "/physical/replacement");
+    std::string replacementPath = CreateTempDirectory();
+    ASSERT_FALSE(replacementPath.empty());
+    controller_->AddRoot(TEST_USER_ID, TEST_ROOT_INDEX, replacementPath);
     ffrt::wait();
 
     EXPECT_EQ(mock.warmupCalls, 1U);
@@ -750,7 +761,7 @@ HWTEST_F(CloudDiskFuseControllerTest, ResolveLookup_002, TestSize.Level1)
     ASSERT_FALSE(rootPath.empty());
     std::string filePath = CreateTempFile(rootPath, "file", "data");
     ASSERT_FALSE(filePath.empty());
-    controller_->roots_[TEST_ROOT_INDEX].mountPath = rootPath;
+    controller_->roots_[TEST_ROOT_INDEX].physicalPath = rootPath;
     behavior.lookupResult = E_OK;
     behavior.relativePathResult = E_OK;
     behavior.placeholder = 1;
@@ -775,7 +786,7 @@ HWTEST_F(CloudDiskFuseControllerTest, ResolveLookup_003, TestSize.Level1)
     controller_->activeUserId_ = TEST_USER_ID;
     controller_->generation_ = 3;
     AddRoot(1, CloudDiskFuseController::RootState::READY, 1);
-    controller_->roots_[1].mountPath = rootPath;
+    controller_->roots_[1].physicalPath = rootPath;
     AddRoot(2, CloudDiskFuseController::RootState::WARMING, 2);
     controller_->roots_[2].warmupInFlight = true;
 
@@ -853,10 +864,10 @@ HWTEST_F(CloudDiskFuseControllerTest, BuildLookupCandidate_001, TestSize.Level1)
     auto root = AddRoot();
     std::string candidate;
     EXPECT_EQ(controller_->BuildLookupCandidate(root, "relative", "file", candidate), E_OK);
-    EXPECT_EQ(candidate, "/mnt/mock/rootrelative/file");
+    EXPECT_EQ(candidate, "/physical/rootrelative/file");
     EXPECT_EQ(controller_->BuildLookupCandidate(root, "relative/", "file", candidate), E_OK);
-    EXPECT_EQ(candidate, "/mnt/mock/rootrelative/file");
-    root.mountPath.assign(PATH_MAX + 1, 'x');
+    EXPECT_EQ(candidate, "/physical/rootrelative/file");
+    root.physicalPath.assign(PATH_MAX + 1, 'x');
     EXPECT_EQ(controller_->BuildLookupCandidate(root, "", "file", candidate), ENAMETOOLONG);
 }
 
@@ -876,7 +887,7 @@ HWTEST_F(CloudDiskFuseControllerTest, ValidateLookupCandidate_001, TestSize.Leve
     ASSERT_FALSE(filePath.empty());
     ASSERT_FALSE(escapedPath.empty());
     CloudDiskFuseController::RootContext root;
-    root.mountPath = rootPath;
+    root.physicalPath = rootPath;
     std::string canonicalPath;
     struct stat attr {};
     EXPECT_EQ(controller_->ValidateLookupCandidate(root, rootPath + "/missing", canonicalPath, attr), ENOENT);
@@ -915,7 +926,7 @@ HWTEST_F(CloudDiskFuseControllerTest, ResolveLookupInRoot_001, TestSize.Level1)
     behavior.placeholder = 1;
     behavior.mode = S_IFDIR | 0700;
     outcome = controller_->ResolveLookupInRoot(TEST_USER_ID, FUSE_ROOT_ID, "file", root, result);
-    EXPECT_EQ(outcome.error, ESTALE);
+    EXPECT_EQ(outcome.state, CloudDiskFuseController::RootLookupState::CONTINUE);
 }
 
 /*
@@ -930,7 +941,7 @@ HWTEST_F(CloudDiskFuseControllerTest, ResolveLookupInRoot_002, TestSize.Level1)
     std::string filePath = CreateTempFile(rootPath, "file", "data");
     ASSERT_FALSE(filePath.empty());
     auto root = AddRoot();
-    root.mountPath = rootPath;
+    root.physicalPath = rootPath;
     auto &behavior = CloudDiskFuseControllerMock::GetState().metaBehaviors[TEST_ROOT_INDEX];
     behavior.exists = true;
     behavior.placeholder = 1;

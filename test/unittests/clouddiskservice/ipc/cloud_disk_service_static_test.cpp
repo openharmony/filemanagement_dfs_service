@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <cstring>
+#include <future>
 #include <limits>
 #include <thread>
 #include <vector>
@@ -27,8 +28,28 @@
 #include "assistant.h"
 #include "cloud_disk_service_access_token_mock.h"
 #include "cloud_disk_service_utils.h"
+#include "cloud_disk_sync_folder_manager_mock.h"
 #include "message_parcel_mock.h"
 #include "securec.h"
+#include "system_ability_manager_client_mock.h"
+
+namespace {
+    bool g_staticPublish = false;
+} // namespace
+
+namespace OHOS {
+bool SystemAbility::Publish(sptr<IRemoteObject> systemAbility)
+{
+    (void)systemAbility;
+    return g_staticPublish;
+}
+
+bool SystemAbility::AddSystemAbilityListener(int32_t systemAbilityId)
+{
+    (void) systemAbilityId;
+    return true;
+}
+} // namespace OHOS
 
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
@@ -234,6 +255,217 @@ void CloudDiskServiceStaticTest::TearDown()
     Assistant::mockErrno = 0;
     CloudDiskSyncFolder::GetInstance().ClearMap();
     PlaceholderCallbackManager::GetInstance().ClearBySyncFolder(PLACEHOLDER_TEST_BUNDLE_NAME, 1);
+}
+
+class CloudDiskServiceStartupTest : public CloudDiskServiceStaticTest {
+public:
+    void SetUp() override
+    {
+        CloudDiskServiceStaticTest::SetUp();
+        g_staticPublish = true;
+        service_ = new CloudDiskService(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
+        service_->initState_ = make_shared<CloudDiskService::InitState>();
+        service_->initTask_ = ffrt::submit_h([]() {});
+        CloudDiskServiceStub::onRemoteRequestCount_.store(0);
+    }
+
+    void TearDown() override
+    {
+        service_->OnStop();
+        ffrt::wait();
+        service_->publishObj_ = nullptr;
+        service_ = nullptr;
+        g_staticPublish = false;
+        Mock::VerifyAndClearExpectations(&CloudDiskSyncFolderManagerMock::GetInstance());
+        ISystemAbilityManagerClient::smc = nullptr;
+        CloudDiskServiceStaticTest::TearDown();
+    }
+
+    sptr<CloudDiskService> service_;
+};
+
+/**
+ * @tc.name: OnRemoteRequestWaitForInitTest001
+ * @tc.desc: Future request codes wait for initialization before entering the generated stub
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, OnRemoteRequestWaitForInitTest001, TestSize.Level1)
+{
+    std::promise<void> releaseInit;
+    auto releaseFuture = releaseInit.get_future().share();
+    auto initState = service_->initState_;
+    service_->initTask_ = ffrt::submit_h([releaseFuture, initState]() {
+        releaseFuture.wait();
+        initState->result = E_OK;
+    });
+    std::promise<void> requestEntered;
+    auto enteredFuture = requestEntered.get_future();
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).Times(0);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    const uint32_t code = static_cast<uint32_t>(ICloudDiskServiceIpcCode::COMMAND_GET_PLACEHOLDER_STATE_INNER) + 1;
+    auto request = std::async(std::launch::async, [this, &requestEntered, &data, &reply, &option]() {
+        requestEntered.set_value();
+        return service_->OnRemoteRequest(code, data, reply, option);
+    });
+    EXPECT_EQ(enteredFuture.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    EXPECT_EQ(request.wait_for(std::chrono::milliseconds(20)), std::future_status::timeout);
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 0U);
+    releaseInit.set_value();
+    EXPECT_EQ(request.get(), ERR_NONE);
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 1U);
+}
+
+/**
+ * @tc.name: OnRemoteRequestInitFailedTest001
+ * @tc.desc: Different initialization failures return E_IPC_FAILED without dispatch
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, OnRemoteRequestInitFailedTest001, TestSize.Level1)
+{
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(E_IPC_FAILED)).Times(2).WillRepeatedly(Return(true));
+    const int32_t initResults[] = {E_PERMISSION_DENIED, E_TRY_AGAIN};
+    for (int32_t initResult : initResults) {
+        service_->initState_->result = initResult;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_EQ(service_->OnRemoteRequest(
+            static_cast<uint32_t>(ICloudDiskServiceIpcCode::COMMAND_REGISTER_SYNC_FOLDER_INNER), data, reply, option),
+            ERR_NONE);
+        EXPECT_EQ(service_->initState_->result, initResult);
+    }
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 0U);
+}
+
+/**
+ * @tc.name: OnRemoteRequestInitFailedTest002
+ * @tc.desc: Failure to serialize the initialization error returns an IPC error
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, OnRemoteRequestInitFailedTest002, TestSize.Level1)
+{
+    service_->initState_->result = E_TRY_AGAIN;
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(E_IPC_FAILED)).WillOnce(Return(false));
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_EQ(service_->OnRemoteRequest(
+        static_cast<uint32_t>(ICloudDiskServiceIpcCode::COMMAND_REGISTER_SYNC_FOLDER_INNER), data, reply, option),
+        ERR_INVALID_VALUE);
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 0U);
+}
+
+/**
+ * @tc.name: OnRemoteRequestFutureCodeTest001
+ * @tc.desc: Future request codes are gated until initialization succeeds
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, OnRemoteRequestFutureCodeTest001, TestSize.Level1)
+{
+    service_->initTask_ = {};
+    service_->initState_ = nullptr;
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(E_IPC_FAILED)).WillOnce(Return(true));
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    const uint32_t code = static_cast<uint32_t>(ICloudDiskServiceIpcCode::COMMAND_GET_PLACEHOLDER_STATE_INNER) + 1;
+    EXPECT_EQ(service_->OnRemoteRequest(code, data, reply, option), ERR_NONE);
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 0U);
+
+    service_->initState_ = make_shared<CloudDiskService::InitState>();
+    service_->initTask_ = ffrt::submit_h([initState = service_->initState_]() {
+        initState->result = E_OK;
+    });
+    EXPECT_EQ(service_->OnRemoteRequest(code, data, reply, option), ERR_NONE);
+    EXPECT_EQ(CloudDiskServiceStub::onRemoteRequestCount_.load(), 1U);
+}
+
+/**
+ * @tc.name: WaitForInitStoppedTest001
+ * @tc.desc: A stopped initialization cannot allow new business requests
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, WaitForInitStoppedTest001, TestSize.Level1)
+{
+    service_->initState_->result = E_OK;
+    service_->initState_->stopped.store(true);
+    EXPECT_EQ(service_->WaitForInit(), E_IPC_FAILED);
+}
+
+/**
+ * @tc.name: InitAccountIdFailedTest001
+ * @tc.desc: Failure to resolve the active account prevents sync folder restoration
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, InitAccountIdFailedTest001, TestSize.Level1)
+{
+    EXPECT_CALL(*dfsuAccessToken_, GetUserId()).WillOnce(Return(0));
+    EXPECT_CALL(*dfsuAccessToken_, GetAccountId(_)).WillOnce(Return(E_INVALID_ARG));
+    EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_)).Times(0);
+    EXPECT_EQ(service_->Init(SystemAbilityOnDemandReason()), E_TRY_AGAIN);
+}
+
+/**
+ * @tc.name: OnStartInitFailedUnloadTest001
+ * @tc.desc: A failed initialization requests unload from a separate dependent task
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, OnStartInitFailedUnloadTest001, TestSize.Level1)
+{
+    auto samgrClient = make_shared<SystemAbilityManagerClientMock>();
+    sptr<ISystemAbilityManagerMock> samgr = new ISystemAbilityManagerMock();
+    ISystemAbilityManagerClient::smc = samgrClient;
+    EXPECT_CALL(*samgrClient, GetSystemAbilityManager()).WillRepeatedly(Return(samgr));
+    EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+    EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_))
+        .WillOnce(Return(E_PERMISSION_DENIED));
+    std::promise<void> unloaded;
+    auto unloadedFuture = unloaded.get_future();
+    EXPECT_CALL(*samgr, UnloadSystemAbility(TEST_CLOUD_DISK_SERVICE_SA_ID)).WillOnce(Invoke([this, &unloaded](int32_t) {
+        EXPECT_EQ(service_->initState_->result, E_PERMISSION_DENIED);
+        EXPECT_NE(ffrt::this_task::get_id(), service_->initTask_.get_id());
+        EXPECT_EQ(service_->WaitForInit(), E_IPC_FAILED);
+        unloaded.set_value();
+        return ERR_OK;
+    }));
+    SystemAbilityOnDemandReason reason;
+    reason.SetName("usual.event.USER_UNLOCKED");
+    reason.SetValue(std::to_string(TEST_USER_ID));
+    service_->OnStart(reason);
+    EXPECT_EQ(unloadedFuture.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    ffrt::wait();
+}
+
+/**
+ * @tc.name: InitEmptySyncFoldersTest001
+ * @tc.desc: Successful initialization with no sync folders still requests SA unload
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(CloudDiskServiceStartupTest, InitEmptySyncFoldersTest001, TestSize.Level1)
+{
+    auto samgrClient = make_shared<SystemAbilityManagerClientMock>();
+    sptr<ISystemAbilityManagerMock> samgr = new ISystemAbilityManagerMock();
+    ISystemAbilityManagerClient::smc = samgrClient;
+    EXPECT_CALL(*samgrClient, GetSystemAbilityManager()).WillRepeatedly(Return(samgr));
+    EXPECT_CALL(*samgr, SubscribeSystemAbility(_, _)).WillRepeatedly(Return(ERR_OK));
+    EXPECT_CALL(*samgr, UnloadSystemAbility(TEST_CLOUD_DISK_SERVICE_SA_ID)).WillOnce(Return(ERR_OK));
+    EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
+    EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_)).WillOnce(Return(E_OK));
+    SystemAbilityOnDemandReason reason;
+    reason.SetName("usual.event.USER_UNLOCKED");
+    reason.SetValue(std::to_string(TEST_USER_ID));
+    EXPECT_EQ(service_->Init(reason), E_OK);
+    EXPECT_EQ(CloudDiskSyncFolder::GetInstance().GetSyncFolderSize(), 0);
 }
 
 /**
@@ -3933,7 +4165,7 @@ HWTEST_F(CloudDiskServiceStaticTest, ConvertPlaceholderToEmptyFileMutationFailur
 {
     struct stat fileStat = {};
     fileStat.st_mode = S_IFREG;
-    auto expectOpenPlaceholder = [&](int32_t fileFd, int32_t stateReadCount) {
+    auto expectOpenPlaceholder = [&fileStat](int32_t fileFd, int32_t stateReadCount) {
         EXPECT_CALL(*insMock_, MockStat(StrEq(PLACEHOLDER_TEST_PATH), _))
             .WillOnce(DoAll(SetArgPointee<1>(fileStat), Return(0)));
         EXPECT_CALL(*insMock_, Open(StrEq(PLACEHOLDER_TEST_PATH), _, _)).WillOnce(Return(fileFd));

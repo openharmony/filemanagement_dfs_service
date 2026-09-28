@@ -881,7 +881,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest003, TestSize.L
         EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
         EXPECT_CALL(*rset_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*rset_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>(TEST_BUNDLE_NAME), Return(E_OK)));
-        EXPECT_CALL(*cloudStatus_, IsCloudStatusOkay(_, _)).WillOnce(Return(true));
+        EXPECT_CALL(*cloudStatus_, IsSwitchOn(_, _)).WillOnce(Return(true));
         taskRunner_->SetRunableBundleNames();
         
         EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "true");
@@ -964,7 +964,7 @@ HWTEST_F(CloudSyncServiceCycleTaskTest, SetRunableBundleNamesTest006, TestSize.L
         EXPECT_CALL(*rset_, GoToNextRow()).WillOnce(Return(E_OK)).WillOnce(Return(E_RDB));
         EXPECT_CALL(*rset_, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*rset_, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>(TEST_BUNDLE_NAME), Return(E_OK)));
-        EXPECT_CALL(*cloudStatus_, IsCloudStatusOkay(_, _)).WillOnce(Return(false));
+        EXPECT_CALL(*cloudStatus_, IsSwitchOn(_, _)).WillOnce(Return(false));
 
         taskRunner_->SetRunableBundleNames();
         EXPECT_EQ(system::GetParameter(START_CONDITION, ""), "false");

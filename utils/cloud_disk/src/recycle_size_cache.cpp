@@ -204,9 +204,57 @@ int32_t RecycleSizeCache::ResetRecycleBinSize(int32_t userId, const std::string 
         return E_INVAL_ARG;
     }
     std::string path = GetCacheFilePath(userId, bundleName);
-    std::lock_guard<std::mutex> lock(gMutex_);
-    AddCacheVersion(path);
-    return WriteCachedSize(path, 0);
+    int64_t myVersion = GetCacheVersion(path);
+    ffrt::thread([path, myVersion] {
+        std::lock_guard<std::mutex> lock(gMutex_);
+        if (GetCacheVersion(path) != myVersion) {
+            LOGD("reset discarded, cache version changed, key:%{private}s, myVersion:%{public}lld",
+                path.c_str(), static_cast<long long>(myVersion));
+            return;
+        }
+        if (WriteCachedSize(path, 0) != E_OK) {
+            LOGE("reset write zero failed, key:%{private}s", path.c_str());
+            return;
+        }
+        AddCacheVersion(path);
+    }).detach();
+    return E_OK;
+}
+
+int32_t RecycleSizeCache::ResetRecycleBinSize(int32_t userId, const std::string &bundleName,
+    const std::vector<MetaBase> &metaBases)
+{
+    if (!IsValidParams(userId, bundleName)) {
+        LOGE("invalid reset with list params");
+        return E_INVAL_ARG;
+    }
+    std::string path = GetCacheFilePath(userId, bundleName);
+    int64_t myVersion = GetCacheVersion(path);
+    ffrt::thread([path, metaBases, myVersion] {
+        std::lock_guard<std::mutex> lock(gMutex_);
+        if (GetCacheVersion(path) != myVersion) {
+            LOGD("reset with list discarded, cache version changed, key:%{private}s, myVersion:%{public}lld",
+                path.c_str(), static_cast<long long>(myVersion));
+            return;
+        }
+        int64_t total = 0;
+        for (const auto &metaBase : metaBases) {
+            if (IsFilteredMetaBase(metaBase)) {
+                continue;
+            }
+            int64_t delta = static_cast<int64_t>(metaBase.size);
+            if (delta <= 0) {
+                continue;
+            }
+            total += delta;
+        }
+        if (WriteCachedSize(path, total) != E_OK) {
+            LOGE("reset with list write failed, key:%{private}s", path.c_str());
+            return;
+        }
+        AddCacheVersion(path);
+    }).detach();
+    return E_OK;
 }
 
 std::string RecycleSizeCache::GetCacheFilePath(int32_t userId, const std::string &bundleName)

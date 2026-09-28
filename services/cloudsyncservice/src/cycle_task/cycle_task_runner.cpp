@@ -131,7 +131,7 @@ void CycleTaskRunner::SetRunableBundleNames()
         if (lastCheckTime != 0 && difftime(currentTime, lastCheckTime) < CycleTask::ONE_DAY) {
             continue;
         }
-        bool cloudStatus = CloudStatus::IsCloudStatusOkay(bundleName, userId_);
+        bool cloudStatus = CloudStatus::IsSwitchOn(bundleName, userId_);
         if (!cloudStatus) {
             LOGI(" %{public}s cloud status is not ok, skip task, ret is %{public}d", bundleName.c_str(), ret);
             cloudPrefImpl->SetLong("lastCheckTime", currentTime);

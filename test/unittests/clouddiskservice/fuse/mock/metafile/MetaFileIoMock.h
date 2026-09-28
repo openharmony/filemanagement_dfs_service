@@ -85,7 +85,9 @@ public:
         ReadReply reply;
         reply.result = static_cast<int64_t>(sizeof(T));
         reply.bytes.resize(sizeof(T));
-        (void)memcpy_s(reply.bytes.data(), sizeof(T), &object, sizeof(T));
+        if (memcpy_s(reply.bytes.data(), sizeof(T), &object, sizeof(T)) != 0) {
+            return;
+        }
         readReplies_.push_back(std::move(reply));
     }
 
@@ -149,7 +151,9 @@ public:
         readReplies_.pop_front();
         if (reply.result > 0 && data != nullptr && !reply.bytes.empty()) {
             size_t copySize = std::min({size, reply.bytes.size(), static_cast<size_t>(reply.result)});
-            (void)memcpy_s(data, copySize, reply.bytes.data(), copySize);
+            if (memcpy_s(data, copySize, reply.bytes.data(), copySize) != 0) {
+                return reply.result;
+            }
         }
         return reply.result;
     }
