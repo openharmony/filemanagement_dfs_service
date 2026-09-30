@@ -995,6 +995,7 @@ group("clouddisk_service_test") {
       ":cloud_disk_service_static_test",
       ":cloud_disk_service_test",
       ":service_account_status_listener_test",
+      "fuse:clouddisk_fuse_test",
     ]
   }
 }

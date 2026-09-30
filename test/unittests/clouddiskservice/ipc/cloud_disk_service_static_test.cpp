@@ -33,6 +33,24 @@
 #include "securec.h"
 #include "system_ability_manager_client_mock.h"
 
+namespace {
+    bool g_staticPublish = false;
+} // namespace
+
+namespace OHOS {
+bool SystemAbility::Publish(sptr<IRemoteObject> systemAbility)
+{
+    (void)systemAbility;
+    return g_staticPublish;
+}
+
+bool SystemAbility::AddSystemAbilityListener(int32_t systemAbilityId)
+{
+    (void) systemAbilityId;
+    return true;
+}
+} // namespace OHOS
+
 namespace OHOS::FileManagement::CloudDiskService::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -244,6 +262,7 @@ public:
     void SetUp() override
     {
         CloudDiskServiceStaticTest::SetUp();
+        g_staticPublish = true;
         service_ = new CloudDiskService(TEST_CLOUD_DISK_SERVICE_SA_ID, TEST_RUN_ON_CREATE);
         service_->initState_ = make_shared<CloudDiskService::InitState>();
         service_->initTask_ = ffrt::submit_h([]() {});
@@ -256,6 +275,7 @@ public:
         ffrt::wait();
         service_->publishObj_ = nullptr;
         service_ = nullptr;
+        g_staticPublish = false;
         Mock::VerifyAndClearExpectations(&CloudDiskSyncFolderManagerMock::GetInstance());
         ISystemAbilityManagerClient::smc = nullptr;
         CloudDiskServiceStaticTest::TearDown();
@@ -405,7 +425,6 @@ HWTEST_F(CloudDiskServiceStartupTest, OnStartInitFailedUnloadTest001, TestSize.L
     sptr<ISystemAbilityManagerMock> samgr = new ISystemAbilityManagerMock();
     ISystemAbilityManagerClient::smc = samgrClient;
     EXPECT_CALL(*samgrClient, GetSystemAbilityManager()).WillRepeatedly(Return(samgr));
-    EXPECT_CALL(*samgr, AddSystemAbility(TEST_CLOUD_DISK_SERVICE_SA_ID, _, _)).WillOnce(Return(ERR_OK));
     EXPECT_CALL(*dfsuAccessToken_, IsUserVerifyed(TEST_USER_ID)).WillOnce(Return(true));
     EXPECT_CALL(CloudDiskSyncFolderManagerMock::GetInstance(), GetAllSyncFoldersForSa(_))
         .WillOnce(Return(E_PERMISSION_DENIED));

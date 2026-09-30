@@ -15,11 +15,13 @@
 
 #include "cloud_disk_service_metafile.h"
 
+#include <climits>
 #include <memory>
 #include <securec.h>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <unordered_set>
 #include <uuid/uuid.h>
 
 #include "bit_ops.h"
@@ -35,6 +37,7 @@ namespace OHOS::FileManagement::CloudDiskService {
 using namespace OHOS::FileManagement;
 
 constexpr uint32_t MAX_META_FILE_NUM = 150;
+constexpr uint32_t MAX_META_PARENT_DEPTH = 1024;
 const unsigned int STAT_MODE_DIR = 0771;
 
 struct DcacheLookupCtx {
@@ -296,12 +299,23 @@ static bool CreateDentry(CloudDiskServiceDentryGroup &d,
     return true;
 }
 
-static std::string GetDentryFileByPath(
-    const int32_t userId, const std::string &syncFolderIndex, const std::string &inode)
+static std::string GetDentryCacheDir(const int32_t userId, const std::string &syncFolderIndex, const std::string &inode)
 {
-    std::string cacheDir = "/data/service/el2/" + std::to_string(userId) +
-                           "/hmdfs/cache/account_cache/dentry_cache/clouddisk_service_cache/" + syncFolderIndex + "/" +
-                           std::to_string(CloudDisk::CloudFileUtils::GetBucketId(inode)) + "/";
+    return "/data/service/el2/" + std::to_string(userId) +
+           "/hmdfs/cache/account_cache/dentry_cache/clouddisk_service_cache/" + syncFolderIndex + "/" +
+           std::to_string(CloudDisk::CloudFileUtils::GetBucketId(inode)) + "/";
+}
+
+static std::string GetDentryFilePath(const int32_t userId, const std::string &syncFolderIndex, const std::string &inode)
+{
+    return GetDentryCacheDir(userId, syncFolderIndex, inode) + inode;
+}
+
+static std::string GetDentryFileByPath(const int32_t userId,
+                                       const std::string &syncFolderIndex,
+                                       const std::string &inode)
+{
+    std::string cacheDir = GetDentryCacheDir(userId, syncFolderIndex, inode);
     Storage::DistributedFile::Utils::ForceCreateDirectory(cacheDir, STAT_MODE_DIR);
     return cacheDir + inode;
 }
@@ -309,10 +323,36 @@ static std::string GetDentryFileByPath(
 CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId,
                                                    const uint32_t syncFolderIndex,
                                                    const uint64_t inode)
+    : CloudDiskServiceMetaFile(userId, syncFolderIndex, inode, true)
+{
+}
+
+CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId,
+                                                   const uint32_t syncFolderIndex,
+                                                   const uint64_t inode,
+                                                   bool createIfMissing)
 {
     userId_ = userId;
     syncFolderIndex_ = Convertor::ConvertToHex(syncFolderIndex);
     selfInode_ = Convertor::ConvertToHex(inode);
+    if (!createIfMissing) {
+        cacheFile_ = GetDentryFilePath(userId_, syncFolderIndex_, selfInode_);
+        fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW)};
+        if (fd_ < 0) {
+            return;
+        }
+        struct stat fileStat {};
+        if (fstat(fd_, &fileStat) != 0 || fileStat.st_size < sizeof(CloudDiskServiceDcacheHeader)) {
+            fd_ = UniqueFd{-1};
+            return;
+        }
+        if (DecodeDentryHeader() != E_OK) {
+            LOGE("decode existing metafile failed");
+            fd_ = UniqueFd{-1};
+        }
+        return;
+    }
+
     cacheFile_ = GetDentryFileByPath(userId_, syncFolderIndex_, selfInode_);
     if (access(cacheFile_.c_str(), F_OK) == 0) {
         fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
@@ -320,6 +360,11 @@ CloudDiskServiceMetaFile::CloudDiskServiceMetaFile(const int32_t userId,
     } else {
         fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
     }
+}
+
+bool CloudDiskServiceMetaFile::IsValid() const
+{
+    return fd_ >= 0;
 }
 
 int32_t CloudDiskServiceMetaFile::DecodeDentryHeader()
@@ -824,6 +869,16 @@ std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFi
     return mFile;
 }
 
+std::shared_ptr<CloudDiskServiceMetaFile> MetaFileMgr::GetCloudDiskServiceMetaFileIfExists(
+    int32_t userId, const uint32_t syncFolderIndex, const uint64_t inode)
+{
+    auto metaFile = std::make_shared<CloudDiskServiceMetaFile>(userId, syncFolderIndex, inode, false);
+    if (!metaFile->IsValid()) {
+        return nullptr;
+    }
+    return metaFile;
+}
+
 int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaFile> metaFile, std::string &path)
 {
     auto pMetaFile = metaFile;
@@ -840,6 +895,50 @@ int32_t MetaFileMgr::GetRelativePath(const std::shared_ptr<CloudDiskServiceMetaF
             return E_PATH_NOT_EXIST;
         }
 
+        path = mBase.name + "/" + path;
+        pMetaFile = parentMetaFile;
+    }
+    path = "/" + path;
+    return E_OK;
+}
+
+int32_t MetaFileMgr::GetRelativePathIfExists(const std::shared_ptr<CloudDiskServiceMetaFile> metaFile,
+                                             std::string &path)
+{
+    if (metaFile == nullptr || !metaFile->IsValid()) {
+        path.clear();
+        return E_PATH_NOT_EXIST;
+    }
+
+    auto pMetaFile = metaFile;
+    int32_t userId = metaFile->userId_;
+    uint32_t syncFolderIndex = Convertor::ConvertFromHex(metaFile->syncFolderIndex_);
+    uint32_t depth = 0;
+    std::unordered_set<std::string> visitedInodes{pMetaFile->selfInode_};
+    while (pMetaFile->parentDentryFile_ != ROOT_PARENTDENTRYFILE) {
+        if (++depth > MAX_META_PARENT_DEPTH || !visitedInodes.emplace(pMetaFile->parentDentryFile_).second) {
+            path.clear();
+            return E_PATH_NOT_EXIST;
+        }
+        uint64_t inode = Convertor::ConvertFromHex(pMetaFile->parentDentryFile_);
+        auto parentMetaFile = GetCloudDiskServiceMetaFileIfExists(userId, syncFolderIndex, inode);
+        if (parentMetaFile == nullptr) {
+            path.clear();
+            return E_PATH_NOT_EXIST;
+        }
+
+        MetaBase mBase(pMetaFile->selfRecordId_, pMetaFile->selfHash_);
+        int32_t ret = parentMetaFile->DoLookupByRecordId(mBase, VALIDATE);
+        if (ret != E_OK) {
+            path.clear();
+            return E_PATH_NOT_EXIST;
+        }
+
+        if (mBase.name.empty() || mBase.name.size() >= PATH_MAX || mBase.name.find('/') != std::string::npos ||
+            path.size() > PATH_MAX - mBase.name.size() - 1) {
+            path.clear();
+            return E_PATH_NOT_EXIST;
+        }
         path = mBase.name + "/" + path;
         pMetaFile = parentMetaFile;
     }

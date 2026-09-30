@@ -363,6 +363,130 @@ int32_t CloudDiskServiceLogFile::FillChildForDir(const std::string &path, const 
     return E_OK;
 }
 
+int32_t CloudDiskServiceLogFile::WarmupChild(const std::string &path,
+                                             const std::string &name,
+                                             const std::shared_ptr<CloudDiskServiceMetaFile> &parentMetaFile,
+                                             const uint64_t timestamp,
+                                             const WarmupCancelCallback &shouldCancel)
+{
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+    std::string childPath = path + "/" + name;
+    struct stat childStat {};
+    if (lstat(childPath.c_str(), &childStat) != 0) {
+        return errno == ENOENT || errno == ESTALE ? E_OK : errno;
+    }
+    if (!S_ISREG(childStat.st_mode) && !S_ISDIR(childStat.st_mode)) {
+        return E_OK;
+    }
+
+    MetaBase childMeta(name);
+    int32_t ret = EnsureWarmupChildMeta(childPath, parentMetaFile, childMeta, childStat, shouldCancel);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    if (!S_ISDIR(childStat.st_mode)) {
+        return E_OK;
+    }
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+
+    auto existingChild =
+        MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFileIfExists(userId_, syncFolderIndex_, childStat.st_ino);
+    if (existingChild == nullptr) {
+        if (shouldCancel && shouldCancel()) {
+            return ECANCELED;
+        }
+        auto childMetaFile =
+            MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId_, syncFolderIndex_, childStat.st_ino);
+        childMetaFile->parentDentryFile_ = parentMetaFile->selfInode_;
+        childMetaFile->selfRecordId_ = childMeta.recordId;
+        childMetaFile->selfHash_ = childMeta.hash;
+        ret = childMetaFile->GenericDentryHeader();
+        if (ret != E_OK) {
+            return ret;
+        }
+    }
+    ret = WarmupChildForDir(childPath, timestamp, shouldCancel);
+    return ret == ENOENT || ret == ENOTDIR || ret == ESTALE ? E_OK : ret;
+}
+
+int32_t CloudDiskServiceLogFile::EnsureWarmupChildMeta(const std::string &childPath,
+                                                       const std::shared_ptr<CloudDiskServiceMetaFile> &parentMetaFile,
+                                                       MetaBase &childMeta,
+                                                       struct stat &childStat,
+                                                       const WarmupCancelCallback &shouldCancel)
+{
+    int32_t ret = parentMetaFile->DoLookupByName(childMeta);
+    if (ret == E_OK) {
+        return E_OK;
+    }
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+
+    EventInfo eventInfo(userId_, syncFolderIndex_, OperationType::CREATE, childPath);
+    ret = ProduceLog(eventInfo);
+    if (ret == E_OK) {
+        ret = parentMetaFile->DoLookupByName(childMeta);
+    }
+    if (ret == E_OK) {
+        return E_OK;
+    }
+    if (lstat(childPath.c_str(), &childStat) != 0 && (errno == ENOENT || errno == ESTALE)) {
+        return E_OK;
+    }
+    return ret;
+}
+
+int32_t CloudDiskServiceLogFile::WarmupChildForDir(const std::string &path,
+                                                   const uint64_t timestamp,
+                                                   const WarmupCancelCallback &shouldCancel)
+{
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+    struct stat parentStat {};
+    if (lstat(path.c_str(), &parentStat) != 0) {
+        return errno;
+    }
+    if (!S_ISDIR(parentStat.st_mode)) {
+        return E_OK;
+    }
+
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        return errno;
+    }
+    int32_t firstError = E_OK;
+    auto parentMetaFile =
+        MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId_, syncFolderIndex_, parentStat.st_ino);
+    struct dirent *entry = nullptr;
+    errno = 0;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (shouldCancel && shouldCancel()) {
+            firstError = ECANCELED;
+            break;
+        }
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        int32_t ret = WarmupChild(path, entry->d_name, parentMetaFile, timestamp, shouldCancel);
+        if (ret != E_OK && firstError == E_OK) {
+            firstError = ret;
+        }
+        errno = 0;
+    }
+    if (entry == nullptr && errno != 0 && firstError == E_OK) {
+        firstError = errno;
+    }
+    (void)closedir(dir);
+    return firstError;
+}
+
 void CloudDiskServiceLogFile::StartCallback()
 {
     LOGD("StartCallback, %{public}u", syncFolderIndex_);
@@ -724,8 +848,66 @@ int32_t LogFileMgr::RegisterSyncFolder(const int32_t userId, const uint32_t sync
 
     metaFile->GenericDentryHeader();
 
-    ffrt::submit([logFile, path] { logFile->FillChildForDir(path, UTCTimeMilliSeconds()); });
+#ifndef SUPPORT_CLOUD_DISK_SERVICE
+    ScheduleFillChildForDir(userId, syncFolderIndex, path);
+#endif
     return E_OK;
+}
+
+void LogFileMgr::ScheduleFillChildForDir(const int32_t userId,
+                                         const uint32_t syncFolderIndex,
+                                         const std::string &path)
+{
+    auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
+    logFile->SetSyncFolderPath(path);
+    ffrt::submit([logFile, path] { logFile->FillChildForDir(path, UTCTimeMilliSeconds()); });
+}
+
+int32_t LogFileMgr::WarmupSyncFolder(const int32_t userId,
+                                     const uint32_t syncFolderIndex,
+                                     const std::string &path,
+                                     const WarmupCancelCallback &shouldCancel)
+{
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+    struct stat rootStat {};
+    if (stat(path.c_str(), &rootStat) != 0) {
+        LOGW("Skip invalid sync folder during metafile warmup, errno: %{public}d", errno);
+        return errno;
+    }
+    if (!S_ISDIR(rootStat.st_mode)) {
+        LOGW("Skip non-directory sync folder during metafile warmup");
+        return ENOTDIR;
+    }
+
+    auto existingRoot =
+        MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFileIfExists(userId, syncFolderIndex, rootStat.st_ino);
+    if (shouldCancel && shouldCancel()) {
+        return ECANCELED;
+    }
+    if (existingRoot == nullptr) {
+        if (shouldCancel && shouldCancel()) {
+            return ECANCELED;
+        }
+        auto rootMetaFile =
+            MetaFileMgr::GetInstance().GetCloudDiskServiceMetaFile(userId, syncFolderIndex, rootStat.st_ino);
+        rootMetaFile->parentDentryFile_ = ROOT_PARENTDENTRYFILE;
+        rootMetaFile->selfRecordId_ = UuidHelper::GenerateUuidOnly();
+        rootMetaFile->selfHash_ = CloudDisk::CloudFileUtils::DentryHash(ROOT_PARENTDENTRYFILE);
+        if (rootMetaFile->GenericDentryHeader() != E_OK) {
+            LOGW("Initialize sync folder metafile during warmup failed");
+            return EIO;
+        }
+    }
+
+    auto logFile = GetCloudDiskServiceLogFile(userId, syncFolderIndex);
+    logFile->SetSyncFolderPath(path);
+    int32_t ret = logFile->WarmupChildForDir(path, UTCTimeMilliSeconds(), shouldCancel);
+    if (ret != E_OK) {
+        LOGW("Warm up sync folder metafile failed, ret: %{public}d", ret);
+    }
+    return ret;
 }
 
 int32_t LogFileMgr::UnRegisterSyncFolder(const int32_t userId, const uint32_t syncFolderIndex)
