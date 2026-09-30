@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,9 +15,14 @@
 
 #include "cloud_disk_service_manager_impl.h"
 
+#include <new>
+
 #include "cloud_disk_service_callback_client.h"
 #include "cloud_disk_service_callback_table_client.h"
 #include "cloud_disk_service_error.h"
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+#include "cloud_disk_sync_folder_manager.h"
+#endif
 #include "cloud_file_utils.h"
 #include "iservice_registry.h"
 #include "service_proxy.h"
@@ -27,6 +32,23 @@
 
 namespace OHOS::FileManagement::CloudDiskService {
 using namespace std;
+#ifdef SUPPORT_CLOUD_DISK_SERVICE
+static int32_t CheckSyncFolderRegistered()
+{
+    std::vector<FileManagement::SyncFolderExt> syncFolders;
+    int32_t ret = FileManagement::CloudDiskSyncFolderManager::GetInstance().GetAllSyncFoldersForSa(syncFolders);
+    if (ret != E_OK) {
+        LOGE("Check sync folder failed: query returned %{public}d", ret);
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+    if (syncFolders.empty()) {
+        LOGW("Check sync folder failed: no sync folder registered");
+        return E_SYNC_FOLDER_NOT_REGISTERED;
+    }
+    return E_OK;
+}
+#endif
+
 CloudDiskServiceManagerImpl &CloudDiskServiceManagerImpl::GetInstance()
 {
     static CloudDiskServiceManagerImpl instance;
@@ -508,19 +530,23 @@ int32_t CloudDiskServiceManagerImpl::GetPlaceholderCustomInfo(const std::string 
 }
 
 int32_t CloudDiskServiceManagerImpl::StartHydrationByPath(
-    const std::string &path, int32_t callbackType, int32_t priority)
+    const std::string &path, int32_t callbackType, int32_t priority, uint64_t accessorId)
 {
-    LOGI("StartHydrationByPath begin, path:%{private}s, callbackType:%{public}d, priority:%{public}d", path.c_str(),
-         callbackType, priority);
+    LOGI("StartHydrationByPath begin, accessorId:%{private}llu",
+         static_cast<unsigned long long>(accessorId));
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSyncFolderRegistered();
+    if (ret != E_OK) {
+        return ret;
+    }
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        LOGE("StartHydrationByPath failed: proxy is null");
+        LOGE("Start hydration for accessor failed: proxy is null");
         return E_IPC_FAILED;
     }
     SetDeathRecipient(proxy->AsObject());
-    int32_t ret = proxy->StartHydrationByPathInner(path, callbackType, priority);
-    LOGI("StartHydrationByPath request completed, ret:%{public}d", ret);
+    ret = proxy->StartHydrationByPathInner(path, callbackType, priority, accessorId);
+    LOGI("StartHydrationByPath completed, ret:%{public}d", ret);
     return ret;
 #else
     return E_NOT_SUPPORTED;
@@ -531,13 +557,17 @@ int32_t CloudDiskServiceManagerImpl::DehydrateFileByPath(const std::string &path
 {
     LOGI("DehydrateFileByPath begin, path:%{private}s", path.c_str());
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    int32_t ret = CheckSyncFolderRegistered();
+    if (ret != E_OK) {
+        return ret;
+    }
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
         LOGE("DehydrateFileByPath failed: proxy is null, ret:%{public}d", static_cast<int32_t>(E_IPC_FAILED));
         return E_IPC_FAILED;
     }
     SetDeathRecipient(proxy->AsObject());
-    int32_t ret = proxy->DehydrateFileByPathInner(path);
+    ret = proxy->DehydrateFileByPathInner(path);
     LOGI("DehydrateFileByPath completed, ret:%{public}d", ret);
     return ret;
 #else
@@ -545,32 +575,44 @@ int32_t CloudDiskServiceManagerImpl::DehydrateFileByPath(const std::string &path
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback)
+int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(
+    uint64_t accessorId, const sptr<ICloudDiskProgressCallback> &callback)
 {
-    LOGI("RegisterProgressCallback begin");
+    LOGI("RegisterProgressCallback begin, accessorId:%{private}llu",
+         static_cast<unsigned long long>(accessorId));
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
     if (callback == nullptr) {
-        LOGE("RegisterProgressCallback failed: callback is null");
+        LOGE("Register accessor progress failed: callback is null");
         return E_INVALID_ARG;
+    }
+    int32_t ret = CheckSyncFolderRegistered();
+    if (ret != E_OK) {
+        return ret;
     }
     std::lock_guard<std::mutex> lock(progressMutex_);
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        LOGE("RegisterProgressCallback failed: proxy is null");
+        LOGE("Register accessor progress failed: proxy is null");
         return E_IPC_FAILED;
     }
     if (progressClient_ == nullptr) {
-        progressClient_ = sptr(new CloudDiskProgressCallbackClient());
-        LOGI("RegisterProgressCallback created local broker");
+        progressClient_ = sptr(new (std::nothrow) CloudDiskProgressCallbackClient());
     }
-    bool added = progressClient_->Add(callback);
-    LOGI("RegisterProgressCallback local callback added:%{public}d", added);
+    if (progressClient_ == nullptr) {
+        LOGE("Register accessor progress failed: allocate broker failed");
+        return E_TRY_AGAIN;
+    }
+    bool added = false;
+    ret = progressClient_->Add(accessorId, callback, added);
+    if (ret != E_OK) {
+        LOGE("Register accessor progress failed: local registration returned %{public}d", ret);
+        return ret;
+    }
     SetDeathRecipient(proxy->AsObject());
-    // Re-register the same broker idempotently, including after an SA restart.
-    int32_t ret = proxy->RegisterProgressCallbackInner(progressClient_->AsObject());
+    ret = proxy->RegisterProgressCallbackInner(accessorId, progressClient_->AsObject());
     if (ret != E_OK && added) {
-        progressClient_->Remove(callback);
-        LOGW("RegisterProgressCallback rolled back local callback, ret:%{public}d", ret);
+        progressClient_->Remove(accessorId, callback);
+        LOGW("Roll back accessor progress registration, ret:%{public}d", ret);
     }
     LOGI("RegisterProgressCallback completed, ret:%{public}d", ret);
     return ret;
@@ -579,24 +621,36 @@ int32_t CloudDiskServiceManagerImpl::RegisterProgressCallback(const sptr<ICloudD
 #endif
 }
 
-int32_t CloudDiskServiceManagerImpl::UnregisterProgressCallback(const sptr<ICloudDiskProgressCallback> &callback)
+int32_t CloudDiskServiceManagerImpl::UnregisterProgressCallback(
+    uint64_t accessorId, const sptr<ICloudDiskProgressCallback> &callback)
 {
-    LOGI("UnregisterProgressCallback begin");
+    LOGI("UnregisterProgressCallback begin, accessorId:%{private}llu",
+         static_cast<unsigned long long>(accessorId));
 #ifdef SUPPORT_CLOUD_DISK_SERVICE
+    if (callback == nullptr) {
+        LOGE("Unregister accessor progress failed: callback is null");
+        return E_INVALID_ARG;
+    }
     std::lock_guard<std::mutex> lock(progressMutex_);
-    if (progressClient_ == nullptr || !progressClient_->Remove(callback)) {
-        LOGI("progressClient: %{public}d", progressClient_ != nullptr);
-        return E_OK;
+    if (progressClient_ == nullptr || !progressClient_->Remove(accessorId, callback)) {
+        LOGW("Unregister accessor progress failed: matching callback is not registered");
+        return E_CALLBACK_NOT_REGISTERED;
+    }
+    int32_t ret = CheckSyncFolderRegistered();
+    if (ret != E_OK) {
+        LOGE("Unregister accessor progress failed after local removal, ret:%{public}d", ret);
+        return ret;
     }
     auto proxy = ServiceProxy::GetInstance();
     if (proxy == nullptr) {
-        LOGE("UnregisterProgressCallback failed: proxy is null");
+        LOGE("Unregister accessor progress failed after local removal: proxy is null");
         return E_IPC_FAILED;
     }
-    int32_t ret = proxy->UnregisterProgressCallbackInner();
+    ret = proxy->UnregisterProgressCallbackInner(accessorId);
     LOGI("UnregisterProgressCallback completed, ret:%{public}d", ret);
     return ret;
 #else
+    LOGW("Unregister accessor progress is not supported");
     return E_NOT_SUPPORTED;
 #endif
 }

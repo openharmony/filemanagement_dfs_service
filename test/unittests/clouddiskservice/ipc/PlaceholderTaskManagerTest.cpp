@@ -364,6 +364,15 @@ public:
         EXPECT_EQ(completed.totalSize, 6u);
     }
 
+    static int32_t CreateOwnedTask(PlaceholderTaskManager &manager, uint64_t accessorId,
+        PlaceholderTaskManager::RequestKey &key, const std::string &filePath = "file.txt")
+    {
+        PlaceholderProgressContext context{100, TEST_SYNC_FOLDER + "/" + filePath};
+        context.owner = {1, 10, accessorId};
+        return manager.CreateHydrateTask(TEST_SYNC_FOLDER, filePath, TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
+            CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key, context);
+    }
+
     std::shared_ptr<AssistantMock> mock_;
 };
 
@@ -793,7 +802,7 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_002, TestSize.Level1)
 {
     auto observer = sptr(new TaskProgressRecorder());
     auto &progressManager = PlaceholderProgressManager::GetInstance();
-    ASSERT_EQ(progressManager.Register({1, 10}, 100, observer), E_OK);
+    ASSERT_EQ(progressManager.Register({1, 10, 11}, 100, observer), E_OK);
     UniqueFd backingFd = OpenTaskFd();
     ASSERT_GE(backingFd.Get(), 0);
     UniqueFd outputFd(dup(backingFd.Get()));
@@ -801,7 +810,8 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_002, TestSize.Level1)
     auto &manager = PlaceholderTaskManager::GetInstance();
     PlaceholderTaskManager::RequestKey reqKey;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
-                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(outputFd), reqKey, {100, ""}),
+                                        CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, std::move(outputFd), reqKey,
+                                        {100, "", "", "", {1, 10, 11}}),
               E_OK);
     int32_t taskFd = ActivateTask(manager, reqKey, UniqueFd(dup(backingFd.Get())));
     ASSERT_GE(taskFd, 0);
@@ -2138,12 +2148,12 @@ HWTEST_F(PlaceholderTaskManagerTest, NotifyProgressLocked_001, TestSize.Level1)
 {
     auto observer = sptr(new TaskProgressRecorder());
     auto &progressManager = PlaceholderProgressManager::GetInstance();
-    ASSERT_EQ(progressManager.Register({2, 20}, 100, observer), E_OK);
+    ASSERT_EQ(progressManager.Register({2, 20, 22}, 100, observer), E_OK);
     auto &manager = PlaceholderTaskManager::GetInstance();
     PlaceholderTaskManager::RequestKey key;
     ASSERT_EQ(manager.CreateHydrateTask(TEST_SYNC_FOLDER, "file.txt", TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX,
                                         CLOUD_DISK_HYDRATE_PRIORITY_NORMAL, OpenTaskFd(), key,
-                                        {100, "/original/file.txt"}),
+                                        {100, "/original/file.txt", "", "", {2, 20, 22}}),
               E_OK);
     auto task = manager.taskMap_.at(key);
     task->state = PlaceholderTaskState::CANCELLED;
@@ -2245,5 +2255,184 @@ HWTEST_F(PlaceholderTaskManagerTest, Execute_012, TestSize.Level1)
     EXPECT_GT(manager.deadlineMap_.at(key), expiredDeadline);
     EXPECT_GT(manager.deadlineMap_.at(key), beforeExecute);
     EXPECT_EQ(task->state, PlaceholderTaskState::IN_PROGRESS);
+}
+/**
+ * @tc.name: AccessorOwner_001
+ * @tc.desc: Explicit cancellation follows its caller without changing task ownership or misrouting a reused path.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, AccessorOwner_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    auto first = sptr(new TaskProgressRecorder());
+    auto second = sptr(new TaskProgressRecorder());
+    auto nextOwner = sptr(new TaskProgressRecorder());
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 22}, 100, second), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 33}, 100, nextOwner), E_OK);
+    PlaceholderTaskManager::RequestKey firstKey;
+    PlaceholderTaskManager::RequestKey secondKey;
+    ASSERT_EQ(CreateOwnedTask(manager, 11, firstKey), E_OK);
+    auto oldTask = manager.taskMap_.at(firstKey);
+    EXPECT_EQ(CreateOwnedTask(manager, 22, secondKey), E_HYDRATE_IN_PROGRESS);
+    ActivateTask(manager, firstKey);
+    ASSERT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX, {1, 10, 22}), E_OK);
+    ASSERT_EQ(CreateOwnedTask(manager, 33, secondKey), E_OK);
+    EXPECT_NE(firstKey, secondKey);
+    EXPECT_EQ(oldTask->owner.accessorId, 11U);
+    EXPECT_EQ(manager.taskMap_.at(secondKey)->owner.accessorId, 33U);
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, MakeRequest(firstKey)), E_CANCELLED);
+    progress.Drain();
+    ASSERT_EQ(first->events.size(), 2U);
+    EXPECT_EQ(first->events.back().state, static_cast<int32_t>(HydrateProgressState::IN_PROGRESS));
+    EXPECT_EQ(first->events.back().accessorId, 11U);
+    ASSERT_EQ(second->events.size(), 1U);
+    EXPECT_EQ(second->events.front().state, static_cast<int32_t>(HydrateProgressState::CANCELLED));
+    EXPECT_EQ(second->events.front().accessorId, 22U);
+    ASSERT_EQ(nextOwner->events.size(), 1U);
+    EXPECT_EQ(nextOwner->events.front().state, static_cast<int32_t>(HydrateProgressState::PENDING));
+    EXPECT_EQ(nextOwner->events.front().accessorId, 33U);
+}
+
+/**
+ * @tc.name: AccessorOwner_002
+ * @tc.desc: Tasks survive off/on and automatic cancellation still notifies the original owner.
+ * @tc.type: FUNC
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, AccessorOwner_002, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(CreateOwnedTask(manager, 11, key), E_OK);
+    progress.Drain();
+    auto first = sptr(new TaskProgressRecorder());
+    auto replacement = sptr(new TaskProgressRecorder());
+    auto other = sptr(new TaskProgressRecorder());
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 22}, 100, other), E_OK);
+    ActivateTask(manager, key);
+    progress.Drain();
+    ASSERT_EQ(first->events.size(), 1U);
+    EXPECT_EQ(first->events.front().state, static_cast<int32_t>(HydrateProgressState::IN_PROGRESS));
+    ASSERT_EQ(progress.Unregister({1, 10, 11}), E_OK);
+    EXPECT_TRUE(manager.HasOutstandingTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX));
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, replacement), E_OK);
+    manager.CancelAllTasks(PlaceholderTaskCancelReason::TIMEOUT);
+    progress.Drain();
+    EXPECT_EQ(first->events.size(), 1U);
+    ASSERT_EQ(replacement->events.size(), 1U);
+    EXPECT_EQ(replacement->events.front().state, static_cast<int32_t>(HydrateProgressState::CANCELLED));
+    EXPECT_EQ(replacement->events.front().accessorId, 11U);
+    EXPECT_TRUE(other->events.empty());
+}
+
+/**
+ * @tc.name: AccessorOwner_003
+ * @tc.desc: A failed write stays retryable and its later completion never reaches another accessor.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, AccessorOwner_003, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    auto first = sptr(new TaskProgressRecorder());
+    auto other = sptr(new TaskProgressRecorder());
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 22}, 100, other), E_OK);
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(CreateOwnedTask(manager, 11, key), E_OK);
+    int32_t fd = ActivateTask(manager, key);
+    Assistant::mockPwriteApi = true;
+    auto request = MakeRequest(key, 0, {1}, 1, true);
+    EXPECT_CALL(*mock_, Pwrite(fd, _, 1, 0)).WillOnce(Return(0));
+    EXPECT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_TRY_AGAIN);
+    progress.Drain();
+    EXPECT_EQ(first->events.size(), 2U);
+    EXPECT_TRUE(other->events.empty());
+    uint8_t state = MakeFileSyncState(PLACEHOLDER_STATE_UNHYDRATED, 0);
+    ExpectStateTransitions(fd, state);
+    EXPECT_CALL(*mock_, Pwrite(fd, _, 1, 0)).WillOnce(Return(1));
+    ASSERT_EQ(manager.Execute(TEST_BUNDLE_NAME, TEST_SYNC_FOLDER_INDEX, request), E_OK);
+    progress.Drain();
+    ASSERT_FALSE(first->events.empty());
+    EXPECT_EQ(first->events.back().state, static_cast<int32_t>(HydrateProgressState::COMPLETED));
+    EXPECT_EQ(first->events.back().accessorId, 11U);
+    EXPECT_EQ(first->events.back().processedSize, 1U);
+    EXPECT_TRUE(other->events.empty());
+    EXPECT_FALSE(manager.HasOutstandingTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX));
+}
+/**
+ * @tc.name: AccessorCancellation_001
+ * @tc.desc: Two accessors cancelling each other's files receive only their own cancellation notifications.
+ * @tc.type: SECU
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, AccessorCancellation_001, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    auto first = sptr(new TaskProgressRecorder());
+    auto second = sptr(new TaskProgressRecorder());
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 22}, 100, second), E_OK);
+    PlaceholderTaskManager::RequestKey firstKey;
+    PlaceholderTaskManager::RequestKey secondKey;
+    ASSERT_EQ(CreateOwnedTask(manager, 11, firstKey, "first.txt"), E_OK);
+    ASSERT_EQ(CreateOwnedTask(manager, 22, secondKey, "second.txt"), E_OK);
+    auto firstTask = manager.taskMap_.at(firstKey);
+    auto secondTask = manager.taskMap_.at(secondKey);
+    ASSERT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "first.txt", TEST_SYNC_FOLDER_INDEX, {1, 10, 22}), E_OK);
+    ASSERT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "second.txt", TEST_SYNC_FOLDER_INDEX, {1, 10, 11}), E_OK);
+    progress.Drain();
+    ASSERT_EQ(first->events.size(), 2U);
+    ASSERT_EQ(second->events.size(), 2U);
+    EXPECT_EQ(first->events.front().filePath, TEST_SYNC_FOLDER + "/first.txt");
+    EXPECT_EQ(second->events.front().filePath, TEST_SYNC_FOLDER + "/second.txt");
+    EXPECT_EQ(first->events.back().filePath, TEST_SYNC_FOLDER + "/second.txt");
+    EXPECT_EQ(second->events.back().filePath, TEST_SYNC_FOLDER + "/first.txt");
+    EXPECT_EQ(first->events.back().state, static_cast<int32_t>(HydrateProgressState::CANCELLED));
+    EXPECT_EQ(second->events.back().state, static_cast<int32_t>(HydrateProgressState::CANCELLED));
+    EXPECT_EQ(first->events.back().accessorId, 11U);
+    EXPECT_EQ(second->events.back().accessorId, 22U);
+    EXPECT_EQ(firstTask->owner.accessorId, 11U);
+    EXPECT_EQ(secondTask->owner.accessorId, 22U);
+}
+
+/**
+ * @tc.name: AccessorCancellation_002
+ * @tc.desc: An unsubscribed canceller gets no replay or fallback; a repeated failed cancel sends no event.
+ * @tc.type: RELI
+ * @tc.require: NA
+ */
+HWTEST_F(PlaceholderTaskManagerTest, AccessorCancellation_002, TestSize.Level2)
+{
+    auto &manager = PlaceholderTaskManager::GetInstance();
+    auto &progress = PlaceholderProgressManager::GetInstance();
+    auto first = sptr(new TaskProgressRecorder());
+    auto second = sptr(new TaskProgressRecorder());
+    auto unrelated = sptr(new TaskProgressRecorder());
+    ASSERT_EQ(progress.Register({1, 10, 11}, 100, first), E_OK);
+    ASSERT_EQ(progress.Register({1, 10, 33}, 100, unrelated), E_OK);
+    PlaceholderTaskManager::RequestKey key;
+    ASSERT_EQ(CreateOwnedTask(manager, 11, key), E_OK);
+    ASSERT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX, {1, 10, 22}), E_OK);
+    progress.Drain();
+    ASSERT_EQ(first->events.size(), 1U);
+    EXPECT_EQ(first->events.front().state, static_cast<int32_t>(HydrateProgressState::PENDING));
+    EXPECT_TRUE(unrelated->events.empty());
+    ASSERT_EQ(progress.Register({1, 10, 22}, 100, second), E_OK);
+    progress.Drain();
+    EXPECT_TRUE(second->events.empty());
+    EXPECT_EQ(manager.CancelTask(TEST_SYNC_FOLDER, "file.txt", TEST_SYNC_FOLDER_INDEX, {1, 10, 22}),
+        E_NO_HYDRATION_IN_PROGRESS);
+    progress.Drain();
+    EXPECT_EQ(first->events.size(), 1U);
+    EXPECT_TRUE(second->events.empty());
+    EXPECT_TRUE(unrelated->events.empty());
 }
 } // namespace OHOS::FileManagement::CloudDiskService::Test

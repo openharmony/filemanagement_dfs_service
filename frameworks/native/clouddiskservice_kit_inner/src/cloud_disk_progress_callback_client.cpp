@@ -16,38 +16,51 @@
 
 #include "cloud_disk_progress_callback_client.h"
 
-#include <algorithm>
+#include "cloud_disk_service_error.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudDiskService {
-bool CloudDiskProgressCallbackClient::Add(const sptr<ICloudDiskProgressCallback> &callback)
+int32_t CloudDiskProgressCallbackClient::Add(uint64_t accessorId,
+    const sptr<ICloudDiskProgressCallback> &callback, bool &added)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (callback == nullptr || std::find(callbacks_.begin(), callbacks_.end(), callback) != callbacks_.end()) {
-        return false;
+    added = false;
+    if (callback == nullptr) {
+        LOGE("Add accessor progress callback failed: callback is null");
+        return E_INVALID_ARG;
     }
-    callbacks_.push_back(callback);
-    return true;
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto entry = accessorCallbacks_.find(accessorId);
+    if (entry != accessorCallbacks_.end()) {
+        return entry->second == callback ? E_OK : E_CALLBACK_ALREADY_REGISTERED;
+    }
+    accessorCallbacks_.emplace(accessorId, callback);
+    added = true;
+    return E_OK;
 }
 
-bool CloudDiskProgressCallbackClient::Remove(const sptr<ICloudDiskProgressCallback> &callback)
+bool CloudDiskProgressCallbackClient::Remove(uint64_t accessorId,
+    const sptr<ICloudDiskProgressCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (callback == nullptr) {
-        callbacks_.clear();
-    } else {
-        callbacks_.erase(std::remove(callbacks_.begin(), callbacks_.end(), callback), callbacks_.end());
+    auto entry = accessorCallbacks_.find(accessorId);
+    if (entry == accessorCallbacks_.end() || entry->second != callback) {
+        return false;
     }
-    return callbacks_.empty();
+    accessorCallbacks_.erase(entry);
+    return true;
 }
 
 void CloudDiskProgressCallbackClient::OnProgress(const HydrateProgress &progress)
 {
-    std::vector<sptr<ICloudDiskProgressCallback>> callbacks;
+    sptr<ICloudDiskProgressCallback> callback;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        callbacks = callbacks_;
+        auto entry = accessorCallbacks_.find(progress.accessorId);
+        if (entry != accessorCallbacks_.end()) {
+            callback = entry->second;
+        }
     }
-    for (const auto &callback : callbacks) {
+    if (callback != nullptr) {
         callback->OnProgress(progress);
     }
 }

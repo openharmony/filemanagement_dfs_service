@@ -89,17 +89,21 @@ void PlaceholderProgressManager::OnRemoteDied(const SubscriberKey &key, const wp
 }
 
 void PlaceholderProgressManager::OnTaskProgress(const std::vector<uint8_t> &reqKey, int32_t userId,
-    const HydrateProgress &progress)
+    const HydrateProgress &progress, const SubscriberKey &owner)
 {
+    if (owner.accessorId == 0) {
+        LOGE("accessorId failed");
+        return;
+    }
     constexpr auto MIN_INTERVAL = std::chrono::milliseconds(500);
     bool terminal = progress.state == static_cast<int32_t>(HydrateProgressState::COMPLETED) ||
         progress.state == static_cast<int32_t>(HydrateProgressState::CANCELLED);
-    std::vector<std::shared_ptr<Subscriber>> recipients;
     std::lock_guard<std::mutex> lock(mutex_);
     auto now = std::chrono::steady_clock::now();
     auto previous = lastProgress_.find(reqKey);
     if (!terminal && previous != lastProgress_.end() && previous->second.state == progress.state &&
         now - previous->second.time < MIN_INTERVAL) {
+        LOGW("check time failed");
         return;
     }
     if (terminal) {
@@ -107,18 +111,17 @@ void PlaceholderProgressManager::OnTaskProgress(const std::vector<uint8_t> &reqK
     } else {
         lastProgress_.insert_or_assign(reqKey, LastProgress{progress.state, now});
     }
-    for (const auto &[key, subscriber] : subscribers_) {
-        (void)key;
-        if (subscriber->userId == userId) {
-            recipients.push_back(subscriber);
-        }
+    auto found = subscribers_.find(owner);
+    if (found == subscribers_.end() || found->second->userId != userId) {
+        LOGW("query owner failed");
+        return;
     }
+    HydrateProgress routedProgress = progress;
+    routedProgress.accessorId = owner.accessorId;
     // A serial queue preserves state order. No Binder call runs under task/subscriber locks.
-    queue_.submit([recipients = std::move(recipients), progress] {
-        for (const auto &subscriber : recipients) {
-            if (subscriber->active) {
-                subscriber->callback->OnProgress(progress);
-            }
+    queue_.submit([subscriber = found->second, progress = std::move(routedProgress)] {
+        if (subscriber->active) {
+            subscriber->callback->OnProgress(progress);
         }
     });
 }
@@ -131,7 +134,7 @@ void PlaceholderProgressManager::Drain()
 
 void PlaceholderProgressManager::Clear()
 {
-    std::map<SubscriberKey, std::shared_ptr<Subscriber>> subscribers;
+    decltype(subscribers_) subscribers;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         for (const auto &[key, subscriber] : subscribers_) {

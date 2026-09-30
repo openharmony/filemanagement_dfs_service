@@ -125,17 +125,19 @@ public:
         int32_t priority) = 0;
     virtual ErrCode CancelHydrationInner(const std::string& syncFolder, const std::string& relativePath) = 0;
     virtual ErrCode ExecuteInner(const CallbackExecuteRequest& request) = 0;
-    virtual ErrCode StartHydrationByPathInner(const std::string &path, int32_t callbackType, int32_t priority) = 0;
-    virtual ErrCode DehydrateFileByPathInner(const std::string &path) = 0;
-    virtual ErrCode RegisterProgressCallbackInner(const sptr<IRemoteObject> &callback) = 0;
-    virtual ErrCode UnregisterProgressCallbackInner() = 0;
     virtual ErrCode DehydrateInner(const std::string& syncFolder, const std::string& relativePath) = 0;
     virtual ErrCode UpdatePlaceholderInner(const std::string& syncFolder, const std::string& relativePath,
         const PlaceholderInfo& metaData, const PlaceholderCustomInfo& customInfo) = 0;
     virtual ErrCode GetPlaceholderCustomInfoInner(const std::string& syncFolder, const std::string& relativePath,
         PlaceholderCustomInfo& customInfo) = 0;
+    virtual ErrCode DehydrateFileByPathInner(const std::string &path) = 0;
     virtual ErrCode
         GetPlaceholderStateInner(const std::string &syncFolder, const std::string &relativePath, int32_t &state) = 0;
+    virtual ErrCode StartHydrationByPathInner(
+        const std::string &path, int32_t callbackType, int32_t priority, uint64_t accessorId) = 0;
+    virtual ErrCode RegisterProgressCallbackInner(
+        uint64_t accessorId, const sptr<IRemoteObject> &callback) = 0;
+    virtual ErrCode UnregisterProgressCallbackInner(uint64_t accessorId) = 0;
 
 protected:
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0xD003900, "CloudDiskService"};
