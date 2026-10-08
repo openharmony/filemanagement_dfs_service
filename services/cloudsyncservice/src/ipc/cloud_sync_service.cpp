@@ -413,6 +413,9 @@ static int32_t GetTargetBundleName(string &targetBundleName, string &callerBundl
     if (DfsuAccessTokenHelper::GetCallerBundleName(callerBundleName)) {
         return E_INVAL_ARG;
     }
+    if (targetBundleName == "") {
+        targetBundleName = callerBundleName;
+    }
     if (callerBundleName == MEDIALIBRARYDATA_BUNDLENAME) {
         callerBundleName = targetBundleName;
     }
