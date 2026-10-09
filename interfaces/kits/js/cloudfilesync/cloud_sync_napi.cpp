@@ -20,6 +20,7 @@
 #include <sys/xattr.h>
 
 #include "async_work.h"
+#include "parse_xattr_int.h"
 #include "cloud_file_utils.h"
 #include "cloud_metrics.h"
 #include "cloud_sync_manager.h"
@@ -977,13 +978,11 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetSingleFileSyncState(const string &uri)
     }
 
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
-    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
-    if (!isValid) {
+    int32_t fileStatus = 0;
+    if (!ParseXattrInt(xattrValueStr, fileStatus)) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }
-
-    int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
         fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
@@ -1034,13 +1033,11 @@ tuple<int32_t, int32_t> CloudSyncNapi::GetFileSyncStateForBatch(const string &ur
     }
 
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
-    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
-    if (!isValid) {
+    int32_t fileStatus = 0;
+    if (!ParseXattrInt(xattrValueStr, fileStatus)) {
         LOGE("invalid xattrValue");
         return { E_PARAMS, -1};
     }
-
-    int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus == FileSync::FILESYNC_TO_BE_UPLOADED || fileStatus == FileSync::FILESYNC_UPLOADING ||
         fileStatus == FileSync::FILESYNC_UPLOAD_FAILURE || fileStatus == FileSync::FILESYNC_UPLOAD_SUCCESS) {
@@ -1197,13 +1194,11 @@ static tuple<int32_t, int32_t> DoGetCoreFileSyncState(const char *resolvedPath)
     }
 
     std::string xattrValueStr(xattrValue.get(), xattrValueSize);
-    bool isValid = std::all_of(xattrValueStr.begin(), xattrValueStr.end(), ::isdigit);
-    if (!isValid) {
+    int32_t fileStatus = 0;
+    if (!ParseXattrInt(xattrValueStr, fileStatus)) {
         LOGE("invalid xattrValue");
         return { E_SERVICE_INNER_ERROR, -1 };
     }
-
-    int32_t fileStatus = std::stoi(xattrValue.get());
     int32_t val;
     if (fileStatus >= 0 && (size_t)fileStatus < publicStatusMap.size()) {
         val = publicStatusMap[fileStatus];
